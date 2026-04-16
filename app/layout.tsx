@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { WalletProvider } from "@/contexts/WalletContext";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,7 +39,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-[#fafaf9]">
         <AuthProvider>
-          <ThemeProvider>{children}</ThemeProvider>
+          <WalletProvider>
+            <ThemeProvider>{children}</ThemeProvider>
+          </WalletProvider>
         </AuthProvider>
       </body>
     </html>
