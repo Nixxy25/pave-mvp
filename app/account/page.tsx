@@ -1,43 +1,34 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { getUserProfile, getStats } from '@/lib/api';
-import type { Merchant, AccountStats } from '@/types';
+import type { AccountStats } from '@/types';
 import { Badge } from '@/components/ui/badge';
 
+type ApiData = {
+  apiKey: string;
+  secretKey: string;
+  stellarWallet: string;
+};
+
 export default function AccountPage() {
-  const [user, setUser] = useState<Merchant | null>(null);
+  const { user: authUser } = useAuth();
+  const [apiData, setApiData] = useState<ApiData | null>(null);
   const [stats, setStats] = useState<AccountStats | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadUser();
+    getUserProfile()
+      .then(profile => setApiData({
+        apiKey: profile.apiKey,
+        secretKey: profile.secretKey,
+        stellarWallet: profile.stellarWallet,
+      }))
+      .catch(() => {});
+    getStats().then(setStats).catch(() => {});
   }, []);
 
-  const loadUser = async () => {
-    try {
-      const [userData, statsData] = await Promise.all([
-        getUserProfile(),
-        getStats(),
-      ]);
-      setUser(userData);
-      setStats(statsData);
-    } catch (error) {
-      console.error('Failed to load user:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="text-muted-foreground">Loading account...</div>
-      </div>
-    );
-  }
-
-  if (!user) {
+  if (!authUser) {
     return (
       <div className="flex h-96 items-center justify-center">
         <div className="text-muted-foreground">No user data found</div>
@@ -65,32 +56,34 @@ export default function AccountPage() {
           <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
             Profile Information
           </h2>
-          
+
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <div className="mb-1 text-xs font-medium text-foreground">Full Name</div>
-                <div className="text-sm text-foreground">{user.name}</div>
+                <div className="text-sm text-foreground">{authUser.fullName}</div>
               </div>
               <div>
                 <div className="mb-1 text-xs font-medium text-foreground">Business Name</div>
-                <div className="text-sm text-foreground">{user.businessName}</div>
+                <div className="text-sm text-foreground">{authUser.businessName}</div>
               </div>
             </div>
-            
+
             <div>
               <div className="mb-1 text-xs font-medium text-foreground">Email Address</div>
-              <div className="text-sm text-foreground">{user.email}</div>
+              <div className="text-sm text-foreground">{authUser.email}</div>
             </div>
-            
-            <div>
-              <div className="mb-1 text-xs font-medium text-foreground">Stellar Wallet Address</div>
-              <div className="font-mono text-sm text-foreground">{user.stellarWallet}</div>
-            </div>
-            
+
+            {apiData?.stellarWallet && (
+              <div>
+                <div className="mb-1 text-xs font-medium text-foreground">Stellar Wallet Address</div>
+                <div className="font-mono text-sm text-foreground">{apiData.stellarWallet}</div>
+              </div>
+            )}
+
             <div>
               <div className="mb-1 text-xs font-medium text-foreground">Plan</div>
-              <Badge className="bg-purple-100 text-purple-700">{user.plan}</Badge>
+              <Badge className="bg-purple-100 text-purple-700">Free</Badge>
             </div>
           </div>
         </div>
@@ -100,35 +93,39 @@ export default function AccountPage() {
           <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
             API Credentials
           </h2>
-          
+
           <div className="space-y-4">
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <div className="text-xs font-medium text-muted-foreground">Public Key</div>
-                <button
-                  onClick={() => navigator.clipboard.writeText(user.apiKey)}
-                  className="text-xs text-[var(--pave-orange)] hover:underline"
-                >
-                  Copy
-                </button>
+                {apiData && (
+                  <button
+                    onClick={() => navigator.clipboard.writeText(apiData.apiKey)}
+                    className="text-xs text-[var(--pave-orange)] hover:underline"
+                  >
+                    Copy
+                  </button>
+                )}
               </div>
               <div className="overflow-x-auto rounded-lg bg-muted p-3 font-mono text-xs text-foreground sm:text-sm">
-                {user.apiKey}
+                {apiData?.apiKey ?? '—'}
               </div>
             </div>
-            
+
             <div>
               <div className="mb-2 flex items-center justify-between">
                 <div className="text-xs font-medium text-muted-foreground">Secret Key</div>
-                <button
-                  onClick={() => navigator.clipboard.writeText(user.secretKey)}
-                  className="text-xs text-[var(--pave-orange)] hover:underline"
-                >
-                  Copy
-                </button>
+                {apiData && (
+                  <button
+                    onClick={() => navigator.clipboard.writeText(apiData.secretKey)}
+                    className="text-xs text-[var(--pave-orange)] hover:underline"
+                  >
+                    Copy
+                  </button>
+                )}
               </div>
               <div className="overflow-x-auto rounded-lg bg-muted p-3 font-mono text-xs text-foreground sm:text-sm">
-                {user.secretKey}
+                {apiData?.secretKey ?? '—'}
               </div>
               <div className="mt-1 text-xs text-foreground">
                 Keep this secret! Never share or commit to version control
@@ -142,25 +139,19 @@ export default function AccountPage() {
           <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
             Account Statistics
           </h2>
-          
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="text-center">
               <div className="font-serif text-2xl font-light italic text-foreground">
-                {stats?.paymentCount || 0}
+                {stats?.paymentCount ?? 0}
               </div>
               <div className="mt-1 text-xs text-foreground">Total Payments</div>
             </div>
             <div className="text-center">
               <div className="font-serif text-2xl font-light italic text-foreground">
-                ${stats?.totalVolume.toLocaleString() || '0'}
+                ${stats?.totalVolume.toLocaleString() ?? '0'}
               </div>
               <div className="mt-1 text-xs text-foreground">Total Volume</div>
-            </div>
-            <div className="text-center">
-              <div className="font-serif text-2xl font-light italic text-foreground">
-                {new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-              </div>
-              <div className="mt-1 text-xs text-foreground">Member Since</div>
             </div>
           </div>
         </div>

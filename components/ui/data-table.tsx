@@ -3,11 +3,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-// ============================================================================
-// DATA TABLE COMPONENTS
-// Reusable table components to avoid repetition across the codebase
-// ============================================================================
-
 export interface TableColumn {
   key: string;
   label: string;
@@ -15,7 +10,6 @@ export interface TableColumn {
   className?: string;
 }
 
-// Table Header Row - renders all column headers with consistent styling
 interface DataTableHeaderProps {
   columns: TableColumn[];
   className?: string;
@@ -44,7 +38,6 @@ export function DataTableHeader({ columns, className }: DataTableHeaderProps) {
   );
 }
 
-// Table Cell - consistent cell styling
 interface DataTableCellProps {
   children: React.ReactNode;
   className?: string;
@@ -66,7 +59,6 @@ export function DataTableCell({ children, className, align = 'left' }: DataTable
   );
 }
 
-// Table Row with hover state
 interface DataTableRowProps {
   children: React.ReactNode;
   className?: string;
@@ -88,7 +80,6 @@ export function DataTableRow({ children, className, onClick }: DataTableRowProps
   );
 }
 
-// Empty state for tables
 interface DataTableEmptyProps {
   colSpan: number;
   message: string;
@@ -106,7 +97,6 @@ export function DataTableEmpty({ colSpan, message, action }: DataTableEmptyProps
   );
 }
 
-// Loading state for tables
 interface DataTableLoadingProps {
   colSpan: number;
   message?: string;
@@ -122,7 +112,6 @@ export function DataTableLoading({ colSpan, message = "Loading..." }: DataTableL
   );
 }
 
-// Full Data Table wrapper
 interface DataTableProps {
   columns: TableColumn[];
   children: React.ReactNode;

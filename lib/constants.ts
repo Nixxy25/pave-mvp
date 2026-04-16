@@ -1,19 +1,9 @@
-/**
- * Application constants and helper functions
- */
+// Application constants and helper functions
 
-// ============================================================================
-// SUPPORTED CURRENCIES - Single source of truth
-// ============================================================================
 
-/**
- * List of all supported currencies for payments
- * Use this across the codebase - never hardcode currency arrays
- */
 export const SUPPORTED_CURRENCIES = ['GHS', 'USD', 'KES', 'XOF', 'NGN'] as const;
 export type SupportedCurrency = typeof SUPPORTED_CURRENCIES[number];
 
-// Currency mappings (only supported currencies)
 export const CURRENCY_NAMES: Record<SupportedCurrency, string> = {
   'GHS': 'Ghanaian Cedi',
   'USD': 'US Dollar',
@@ -30,7 +20,6 @@ export const CURRENCY_SYMBOLS: Record<SupportedCurrency, string> = {
   'NGN': '₦',
 };
 
-// Country codes for supported currencies
 export const CURRENCY_COUNTRIES: Record<SupportedCurrency, string> = {
   'GHS': 'GH',
   'KES': 'KE',
@@ -39,7 +28,6 @@ export const CURRENCY_COUNTRIES: Record<SupportedCurrency, string> = {
   'USD': 'US',
 };
 
-// Currency conversion rates (only supported currencies)
 export const CONVERSION_RATES: Record<SupportedCurrency, Partial<Record<SupportedCurrency, number>>> = {
   'NGN': { 'GHS': 0.00427, 'USD': 0.00062, 'KES': 0.081, 'XOF': 0.365 },
   'USD': { 'GHS': 13.7, 'NGN': 1605, 'KES': 129.5, 'XOF': 585 },
@@ -48,7 +36,6 @@ export const CONVERSION_RATES: Record<SupportedCurrency, Partial<Record<Supporte
   'XOF': { 'NGN': 2.74, 'USD': 0.0017, 'GHS': 0.0234, 'KES': 0.221 },
 };
 
-// Helper functions
 export function getCurrencyName(code: string): string {
   return CURRENCY_NAMES[code as SupportedCurrency] || code;
 }
@@ -84,7 +71,6 @@ export function calculateEquivalents(
   return equivalents;
 }
 
-// Get country code from currency
 export function getCountryFromCurrency(currency: string): string {
   return CURRENCY_COUNTRIES[currency as SupportedCurrency] || 'NG';
 }

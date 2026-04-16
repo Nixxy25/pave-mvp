@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { DataTableHeader, type TableColumn } from '@/components/ui/data-table';
 import Link from 'next/link';
 
-// Activity table columns - single source of truth
 const ACTIVITY_COLUMNS: TableColumn[] = [
   { key: 'type', label: 'Type', className: 'px-5' },
   { key: 'customer', label: 'Customer / Destination', className: 'px-5' },
@@ -34,7 +33,6 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    // Update activities when payments or withdrawals change
     if (!paymentsLoading && !withdrawalsLoading) {
       const activities = [
         ...payments.map((p: Payment) => ({ ...p, type: 'payment' as const })),
@@ -56,11 +54,9 @@ export default function DashboardPage() {
       setUser(userData);
       setStats(statsData);
     } catch (error) {
-      console.error('Failed to load dashboard data:', error);
     }
   };
 
-  // Calculate today's balance changes
   const calculateTodayChange = () => {
     const today = new Date().toDateString();
     
@@ -75,7 +71,7 @@ export default function DashboardPage() {
     const withdrawalsTotal = todayWithdrawals.reduce((sum: number, w: Withdrawal) => sum + w.amount, 0);
     
     const usdcChange = paymentsTotal - withdrawalsTotal;
-    const ngnChange = usdcChange * 1605; // USD to NGN conversion rate
+    const ngnChange = usdcChange * 1605;
     
     return { usdcChange, ngnChange };
   };

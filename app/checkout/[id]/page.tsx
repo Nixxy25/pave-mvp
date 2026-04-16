@@ -17,7 +17,6 @@ export default function CheckoutPage() {
   const [selectedMethod, setSelectedMethod] = useState('mobile_money');
   const [selectedCurrency, setSelectedCurrency] = useState('GHS');
   
-  // Customer information
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
@@ -34,13 +33,11 @@ export default function CheckoutPage() {
       if (link) {
         setCheckoutData(link);
         
-        // Get merchant data
         const merchant = await getMerchantInfo();
         if (merchant) {
           setMerchantInfo(merchant);
         }
         
-        // Set default currency from accepted currencies (filtered to supported only)
         const acceptedCurrencies = link.acceptedCurrencies || [];
         const availableCurrencies = acceptedCurrencies.filter(isSupportedCurrency);
         if (availableCurrencies.length > 0) {
@@ -53,7 +50,6 @@ export default function CheckoutPage() {
         }
       }
     } catch (error) {
-      console.error('Failed to load checkout:', error);
     } finally {
       setLoading(false);
     }
@@ -62,7 +58,6 @@ export default function CheckoutPage() {
   const handlePayment = async () => {
     if (!checkoutData) return;
     
-    // Validate customer information
     if (!customerName.trim() || !customerEmail.trim()) {
       alert('Please enter your name and email to continue');
       return;
@@ -72,7 +67,6 @@ export default function CheckoutPage() {
     
     const exchangeAmount = checkoutData.equivalents[selectedCurrency] || checkoutData.amount;
     
-    // Simulate payment processing delay
     setTimeout(async () => {
       try {
         await completeCheckoutPayment({
@@ -86,10 +80,8 @@ export default function CheckoutPage() {
           paymentMethod: selectedMethod as 'mobile_money' | 'card',
         });
         
-        // Redirect to success page
         window.location.href = `/confirmed/${params.id}?amount=${exchangeAmount}&currency=${selectedCurrency}`;
       } catch (error) {
-        console.error('Payment failed:', error);
         alert('Payment failed. Please try again.');
         setProcessing(false);
       }

@@ -12,7 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { DataTableHeader, DataTableLoading, DataTableEmpty, type TableColumn } from '@/components/ui/data-table';
 
-// Withdrawal table columns
 const WITHDRAWAL_COLUMNS: TableColumn[] = [
   { key: 'id', label: 'Withdrawal ID' },
   { key: 'amount', label: 'Amount' },

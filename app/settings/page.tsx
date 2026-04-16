@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { logout } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const [saving, setSaving] = useState(false);
+  const { logout } = useAuth();
   
   const [settings, setSettings] = useState({
     webhookUrl: '',
@@ -18,13 +18,6 @@ export default function SettingsPage() {
     stellarExplorerLinks: true,
     autoConvert: false,
   });
-
-  const handleSave = async () => {
-    setSaving(true);
-    // Simulate saving
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    setSaving(false);
-  };
 
   const handleLogout = async () => {
     await logout();
@@ -119,17 +112,6 @@ export default function SettingsPage() {
               />
             </div>
           </div>
-        </div>
-
-        {/* Save Button */}
-        <div className="flex justify-end gap-3">
-          <Button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full bg-[var(--pave-orange)] hover:bg-[var(--pave-orange-hover)] sm:w-auto"
-          >
-            {saving ? 'Saving...' : 'Save Settings'}
-          </Button>
         </div>
 
         {/* Sign Out */}

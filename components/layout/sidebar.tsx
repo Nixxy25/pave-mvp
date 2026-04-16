@@ -69,13 +69,11 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
         const userData = await getUserProfile();
         setUser(userData);
       } catch (error) {
-        console.error('Failed to load user:', error);
       }
     };
     loadUser();
   }, []);
 
-  // Close sidebar on route change (mobile)
   useEffect(() => {
     onMobileClose?.();
   }, [pathname]);

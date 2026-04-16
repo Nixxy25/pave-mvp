@@ -16,7 +16,6 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { DataTableHeader, DataTableLoading, DataTableEmpty, type TableColumn } from '@/components/ui/data-table';
 
-// Payment table columns
 const PAYMENT_COLUMNS: TableColumn[] = [
   { key: 'id', label: 'Payment ID' },
   { key: 'payer', label: 'Payer' },

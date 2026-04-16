@@ -13,7 +13,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DataTableHeader, DataTableLoading, DataTableEmpty, type TableColumn } from '@/components/ui/data-table';
 
-// Checkout links table columns
 const CHECKOUT_LINK_COLUMNS: TableColumn[] = [
   { key: 'id', label: 'Link ID' },
   { key: 'description', label: 'Description' },
@@ -67,7 +66,6 @@ export default function CheckoutLinksPage() {
       
       await refetch();
     } catch (error) {
-      console.error('Failed to create checkout link:', error);
     } finally {
       setCreating(false);
     }
