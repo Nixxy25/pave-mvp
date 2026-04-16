@@ -39,7 +39,7 @@ export interface CreatePaymentData {
   description: string;
   acceptedCurrencies: string[];
   settlementAsset: string;
-  redirectUrl?: string;
+  stellarWalletAddress?: string;
   webhookUrl?: string;
   expiresInHours?: number;
   metadata?: Record<string, any>;
@@ -61,9 +61,11 @@ export interface CheckoutLink {
   description: string;
   acceptedCurrencies: string[];
   settlementAsset: string;
+  stellarWalletAddress?: string;
   equivalents: Record<string, number>;
-  redirectUrl?: string;
   expiresAt: string;
   createdAt: string;
   status: 'active' | 'expired' | 'completed';
+  merchantName?: string;
+  merchantVerified?: boolean;
 }

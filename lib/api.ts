@@ -1,5 +1,6 @@
 import { getCurrentUser as getCognitoUser, fetchUserAttributes, fetchAuthSession } from 'aws-amplify/auth';
 import { CONVERSION_RATES } from './constants';
+import { supabase } from './supabase';
 import type {
   Payment,
   CreatePaymentData,
@@ -46,45 +47,104 @@ async function setUserData<T>(key: string, value: T): Promise<void> {
   localStorage.setItem(`pave_${key}_${userId}`, JSON.stringify(value));
 }
 
-// ─── Payments (localStorage) ─────────────────────────────────────────────────
+// ─── Row mappers ─────────────────────────────────────────────────────────────
+
+function rowToCheckoutLink(row: Record<string, unknown>): CheckoutLink {
+  return {
+    id: row.id as string,
+    paymentId: row.id as string,
+    url: `${typeof window !== 'undefined' ? window.location.origin : ''}/checkout/${row.id}`,
+    amount: row.amount as number,
+    currency: row.currency as string,
+    description: row.description as string,
+    acceptedCurrencies: row.accepted_currencies as string[],
+    settlementAsset: row.settlement_asset as string,
+    stellarWalletAddress: row.stellar_wallet_address as string | undefined,
+    equivalents: (row.equivalents as Record<string, number>) || {},
+    expiresAt: row.expires_at as string,
+    createdAt: row.created_at as string,
+    status: row.status as 'active' | 'expired' | 'completed',
+    merchantName: row.merchant_name as string | undefined,
+    merchantVerified: row.merchant_verified as boolean | undefined,
+  };
+}
+
+function rowToPayment(row: Record<string, unknown>): Payment {
+  return {
+    id: row.id as string,
+    status: row.status as Payment['status'],
+    payer: {
+      name: row.payer_name as string,
+      email: row.payer_email as string | undefined,
+      country: row.payer_country as string | undefined,
+    },
+    amount: row.amount as number,
+    currency: row.currency as string,
+    usdcAmount: row.usdc_amount as number | undefined,
+    paidWith: row.paid_with as string | undefined,
+    settledAmount: row.settled_amount as number,
+    settledCurrency: row.settled_currency as string,
+    method: row.method as Payment['method'],
+    source: row.source as Payment['source'],
+    stellarTxHash: row.stellar_tx_hash as string | undefined,
+    description: row.description as string | undefined,
+    createdAt: row.created_at as string,
+    settledAt: row.settled_at as string | undefined,
+  };
+}
+
+// ─── Payments (Supabase) ──────────────────────────────────────────────────────
 
 export async function getPayments(filters?: PaymentFilters): Promise<Payment[]> {
-  let payments = await getUserData<Payment[]>('payments', []);
+  const userId = await getCurrentUserId();
+  if (!userId) return [];
+
+  let query = supabase
+    .from('payments')
+    .select('*')
+    .eq('merchant_id', userId)
+    .order('created_at', { ascending: false });
 
   if (filters?.status) {
-    payments = payments.filter(p => p.status === filters.status);
+    query = query.eq('status', filters.status);
   }
 
   if (filters?.search) {
-    const search = filters.search.toLowerCase();
-    payments = payments.filter(p =>
-      p.payer.name.toLowerCase().includes(search) ||
-      p.id.toLowerCase().includes(search)
-    );
+    query = query.or(`payer_name.ilike.%${filters.search}%,id.ilike.%${filters.search}%`);
   }
 
-  return payments;
+  const { data } = await query;
+  return (data || []).map(rowToPayment);
 }
 
 export async function getPaymentById(id: string): Promise<Payment | null> {
-  const payments = await getUserData<Payment[]>('payments', []);
-  return payments.find(p => p.id === id) || null;
+  const { data } = await supabase.from('payments').select('*').eq('id', id).single();
+  return data ? rowToPayment(data) : null;
 }
 
-// ─── Checkout Links (localStorage) ───────────────────────────────────────────
+// ─── Checkout Links (Supabase) ────────────────────────────────────────────────
 
 export async function getCheckoutLinks(): Promise<CheckoutLink[]> {
-  return getUserData<CheckoutLink[]>('checkout_links', []);
+  const userId = await getCurrentUserId();
+  if (!userId) return [];
+
+  const { data } = await supabase
+    .from('checkout_links')
+    .select('*')
+    .eq('merchant_id', userId)
+    .order('created_at', { ascending: false });
+
+  return (data || []).map(rowToCheckoutLink);
 }
 
 export async function getCheckoutLinkById(id: string): Promise<CheckoutLink | null> {
-  const links = await getUserData<CheckoutLink[]>('checkout_links', []);
-  return links.find(link => link.id === id) || null;
+  const { data } = await supabase.from('checkout_links').select('*').eq('id', id).single();
+  return data ? rowToCheckoutLink(data) : null;
 }
 
 export async function createPayment(data: CreatePaymentData): Promise<CheckoutLink> {
-  const linkId = `link_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-  const paymentId = `pay_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  const userId = await getCurrentUserId();
+  if (!userId) throw new Error('Not authenticated');
 
   const conversionRates: Record<string, Record<string, number>> = {
     NGN: { GHS: 0.00427, USD: 0.00062, KES: 0.081, XOF: 0.365 },
@@ -102,37 +162,66 @@ export async function createPayment(data: CreatePaymentData): Promise<CheckoutLi
     }
   }
 
-  const newLink: CheckoutLink = {
-    id: linkId,
-    paymentId,
-    url: `${typeof window !== 'undefined' ? window.location.origin : ''}/checkout/${linkId}`,
-    amount: data.amount,
-    currency: data.currency,
-    description: data.description,
-    acceptedCurrencies: data.acceptedCurrencies,
-    settlementAsset: data.settlementAsset,
-    equivalents,
-    redirectUrl: data.redirectUrl,
-    expiresAt: new Date(Date.now() + (data.expiresInHours || 24) * 60 * 60 * 1000).toISOString(),
-    createdAt: new Date().toISOString(),
-    status: 'active',
-  };
+  const attrs = await fetchUserAttributes().catch(() => ({})) as Record<string, string>;
+  const merchantName = attrs.nickname || 'Business';
+  const merchantPersonName = attrs.name || '';
 
-  const checkoutLinks = await getUserData<CheckoutLink[]>('checkout_links', []);
-  checkoutLinks.push(newLink);
-  await setUserData('checkout_links', checkoutLinks);
+  const expiresAt = data.expiresInHours
+    ? new Date(Date.now() + data.expiresInHours * 60 * 60 * 1000).toISOString()
+    : new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: inserted, error } = await supabase
+    .from('checkout_links')
+    .insert({
+      merchant_id: userId,
+      merchant_name: merchantName,
+      merchant_person_name: merchantPersonName,
+      merchant_verified: true,
+      amount: data.amount,
+      currency: data.currency,
+      description: data.description,
+      accepted_currencies: data.acceptedCurrencies,
+      settlement_asset: data.settlementAsset,
+      stellar_wallet_address: data.stellarWalletAddress || null,
+      equivalents,
+      expires_at: expiresAt,
+      status: 'active',
+    })
+    .select()
+    .single();
+
+  if (error) throw new Error(error.message);
 
   await logAPICall('POST', '/v1/payments', 201, JSON.stringify(data));
 
-  return newLink;
+  return rowToCheckoutLink(inserted);
 }
 
-export async function getMerchantInfo(): Promise<{ name: string; country: string; verified: boolean } | null> {
+export async function getMerchantInfo(checkoutLinkId?: string): Promise<{ name: string; personName: string; country: string; verified: boolean } | null> {
+  // For public checkout page: read merchant name from the checkout link row (no auth needed)
+  if (checkoutLinkId) {
+    const { data } = await supabase
+      .from('checkout_links')
+      .select('merchant_name, merchant_person_name, merchant_verified')
+      .eq('id', checkoutLinkId)
+      .single();
+    if (data) {
+      return {
+        name: data.merchant_name || 'Business',
+        personName: data.merchant_person_name || '',
+        country: 'Nigeria',
+        verified: data.merchant_verified ?? true,
+      };
+    }
+    return null;
+  }
+  // Logged-in dashboard: read from Cognito
   if (typeof window === 'undefined') return null;
   try {
     const attributes = await fetchUserAttributes();
     return {
       name: attributes.nickname || 'Business',
+      personName: attributes.name || '',
       country: 'Nigeria',
       verified: true,
     };
@@ -144,7 +233,6 @@ export async function getMerchantInfo(): Promise<{ name: string; country: string
 export async function completeCheckoutPayment(data: {
   checkoutLinkId: string;
   customerName: string;
-  customerEmail: string;
   amount: number;
   currency: string;
   usdcAmount: number;
@@ -153,50 +241,68 @@ export async function completeCheckoutPayment(data: {
 }): Promise<{ success: boolean; paymentId: string }> {
   if (typeof window === 'undefined') throw new Error('Cannot complete payment on server');
 
-  const paymentId = `pay_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+  // Get merchant_id from the checkout link (public row, no auth needed)
+  const { data: linkRow } = await supabase
+    .from('checkout_links')
+    .select('merchant_id')
+    .eq('id', data.checkoutLinkId)
+    .single();
+
+  if (!linkRow) throw new Error('Checkout link not found');
 
   const countryMap: Record<string, string> = {
     GHS: 'GH', KES: 'KE', XOF: 'SN', NGN: 'NG', USD: 'US',
   };
 
-  const newPayment: Payment = {
-    id: paymentId,
-    payer: {
-      name: data.customerName.trim(),
-      email: data.customerEmail.trim(),
-      country: countryMap[data.currency] || 'NG',
-    },
-    amount: data.amount,
-    currency: data.currency,
-    usdcAmount: data.usdcAmount,
-    description: data.description,
-    method: data.paymentMethod === 'mobile_money' ? 'Mobile Money' : 'Card',
-    source: 'Checkout',
-    paidWith: data.paymentMethod === 'mobile_money' ? 'MTN Mobile Money' : 'Visa Card',
-    stellarTxHash: `${Math.random().toString(36).substring(2, 8)}...${Math.random().toString(36).substring(2, 6)}`,
-    status: 'completed',
-    settledAmount: data.usdcAmount,
-    settledCurrency: 'USDC',
-    createdAt: new Date().toISOString(),
-    settledAt: new Date().toISOString(),
-  };
+  const stellarTxHash = `${Math.random().toString(36).substring(2, 10)}${Math.random().toString(36).substring(2, 10)}`;
 
-  // Save payment and update balance in localStorage
-  await setUserData('payments', [...await getUserData<Payment[]>('payments', []), newPayment]);
+  const { data: inserted, error } = await supabase
+    .from('payments')
+    .insert({
+      merchant_id: linkRow.merchant_id,
+      checkout_link_id: data.checkoutLinkId,
+      payer_name: data.customerName,
+      payer_country: countryMap[data.currency] || 'NG',
+      amount: data.amount,
+      currency: data.currency,
+      usdc_amount: data.usdcAmount,
+      paid_with: 'Visa Card',
+      settled_amount: data.usdcAmount,
+      settled_currency: 'USDC',
+      method: 'Card',
+      source: 'Checkout',
+      description: data.description,
+      status: 'completed',
+      settled_at: new Date().toISOString(),
+    })
+    .select()
+    .single();
 
-  const balance = await getUserData<BalanceData>('balance', { usdc: 0, ngn: 0 });
-  balance.usdc += data.usdcAmount;
-  await setUserData('balance', balance);
+  if (error) throw new Error(error.message);
 
   // Mark checkout link as completed
-  const links = await getUserData<CheckoutLink[]>('checkout_links', []);
-  const linkIndex = links.findIndex(l => l.id === data.checkoutLinkId);
-  if (linkIndex !== -1) {
-    links[linkIndex].status = 'completed';
-    await setUserData('checkout_links', links);
-  }
+  await supabase
+    .from('checkout_links')
+    .update({ status: 'completed' })
+    .eq('id', data.checkoutLinkId);
 
-  return { success: true, paymentId: newPayment.id };
+  // Update Supabase balance
+  const { data: currentBalance } = await supabase
+    .from('balances')
+    .select('usdc')
+    .eq('merchant_id', linkRow.merchant_id)
+    .single();
+
+  const newUsdc = (currentBalance?.usdc || 0) + data.usdcAmount;
+  const usdToNgnRate = CONVERSION_RATES['USD']?.['NGN'] || 1605;
+
+  await supabase.from('balances').upsert({
+    merchant_id: linkRow.merchant_id,
+    usdc: newUsdc,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: 'merchant_id' });
+
+  return { success: true, paymentId: inserted.id };
 }
 
 // ─── Withdrawals (localStorage) ───────────────────────────────────────────────
@@ -237,26 +343,52 @@ export async function createWithdrawal(data: CreateWithdrawalData): Promise<With
   balance.usdc -= data.amount;
 
   await setUserData('withdrawals', withdrawals);
-  await setUserData('balance', balance);
+
+  // Update Supabase balance
+  const userId2 = await getCurrentUserId();
+  if (userId2) {
+    const { data: currentBal } = await supabase
+      .from('balances')
+      .select('usdc')
+      .eq('merchant_id', userId2)
+      .single();
+    const newUsdc = Math.max(0, (currentBal?.usdc || 0) - data.amount);
+    await supabase.from('balances').upsert({
+      merchant_id: userId2,
+      usdc: newUsdc,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'merchant_id' });
+  }
 
   await logAPICall('POST', '/v1/payouts', 201, JSON.stringify(data));
 
   return newWithdrawal;
 }
 
-// ─── Balance & Stats (localStorage) ──────────────────────────────────────────
+// ─── Balance & Stats (Supabase) ──────────────────────────────────────────────
 
 export async function getBalance(): Promise<BalanceData> {
-  const balance = await getUserData<BalanceData>('balance', { usdc: 0, ngn: 0 });
+  const userId = await getCurrentUserId();
+  if (!userId) return { usdc: 0, ngn: 0 };
+
+  const { data } = await supabase
+    .from('balances')
+    .select('usdc')
+    .eq('merchant_id', userId)
+    .single();
+
+  const usdc = data?.usdc || 0;
   const usdToNgnRate = CONVERSION_RATES['USD']?.['NGN'] || 1605;
-  balance.ngn = parseFloat((balance.usdc * usdToNgnRate).toFixed(2));
-  return balance;
+  return { usdc, ngn: parseFloat((usdc * usdToNgnRate).toFixed(2)) };
 }
 
 export async function getStats(): Promise<AccountStats> {
-  const payments = await getUserData<Payment[]>('payments', []);
-  const completed = payments.filter(p => p.status === 'completed');
-  const totalVolume = completed.reduce((sum, p) => sum + (p.usdcAmount || 0), 0);
+  const userId = await getCurrentUserId();
+  const { data } = userId
+    ? await supabase.from('payments').select('usdc_amount, status').eq('merchant_id', userId)
+    : { data: [] };
+  const completed = (data || []).filter((p: { status: string }) => p.status === 'completed');
+  const totalVolume = completed.reduce((sum: number, p: { usdc_amount?: number }) => sum + (p.usdc_amount || 0), 0);
   const paveFee = totalVolume * 0.014;
 
   return {
@@ -327,13 +459,6 @@ export async function getUserProfile(): Promise<Merchant> {
   } as Merchant;
 }
 
-export async function updateSettings(settings: Partial<Merchant['preferences']>): Promise<void> {
-  const userId = await getCurrentUserId();
-  if (!userId) return;
-
-  const preferences = JSON.parse(localStorage.getItem(`pave_preferences_${userId}`) || '{}');
-  localStorage.setItem(`pave_preferences_${userId}`, JSON.stringify({ ...preferences, ...settings }));
-}
 
 // ─── localStorage — API Logs ──────────────────────────────────────────────────
 
