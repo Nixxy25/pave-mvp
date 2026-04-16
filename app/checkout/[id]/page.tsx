@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { StellarPayment } from '@/components/checkout/StellarPayment';
+import { StellarPayment } from './StellarPayment';
 import { CheckoutHeader } from './CheckoutHeader';
 import { PaymentMethodSelector } from './PaymentMethodSelector';
 import { CurrencySelector } from './CurrencySelector';
