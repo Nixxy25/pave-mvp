@@ -6,7 +6,6 @@ import type { APILog } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { DataTableHeader, DataTableLoading, DataTableEmpty, type TableColumn } from '@/components/ui/data-table';
 
-// API logs table columns
 const LOG_COLUMNS: TableColumn[] = [
   { key: 'timestamp', label: 'Timestamp' },
   { key: 'method', label: 'Method' },

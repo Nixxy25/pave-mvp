@@ -23,7 +23,6 @@ export default function AccountPage() {
       setUser(userData);
       setStats(statsData);
     } catch (error) {
-      console.error('Failed to load user:', error);
     } finally {
       setLoading(false);
     }
