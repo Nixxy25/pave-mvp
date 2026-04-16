@@ -99,27 +99,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       let emailVerified = false;
       
       if (isGoogleUser) {
-        try {
-          const session = await fetchAuthSession();
-          const idToken = session.tokens?.idToken;
-          
-          if (idToken?.payload) {
-            email = (idToken.payload.email as string) || '';
-            fullName = (idToken.payload.name as string) || '';
-            businessName = (idToken.payload.nickname as string) || '';
-            emailVerified = (idToken.payload.email_verified as boolean) || false;
-          }
-        } catch (tokenError) {
+        const session = await fetchAuthSession();
+        const idToken = session.tokens?.idToken;
+        if (idToken?.payload) {
+          email = (idToken.payload.email as string) || '';
+          fullName = (idToken.payload.name as string) || '';
+          emailVerified = (idToken.payload.email_verified as boolean) || false;
         }
+
+        // businessName is saved to Cognito nickname by complete-profile
+        const attributes = await fetchUserAttributes();
+        businessName = attributes.nickname || '';
       } else {
-        try {
-          const attributes = await fetchUserAttributes();
-          email = attributes.email || '';
-          fullName = attributes.name || '';
-          businessName = attributes.nickname || '';
-          emailVerified = attributes.email_verified === 'true';
-        } catch (attrError) {
-        }
+        const attributes = await fetchUserAttributes();
+        email = attributes.email || '';
+        fullName = attributes.name || '';
+        businessName = attributes.nickname || '';
+        emailVerified = attributes.email_verified === 'true';
       }
       
       const needsBusiness = isGoogleUser && (!businessName || businessName === fullName);
@@ -135,10 +131,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       };
 
       setUser(userData);
-      
-      if (isGoogleUser) {
-        localStorage.setItem(`pave_user_${currentUser.userId}`, JSON.stringify(userData));
-      }
 
     } catch (error) {
       setUser(null);
@@ -198,13 +190,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function logout() {
-    const currentUserId = user?.userId;
     await signOut();
     setUser(null);
     setNeedsBusinessName(false);
-    if (currentUserId) {
-      localStorage.removeItem(`pave_user_${currentUserId}`);
-    }
   }
 
   async function updateBusinessName(businessName: string) {
