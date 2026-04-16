@@ -14,12 +14,14 @@ export default function ConfirmedPage() {
     const amount = searchParams.get('amount');
     const currency = searchParams.get('currency');
     const txId = searchParams.get('txId');
+    const method = searchParams.get('method');
     
     setPaymentDetails({
       amount: amount || '192.40',
       currency: currency || 'GHS',
       timestamp: new Date().toISOString(),
       txId: txId || null,
+      method: method || 'card',
     });
   }, [searchParams]);
 
@@ -72,8 +74,23 @@ export default function ConfirmedPage() {
           <div className="mb-6 space-y-3 border-t pt-4">
             {paymentDetails.txId && (
               <div className="flex justify-between text-[14px]">
-                <span className="text-muted-foreground">Transaction ID</span>
-                <span className="font-mono text-[12px] font-medium text-foreground break-all text-right max-w-[200px]">{paymentDetails.txId}</span>
+                <span className="text-muted-foreground">
+                  {paymentDetails.method === 'stellar' ? 'Stellar TX Hash' : 'Transaction ID'}
+                </span>
+                {paymentDetails.method === 'stellar' ? (
+                  <a
+                    href={`https://stellar.expert/explorer/testnet/tx/${paymentDetails.txId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-mono text-[12px] font-medium text-[var(--stellar)] hover:underline break-all text-right max-w-[200px]"
+                  >
+                    {paymentDetails.txId.slice(0, 8)}…{paymentDetails.txId.slice(-6)}
+                  </a>
+                ) : (
+                  <span className="font-mono text-[12px] font-medium text-foreground break-all text-right max-w-[200px]">
+                    {paymentDetails.txId}
+                  </span>
+                )}
               </div>
             )}
             <div className="flex justify-between text-[14px]">
