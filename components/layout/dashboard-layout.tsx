@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/contexts/AuthContext';
 import { Topbar } from './topbar';
 import { Sidebar } from './sidebar';
 import { NotificationPanel } from './notification-panel';
@@ -12,35 +13,22 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { getUserProfile } = await import('@/lib/api');
-        const user = await getUserProfile();
-        
-        if (!user) {
-          router.push('/login');
-        } else {
-          setIsAuthenticated(true);
-        }
-      } catch (error) {
-        router.push('/login');
-      }
-    };
-    
-    checkAuth();
-  }, [router]);
+    if (!isLoading && !isAuthenticated) {
+      router.push('/login');
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   // Close mobile sidebar when route changes
   useEffect(() => {
     setIsMobileSidebarOpen(false);
   }, []);
 
-  if (isAuthenticated === null) {
+  if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="text-center">
