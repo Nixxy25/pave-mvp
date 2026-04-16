@@ -33,9 +33,9 @@ export default function CheckoutLinksPage() {
     currency: 'NGN',
     description: '',
     settlementAsset: 'USDC',
+    stellarWalletAddress: '',
     acceptedCurrencies: [...SUPPORTED_CURRENCIES],
     expiresInHours: 24,
-    redirectUrl: '',
   });
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -48,9 +48,9 @@ export default function CheckoutLinksPage() {
         currency: formData.currency,
         description: formData.description,
         settlementAsset: formData.settlementAsset,
+        stellarWalletAddress: formData.stellarWalletAddress || undefined,
         acceptedCurrencies: formData.acceptedCurrencies,
         expiresInHours: formData.expiresInHours,
-        redirectUrl: formData.redirectUrl || undefined,
       });
       
       setShowCreateDialog(false);
@@ -59,9 +59,9 @@ export default function CheckoutLinksPage() {
         currency: 'NGN',
         description: '',
         settlementAsset: 'USDC',
+        stellarWalletAddress: '',
         acceptedCurrencies: [...SUPPORTED_CURRENCIES],
         expiresInHours: 24,
-        redirectUrl: '',
       });
       
       await refetch();
@@ -102,7 +102,7 @@ export default function CheckoutLinksPage() {
               + New Checkout Link
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-xl">
+          <DialogContent className="w-[50vw] max-w-[50vw]">
             <DialogHeader>
               <DialogTitle className="font-serif text-xl font-light italic">Create checkout link</DialogTitle>
               <p className="text-sm text-muted-foreground">A hosted payment page, generated in seconds</p>
@@ -130,7 +130,7 @@ export default function CheckoutLinksPage() {
                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                     placeholder="45000"
                     required
-                    className="font-mono"
+                    className="font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                 </div>
                 
@@ -144,9 +144,7 @@ export default function CheckoutLinksPage() {
                       <SelectItem value="NGN">NGN</SelectItem>
                       <SelectItem value="KES">KES</SelectItem>
                       <SelectItem value="GHS">GHS</SelectItem>
-                      <SelectItem value="ZAR">ZAR</SelectItem>
                       <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="XOF">XOF</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -183,15 +181,17 @@ export default function CheckoutLinksPage() {
               </div>
               
               <div>
-                <Label htmlFor="redirectUrl">Redirect after payment <span className="text-xs text-muted-foreground">(optional)</span></Label>
+                <Label htmlFor="stellarWallet">Stellar wallet address <span className="text-xs text-muted-foreground">(optional — for display on checkout)</span></Label>
                 <Input
-                  id="redirectUrl"
-                  type="url"
-                  value={formData.redirectUrl}
-                  onChange={(e) => setFormData({ ...formData, redirectUrl: e.target.value })}
-                  placeholder="https://yourwebsite.com/success"
+                  id="stellarWallet"
+                  value={formData.stellarWalletAddress}
+                  onChange={(e) => setFormData({ ...formData, stellarWalletAddress: e.target.value })}
+                  placeholder="G..."
+                  className="font-mono text-xs"
                 />
               </div>
+
+
               
               <div className="border-t pt-4">
                 <Label className="mb-2 block">Accept currencies from customers <span className="text-xs text-muted-foreground">— payer's local currency</span></Label>
