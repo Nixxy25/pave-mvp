@@ -13,12 +13,13 @@ export default function ConfirmedPage() {
   useEffect(() => {
     const amount = searchParams.get('amount');
     const currency = searchParams.get('currency');
+    const txId = searchParams.get('txId');
     
     setPaymentDetails({
       amount: amount || '192.40',
       currency: currency || 'GHS',
       timestamp: new Date().toISOString(),
-      reference: `PAV-${Date.now()}`,
+      txId: txId || null,
     });
   }, [searchParams]);
 
@@ -69,10 +70,12 @@ export default function ConfirmedPage() {
 
           {/* Payment Details */}
           <div className="mb-6 space-y-3 border-t pt-4">
-            <div className="flex justify-between text-[14px]">
-              <span className="text-muted-foreground">Reference</span>
-              <span className="font-mono font-medium text-foreground">{paymentDetails.reference}</span>
-            </div>
+            {paymentDetails.txId && (
+              <div className="flex justify-between text-[14px]">
+                <span className="text-muted-foreground">Transaction ID</span>
+                <span className="font-mono text-[12px] font-medium text-foreground break-all text-right max-w-[200px]">{paymentDetails.txId}</span>
+              </div>
+            )}
             <div className="flex justify-between text-[14px]">
               <span className="text-muted-foreground">Date</span>
               <span className="font-medium text-foreground">
