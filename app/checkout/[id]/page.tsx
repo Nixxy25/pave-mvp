@@ -14,12 +14,8 @@ export default function CheckoutPage() {
   const [merchantInfo, setMerchantInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState('mobile_money');
   const [selectedCurrency, setSelectedCurrency] = useState('GHS');
-  
   const [customerName, setCustomerName] = useState('');
-  const [customerEmail, setCustomerEmail] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
 
   useEffect(() => {
     loadCheckoutData();
@@ -33,7 +29,7 @@ export default function CheckoutPage() {
       if (link) {
         setCheckoutData(link);
         
-        const merchant = await getMerchantInfo();
+        const merchant = await getMerchantInfo(checkoutId);
         if (merchant) {
           setMerchantInfo(merchant);
         }
@@ -57,30 +53,27 @@ export default function CheckoutPage() {
 
   const handlePayment = async () => {
     if (!checkoutData) return;
-    
-    if (!customerName.trim() || !customerEmail.trim()) {
-      alert('Please enter your name and email to continue');
+    if (!customerName.trim()) {
+      alert('Please enter your name to continue');
       return;
     }
-    
     setProcessing(true);
     
     const exchangeAmount = checkoutData.equivalents[selectedCurrency] || checkoutData.amount;
     
     setTimeout(async () => {
       try {
-        await completeCheckoutPayment({
+        const result = await completeCheckoutPayment({
           checkoutLinkId: checkoutData.id,
-          customerName,
-          customerEmail,
+          customerName: customerName.trim(),
           amount: exchangeAmount,
           currency: selectedCurrency,
           usdcAmount: checkoutData.equivalents['USD'] || checkoutData.amount,
           description: checkoutData.description,
-          paymentMethod: selectedMethod as 'mobile_money' | 'card',
+          paymentMethod: 'card',
         });
         
-        window.location.href = `/confirmed/${params.id}?amount=${exchangeAmount}&currency=${selectedCurrency}`;
+        window.location.href = `/confirmed/${params.id}?amount=${exchangeAmount}&currency=${selectedCurrency}&txId=${result.paymentId}`;
       } catch (error) {
         alert('Payment failed. Please try again.');
         setProcessing(false);
@@ -143,7 +136,7 @@ export default function CheckoutPage() {
               <div>
                 <div className="text-[15px] font-medium text-foreground">{merchantInfo?.name || 'Business'}</div>
                 <div className="text-[12.5px] text-muted-foreground">
-                  {merchantInfo?.country || 'Nigeria'} · {merchantInfo?.verified && 'Verified merchant'}
+                  {merchantInfo?.personName || 'Verified merchant'}
                 </div>
               </div>
             </div>
@@ -165,97 +158,27 @@ export default function CheckoutPage() {
 
           {/* Body */}
           <div className="p-6">
-            <div className="mb-4 space-y-3">
-              <div>
-                <label className="mb-1.5 block text-[13px] font-medium text-foreground">Your name</label>
-                <input
-                  type="text"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  placeholder="John Doe"
-                  required
-                  className="h-11 w-full rounded-lg border border-gray-300 px-3.5 text-[14px] outline-none transition-all focus:border-[var(--pave-orange)] focus:ring-2 focus:ring-[var(--pave-orange-light)]"
-                />
-              </div>
-              <div>
-                <label className="mb-1.5 block text-[13px] font-medium text-foreground">Email address</label>
-                <input
-                  type="email"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  placeholder="john@example.com"
-                  required
-                  className="h-11 w-full rounded-lg border border-gray-300 px-3.5 text-[14px] outline-none transition-all focus:border-[var(--pave-orange)] focus:ring-2 focus:ring-[var(--pave-orange-light)]"
-                />
-              </div>
+            {/* Customer name */}
+            <div className="mb-5">
+              <label className="mb-1.5 block text-[13px] font-medium text-foreground">Your name</label>
+              <input
+                type="text"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+                placeholder="John Doe"
+                className="h-11 w-full rounded-lg border border-gray-300 px-3.5 text-[14px] outline-none transition-all focus:border-[var(--pave-orange)] focus:ring-2 focus:ring-[var(--pave-orange)]/20"
+              />
             </div>
-            
-            <div className="mb-3 text-[13px] font-medium text-muted-foreground">Pay with</div>
-            
-            {/* Payment Methods */}
-            <div className="mb-5 space-y-2">
-              <div
-                onClick={() => setSelectedMethod('mobile_money')}
-                className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-all ${
-                  selectedMethod === 'mobile_money'
-                    ? 'border-[var(--pave-orange)] bg-[var(--pave-orange-light)]'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className={`h-5 w-5 flex-shrink-0 rounded-full border-2 ${
-                  selectedMethod === 'mobile_money'
-                    ? 'border-[var(--pave-orange)] bg-card'
-                    : 'border-gray-300'
-                }`}>
-                  {selectedMethod === 'mobile_money' && (
-                    <div className="h-full w-full scale-[.6] rounded-full bg-[var(--pave-orange)]" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="text-[14px] font-medium text-foreground">Mobile Money</div>
-                  <div className="text-[12px] text-muted-foreground">MTN, Airtel, Vodafone, Telecel</div>
-                </div>
-                <Badge className="bg-muted text-foreground">{selectedCurrency}</Badge>
+            {/* Payment Method — Card only */}
+            <div className="mb-5 flex items-center gap-3 rounded-lg border-2 border-[var(--pave-orange)] bg-[var(--pave-orange-light)] p-4">
+              <div className="h-5 w-5 flex-shrink-0 rounded-full border-2 border-[var(--pave-orange)] bg-card">
+                <div className="h-full w-full scale-[.6] rounded-full bg-[var(--pave-orange)]" />
               </div>
-
-              <div
-                onClick={() => setSelectedMethod('card')}
-                className={`flex cursor-pointer items-center gap-3 rounded-lg border-2 p-4 transition-all ${
-                  selectedMethod === 'card'
-                    ? 'border-[var(--pave-orange)] bg-[var(--pave-orange-light)]'
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                <div className={`h-5 w-5 flex-shrink-0 rounded-full border-2 ${
-                  selectedMethod === 'card'
-                    ? 'border-[var(--pave-orange)] bg-card'
-                    : 'border-gray-300'
-                }`}>
-                  {selectedMethod === 'card' && (
-                    <div className="h-full w-full scale-[.6] rounded-full bg-[var(--pave-orange)]" />
-                  )}
-                </div>
-                <div className="flex-1">
-                  <div className="text-[14px] font-medium text-foreground">Debit / Credit Card</div>
-                  <div className="text-[12px] text-muted-foreground">Visa, Mastercard, Verve</div>
-                </div>
-                <Badge className="bg-muted text-foreground">Any</Badge>
+              <div className="flex-1">
+                <div className="text-[14px] font-medium text-foreground">Debit / Credit Card</div>
+                <div className="text-[12px] text-muted-foreground">Visa, Mastercard, Verve</div>
               </div>
-
-              <div
-                className="flex items-center gap-3 rounded-lg border-2 border-border bg-muted p-4 opacity-60 cursor-not-allowed"
-              >
-                <div className="h-5 w-5 flex-shrink-0 rounded-full border-2 border-border"></div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <div className="text-[14px] font-medium text-muted-foreground">Stellar Wallet</div>
-                    <Badge className="border-border bg-muted text-muted-foreground text-[10px]">
-                      Coming Soon
-                    </Badge>
-                  </div>
-                  <div className="text-[12px] text-muted-foreground">Requires wallet connection - In development</div>
-                </div>
-              </div>
+              <Badge className="bg-muted text-foreground">Any</Badge>
             </div>
 
             {/* Currency Selector */}
@@ -281,7 +204,7 @@ export default function CheckoutPage() {
           <div className="border-t p-6 pt-5">
             <Button
               onClick={handlePayment}
-              disabled={processing || !customerName.trim() || !customerEmail.trim()}
+              disabled={processing || !customerName.trim()}
               className="h-12 w-full bg-[var(--pave-orange)] text-[15px] font-medium hover:bg-[var(--pave-orange-hover)] disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {processing ? 'Processing...' : `Pay ${selectedCurrency} ${exchangeAmount.toLocaleString()}`}
