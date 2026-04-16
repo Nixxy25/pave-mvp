@@ -1,13 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { Bell, Menu } from 'lucide-react';
-import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface TopbarProps {
   onNotificationClick?: () => void;
@@ -16,19 +15,7 @@ interface TopbarProps {
 }
 
 export function Topbar({ onNotificationClick, hasUnreadNotifications = false, onMenuClick }: TopbarProps) {
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const { getUserProfile } = await import('@/lib/api');
-        const userData = await getUserProfile();
-        setUser(userData);
-      } catch (error) {
-      }
-    };
-    loadUser();
-  }, []);
+  const { user } = useAuth();
 
   const getInitials = (name: string) => {
     return name
@@ -85,7 +72,7 @@ export function Topbar({ onNotificationClick, hasUnreadNotifications = false, on
         <Link href="/account">
           <Avatar className="h-8 w-8 cursor-pointer bg-gradient-to-br from-[var(--pave-orange)] to-[#ff8a00] ring-2 ring-white ring-offset-2 ring-offset-[var(--border)]">
             <AvatarFallback className="bg-transparent text-[11.5px] font-medium text-white">
-              {user ? getInitials(user.name) : '...'}
+              {user ? getInitials(user.fullName) : '?'}
             </AvatarFallback>
           </Avatar>
         </Link>
