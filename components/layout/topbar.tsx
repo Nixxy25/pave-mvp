@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { Bell } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -12,9 +12,10 @@ import { ThemeToggle } from '@/components/theme-toggle';
 interface TopbarProps {
   onNotificationClick?: () => void;
   hasUnreadNotifications?: boolean;
+  onMenuClick?: () => void;
 }
 
-export function Topbar({ onNotificationClick, hasUnreadNotifications = false }: TopbarProps) {
+export function Topbar({ onNotificationClick, hasUnreadNotifications = false, onMenuClick }: TopbarProps) {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -40,20 +41,29 @@ export function Topbar({ onNotificationClick, hasUnreadNotifications = false }: 
   };
 
   return (
-    <nav className="sticky top-0 z-50 flex h-[58px] items-center justify-between border-b bg-card px-7">
-      <Link href="/dashboard" className="flex items-center gap-2.5">
-        <div className="flex h-7 w-7 items-center justify-center rounded-lg">
-          <div className="h-full w-full" />
-        </div>
-        <span className="font-serif text-[21px] font-medium tracking-tight text-foreground">
-          Pave
-        </span>
-      </Link>
+    <nav className="sticky top-0 z-50 flex h-[58px] items-center justify-between border-b bg-card px-4 md:px-7">
+      <div className="flex items-center gap-1">
+        <Link href="/dashboard">
+          <span className="font-serif text-[21px] font-medium tracking-tight text-foreground">
+            Pave
+          </span>
+        </Link>
+        
+        {/* Mobile menu button */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-9 w-9 md:hidden "
+          onClick={onMenuClick}
+        >
+          <Menu className="h-5 w-5 text-foreground" />
+        </Button>
+      </div>
 
-      <div className="flex items-center gap-2.5">
+      <div className="flex items-center gap-1.5 sm:gap-2.5">
         <Badge 
           variant="outline" 
-          className="border-[#c7d2fe] bg-[#eef2ff] font-mono text-[11.5px] text-[#3b5bdb]"
+          className="hidden border-[#c7d2fe] bg-[#eef2ff] font-mono text-[11.5px] text-[#3b5bdb] sm:flex"
         >
           <div className="mr-1.5 h-1.5 w-1.5 animate-blink rounded-full bg-[#3b5bdb]" />
           Testnet

@@ -63,12 +63,12 @@ export default function PaymentsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1200px] px-7 py-8 pb-20">
+    <div className="mx-auto max-w-[1200px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
       <div className="mb-6 animate-fadeup">
         <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
           Payments
         </div>
-        <h1 className="font-serif text-[27px] font-light italic leading-tight tracking-tight text-foreground">
+        <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
           Payment History
         </h1>
         <p className="mt-1 text-[13.5px] text-muted-foreground">
@@ -77,15 +77,15 @@ export default function PaymentsPage() {
       </div>
 
       {/* Filters */}
-      <div className="mb-5 flex gap-3 animate-fadeup" style={{ animationDelay: '0.07s' }}>
+      <div className="mb-5 flex flex-col gap-3 animate-fadeup sm:flex-row" style={{ animationDelay: '0.07s' }}>
         <Input
           placeholder="Search by payer name or payment ID..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="max-w-md"
+          className="w-full sm:max-w-md"
         />
         <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Filter by status" />
           </SelectTrigger>
           <SelectContent>
@@ -95,7 +95,7 @@ export default function PaymentsPage() {
             <SelectItem value="failed">Failed</SelectItem>
           </SelectContent>
         </Select>
-        <Button onClick={loadPayments} variant="outline">
+        <Button onClick={loadPayments} variant="outline" className="w-full sm:w-auto">
           Apply Filters
         </Button>
       </div>

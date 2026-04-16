@@ -121,7 +121,7 @@ export default function CheckoutPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Topbar */}
-      <nav className="sticky top-0 z-50 flex h-[58px] items-center justify-between border-b bg-card px-7">
+      <nav className="sticky top-0 z-50 flex h-[58px] items-center justify-between border-b bg-card px-4 sm:px-7">
         <div className="flex items-center gap-2.5">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg">
             <div className="h-full w-full" />
@@ -130,7 +130,7 @@ export default function CheckoutPage() {
             Pave Checkout
           </span>
         </div>
-        <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+        <div className="hidden items-center gap-2 text-[12px] text-muted-foreground sm:flex">
           <svg width="12" height="13" viewBox="0 0 12 13" fill="none">
             <path d="M2 6V4a4 4 0 018 0v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
             <rect x="1" y="5.5" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
@@ -140,7 +140,7 @@ export default function CheckoutPage() {
       </nav>
 
       {/* Main Content */}
-      <div className="flex justify-center px-4 py-12">
+      <div className="flex justify-center px-4 py-8 sm:py-12">
         <div className="w-full max-w-[520px] animate-fadeup rounded-[20px] border bg-card shadow-lg">
           {/* Header */}
           <div className="border-b p-6 pb-5">

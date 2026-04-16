@@ -32,12 +32,12 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[900px] px-7 py-8 pb-20">
+    <div className="mx-auto max-w-[900px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
       <div className="mb-6 animate-fadeup">
         <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
           Settings
         </div>
-        <h1 className="font-serif text-[27px] font-light italic leading-tight tracking-tight text-foreground">
+        <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
           Account Settings
         </h1>
         <p className="mt-1 text-[13.5px] text-muted-foreground">
@@ -47,7 +47,7 @@ export default function SettingsPage() {
 
       <div className="space-y-6">
         {/* Webhooks */}
-        <div className="rounded-[14px] border bg-card p-6 shadow-sm animate-fadeup" style={{ animationDelay: '0.07s' }}>
+        <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.07s' }}>
           <h2 className="mb-4 font-serif text-lg font-light italic text-foreground\">
             Webhook Configuration
           </h2>
@@ -71,14 +71,14 @@ export default function SettingsPage() {
         </div>
 
         {/* Notifications */}
-        <div className="rounded-[14px] border bg-card p-6 shadow-sm animate-fadeup" style={{ animationDelay: '0.14s' }}>
+        <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.14s' }}>
           <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
             Notifications
           </h2>
           
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
                 <div className="font-medium text-foreground">Email Notifications</div>
                 <div className="text-sm text-muted-foreground">Receive email alerts for important events</div>
               </div>
@@ -88,8 +88,8 @@ export default function SettingsPage() {
               />
             </div>
             
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
                 <div className="font-medium text-foreground">Stellar Explorer Links</div>
                 <div className="text-sm text-muted-foreground">Show blockchain explorer links in the dashboard</div>
               </div>
@@ -102,14 +102,14 @@ export default function SettingsPage() {
         </div>
 
         {/* Settlement */}
-        <div className="rounded-[14px] border bg-card p-6 shadow-sm animate-fadeup" style={{ animationDelay: '0.21s' }}>
+        <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.21s' }}>
           <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
             Settlement Preferences
           </h2>
           
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
                 <div className="font-medium text-foreground">Auto-convert to NGN</div>
                 <div className="text-sm text-muted-foreground">Automatically convert USDC to NGN on receipt</div>
               </div>
@@ -126,27 +126,28 @@ export default function SettingsPage() {
           <Button
             onClick={handleSave}
             disabled={saving}
-            className="bg-[var(--pave-orange)] hover:bg-[var(--pave-orange-hover)]"
+            className="w-full bg-[var(--pave-orange)] hover:bg-[var(--pave-orange-hover)] sm:w-auto"
           >
             {saving ? 'Saving...' : 'Save Settings'}
           </Button>
         </div>
 
         {/* Sign Out */}
-        <div className="rounded-[14px] border bg-card p-6 shadow-sm animate-fadeup" style={{ animationDelay: '0.28s' }}>
+        <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.28s' }}>
           <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
             Sign Out
           </h2>
           
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex-1">
                 <div className="font-medium text-foreground">Sign Out</div>
                 <div className="text-sm text-muted-foreground">Sign out of your account</div>
               </div>
               <Button
                 onClick={handleLogout}
                 variant="outline"
+                className="w-full sm:w-auto"
               >
                 Sign Out
               </Button>

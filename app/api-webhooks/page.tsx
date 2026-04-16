@@ -41,12 +41,12 @@ export default function APIWebhooksPage() {
 }`;
 
   return (
-    <div className="mx-auto max-w-[1200px] px-7 py-8 pb-20">
+    <div className="mx-auto max-w-[1200px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
       <div className="mb-6 animate-fadeup">
         <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
           API & Webhooks
         </div>
-        <h1 className="font-serif text-[27px] font-light italic leading-tight tracking-tight text-foreground">
+        <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
           Developer Documentation
         </h1>
         <p className="mt-1 text-[13.5px] text-muted-foreground">
@@ -56,7 +56,7 @@ export default function APIWebhooksPage() {
 
       <div className="grid gap-6">
         {/* Create Payment */}
-        <div className="rounded-[14px] border bg-card p-6 shadow-sm animate-fadeup" style={{ animationDelay: '0.07s' }}>
+        <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.07s' }}>
           <h2 className="mb-2 font-serif text-lg font-light italic text-foreground">
             Create a Payment
           </h2>
@@ -65,12 +65,12 @@ export default function APIWebhooksPage() {
           </p>
           
           <div className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">Request</div>
-          <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 text-xs text-gray-100">
+          <pre className="overflow-x-auto rounded-lg bg-gray-900 p-3 text-xs text-gray-100 sm:p-4">
             <code>{curlExample}</code>
           </pre>
           
           <div className="mb-3 mt-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">Response</div>
-          <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 text-xs text-gray-100">
+          <pre className="overflow-x-auto rounded-lg bg-gray-900 p-3 text-xs text-gray-100 sm:p-4">
             <code>{responseExample}</code>
           </pre>
         </div>
@@ -103,34 +103,6 @@ export default function APIWebhooksPage() {
           <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 text-xs text-gray-100">
             <code>{webhookExample}</code>
           </pre>
-        </div>
-
-        {/* SDK Links */}
-        <div className="rounded-[14px] border bg-card p-6 shadow-sm animate-fadeup" style={{ animationDelay: '0.21s' }}>
-          <h2 className="mb-2 font-serif text-lg font-light italic text-foreground\">
-            Official SDKs
-          </h2>
-          <p className="mb-4 text-sm text-muted-foreground">
-            Use our official libraries for faster integration
-          </p>
-          
-          <div className="grid grid-cols-3 gap-3">
-            <div className="rounded-lg border p-4 text-center">
-              <div className="mb-2 text-2xl">🟦</div>
-              <div className="font-medium text-foreground">Node.js</div>
-              <div className="mt-1 text-xs text-muted-foreground">npm i @pave/node</div>
-            </div>
-            <div className="rounded-lg border p-4 text-center">
-              <div className="mb-2 text-2xl">🐍</div>
-              <div className="font-medium text-foreground">Python</div>
-              <div className="mt-1 text-xs text-muted-foreground">pip install pave</div>
-            </div>
-            <div className="rounded-lg border p-4 text-center">
-              <div className="mb-2 text-2xl">🟩</div>
-              <div className="font-medium text-foreground">Go</div>
-              <div className="mt-1 text-xs text-muted-foreground">go get pave.finance/sdk</div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

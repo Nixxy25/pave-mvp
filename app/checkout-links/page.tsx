@@ -84,13 +84,13 @@ export default function CheckoutLinksPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1200px] px-7 py-8 pb-20">
-      <div className="mb-6 animate-fadeup flex items-end justify-between">
+    <div className="mx-auto max-w-[1200px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
+      <div className="mb-6 animate-fadeup flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
             Checkout Links
           </div>
-          <h1 className="font-serif text-[27px] font-light italic leading-tight tracking-tight text-foreground">
+          <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
             Payment Links
           </h1>
           <p className="mt-1 text-[13.5px] text-muted-foreground">
@@ -100,7 +100,7 @@ export default function CheckoutLinksPage() {
         
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
-            <Button className="bg-[var(--pave-orange)] hover:bg-[var(--pave-orange-hover)]">
+            <Button className="w-full bg-[var(--pave-orange)] hover:bg-[var(--pave-orange-hover)] sm:w-auto">
               + New Checkout Link
             </Button>
           </DialogTrigger>

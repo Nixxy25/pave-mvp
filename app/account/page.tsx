@@ -46,12 +46,12 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[900px] px-7 py-8 pb-20">
+    <div className="mx-auto max-w-[900px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
       <div className="mb-6 animate-fadeup">
         <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
           Account
         </div>
-        <h1 className="font-serif text-[27px] font-light italic leading-tight tracking-tight text-foreground">
+        <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
           Your Profile
         </h1>
         <p className="mt-1 text-[13.5px] text-muted-foreground">
@@ -61,13 +61,13 @@ export default function AccountPage() {
 
       <div className="space-y-6">
         {/* Profile Card */}
-        <div className="rounded-[14px] border bg-card p-6 shadow-sm animate-fadeup" style={{ animationDelay: '0.07s' }}>
+        <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.07s' }}>
           <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
             Profile Information
           </h2>
           
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div>
                 <div className="mb-1 text-xs font-medium text-foreground">Full Name</div>
                 <div className="text-sm text-foreground">{user.name}</div>
@@ -96,7 +96,7 @@ export default function AccountPage() {
         </div>
 
         {/* API Keys */}
-        <div className="rounded-[14px] border bg-card p-6 shadow-sm animate-fadeup" style={{ animationDelay: '0.14s' }}>
+        <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.14s' }}>
           <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
             API Credentials
           </h2>
@@ -112,7 +112,7 @@ export default function AccountPage() {
                   Copy
                 </button>
               </div>
-              <div className="rounded-lg bg-muted p-3 font-mono text-sm text-foreground">
+              <div className="overflow-x-auto rounded-lg bg-muted p-3 font-mono text-xs text-foreground sm:text-sm">
                 {user.apiKey}
               </div>
             </div>
@@ -127,23 +127,23 @@ export default function AccountPage() {
                   Copy
                 </button>
               </div>
-              <div className="rounded-lg bg-muted p-3 font-mono text-sm text-foreground">
+              <div className="overflow-x-auto rounded-lg bg-muted p-3 font-mono text-xs text-foreground sm:text-sm">
                 {user.secretKey}
               </div>
               <div className="mt-1 text-xs text-foreground">
-                ⚠️ Keep this secret! Never share or commit to version control
+                Keep this secret! Never share or commit to version control
               </div>
             </div>
           </div>
         </div>
 
         {/* Account Stats */}
-        <div className="rounded-[14px] border bg-card p-6 shadow-sm animate-fadeup" style={{ animationDelay: '0.21s' }}>
+        <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.21s' }}>
           <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
             Account Statistics
           </h2>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="text-center">
               <div className="font-serif text-2xl font-light italic text-foreground">
                 {stats?.paymentCount || 0}

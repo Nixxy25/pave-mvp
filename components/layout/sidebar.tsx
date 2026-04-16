@@ -13,6 +13,7 @@ import {
   FileText,
   User,
   Settings,
+  X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -21,6 +22,11 @@ interface NavItem {
   href: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
+}
+
+interface SidebarProps {
+  isMobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 const navSections = [
@@ -53,7 +59,7 @@ const bottomItems = [
   { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
-export function Sidebar() {
+export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const [user, setUser] = useState<any>(null);
 
@@ -69,6 +75,11 @@ export function Sidebar() {
     loadUser();
   }, []);
 
+  // Close sidebar on route change (mobile)
+  useEffect(() => {
+    onMobileClose?.();
+  }, [pathname]);
+
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -78,8 +89,8 @@ export function Sidebar() {
       .slice(0, 2);
   };
 
-  return (
-    <aside className="flex w-[216px] flex-shrink-0 flex-col gap-0.5 overflow-y-auto border-r bg-card p-2.5">
+  const sidebarContent = (
+    <>
       {navSections.map((section) => (
         <div key={section.title}>
           <div className="px-2.5 pb-1 pt-2.5">
@@ -137,7 +148,7 @@ export function Sidebar() {
       })}
 
       <div className="mt-auto">
-        <Link href="/account" className="flex cursor-pointer items-center gap-2.5 rounded-md p-2.5 transition-all hover:bg-gray-50">
+        <Link href="/account" className="flex cursor-pointer items-center gap-2.5 rounded-md p-2.5 transition-all hover:bg-muted">
           <Avatar className="h-7 w-7 flex-shrink-0 bg-gradient-to-br from-[var(--pave-orange)] to-[#ff8a00]">
             <AvatarFallback className="bg-transparent text-[11px] font-medium text-white">
               {user ? getInitials(user.name) : '...'}
@@ -153,6 +164,41 @@ export function Sidebar() {
           </div>
         </Link>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Desktop Sidebar */}
+      <aside className="hidden w-[216px] flex-shrink-0 flex-col gap-0.5 overflow-y-auto border-r bg-card p-2.5 md:flex">
+        {sidebarContent}
+      </aside>
+
+      {/* Mobile Sidebar Overlay */}
+      {isMobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={onMobileClose}
+          />
+          
+          {/* Sidebar */}
+          <aside className="absolute left-0 top-0 flex h-full w-[280px] flex-col gap-0.5 overflow-y-auto bg-card p-2.5 shadow-xl animate-in slide-in-from-left duration-300">
+            {/* Close button */}
+            <div className="mb-2 flex items-center justify-between px-2.5 pt-1">
+              <span className="font-serif text-[18px] font-medium text-foreground">Menu</span>
+              <button 
+                onClick={onMobileClose}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+    </>
   );
 }

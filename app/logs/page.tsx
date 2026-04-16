@@ -55,12 +55,12 @@ export default function LogsPage() {
   };
 
   return (
-    <div className="mx-auto max-w-[1400px] px-7 py-8 pb-20">
+    <div className="mx-auto max-w-[1400px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
       <div className="mb-6 animate-fadeup">
         <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
           API Logs
         </div>
-        <h1 className="font-serif text-[27px] font-light italic leading-tight tracking-tight text-foreground">
+        <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
           Request Logs
         </h1>
         <p className="mt-1 text-[13.5px] text-muted-foreground">

@@ -13,6 +13,7 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -34,6 +35,11 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     checkAuth();
   }, [router]);
 
+  // Close mobile sidebar when route changes
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, []);
+
   if (isAuthenticated === null) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -50,10 +56,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <Topbar 
         onNotificationClick={() => setIsNotificationOpen(!isNotificationOpen)}
         hasUnreadNotifications={true}
+        onMenuClick={() => setIsMobileSidebarOpen(!isMobileSidebarOpen)}
       />
       
       <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
+        <Sidebar 
+          isMobileOpen={isMobileSidebarOpen}
+          onMobileClose={() => setIsMobileSidebarOpen(false)}
+        />
         
         <main className="flex-1 overflow-y-auto bg-background">
           {children}

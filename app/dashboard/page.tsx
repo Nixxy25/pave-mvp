@@ -117,12 +117,12 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[980px] px-7 py-8 pb-20">
+    <div className="mx-auto max-w-[980px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
       <div className="mb-6.5 animate-fadeup">
         <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
           Dashboard
         </div>
-        <h1 className="font-serif text-[27px] font-light italic leading-tight tracking-tight text-foreground">
+        <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
           Good morning, <strong className="font-medium not-italic">{user?.name.split(' ')[0] || 'there'}</strong> 👋
         </h1>
         <p className="mt-1 text-[13.5px] text-muted-foreground">
@@ -140,7 +140,7 @@ export default function DashboardPage() {
         <div className="text-[13px] font-medium text-[var(--success)]">Pave testnet</div>
       </div>
 
-      <div className="grid grid-cols-4 gap-3.5 mb-6.5 animate-fadeup" style={{ animationDelay: '0.14s' }}>
+      <div className="grid grid-cols-1 gap-3.5 mb-6.5 animate-fadeup sm:grid-cols-2 lg:grid-cols-4" style={{ animationDelay: '0.14s' }}>
         {(() => {
           const { usdcChange, ngnChange } = calculateTodayChange();
           const todayActivityCount = recentActivities.filter(a => {
