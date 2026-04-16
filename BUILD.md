@@ -1,102 +1,565 @@
-# Pave MVP — Next.js Build Guide
+# Pave MVP — Complete Project Documentation
 
-## Project Overview
+## 🎯 Project Overview
 
-**Pave** is a global payment infrastructure platform built on the Stellar blockchain. It enables merchants to accept payments in 40+ local currencies (GHS, NGN, KES, XOF, etc.) and receive instant settlement in USDC via atomic path payments on Stellar. The platform includes:
+**Pave** is a **payment infrastructure/API platform** (like Stripe Checkout) that other platforms and merchants integrate into their websites/apps. When their customers want to pay, they're redirected to Pave's hosted checkout page.
 
-- **Customer-facing checkout** — Hosted payment pages with real-time currency conversion
-- **Merchant dashboard** — Payment tracking, analytics, and withdrawal management
-- **Developer tools** — REST API, webhooks, and request logs
-- **Stellar integration** — On-chain settlement verification, path payment visualization, and ledger tracking
+### Core Value Proposition (Infrastructure)
+- **For Platforms/Apps**: Integrate Pave's API → get a hosted checkout page for African payments
+- **For End Customers**: Pay using mobile money, cards (via Pave's checkout UI)
+- **For Merchants**: Receive settlements in USDC (via Stellar blockchain infrastructure)
 
-The application has 14 distinct screens covering authentication, payments, settlement, withdrawals, API documentation, and account management.
+### How It Works
+```
+E-commerce website → User clicks "Pay with Pave" → 
+Redirects to Pave hosted checkout → Customer pays → 
+Redirects back to merchant site → Merchant receives USDC
+```
+
+**Think of it as**: Stripe Checkout for African payments + Stellar settlement infrastructure
 
 ---
 
-## Recommended Folder Structure
+## 🏗️ Current Project Structure
+
+### Folder Organization (Latest)
 
 ```
 pave-mvp/
 ├── app/
-│   ├── (auth)/
-│   │   └── login/                 # Authentication pages (S1)
-│   ├── (dashboard)/
-│   │   ├── layout.tsx             # Dashboard layout with sidebar + topbar
-│   │   ├── page.tsx               # Dashboard home (S2)
-│   │   ├── payments/              # Payment list and detail views (S3)
-│   │   ├── checkout-links/        # Create and manage checkout links (S4, S5)
-│   │   ├── settlement/            # Stellar settlement visualization (S8)
-│   │   ├── withdrawals/           # Withdrawal form and history (S10)
-│   │   ├── api-webhooks/          # API documentation (S11)
-│   │   ├── logs/                  # API request logs (S12)
-│   │   ├── account/               # User profile (S13)
-│   │   └── settings/              # Account settings (S14)
+│   ├── (auth)/                    # Authentication routes
+│   │   ├── login/                 # Login page
+│   │   └── signup/                # Signup page
+│   ├── dashboard/                 # Main merchant dashboard
+│   │   ├── layout.tsx            # Dashboard wrapper with sidebar/topbar
+│   │   └── page.tsx              # Dashboard home - stats & overview
+│   ├── payments/                  # Payment management
+│   ├── checkout-links/            # Create & manage checkout links
+│   ├── settlement/                # Stellar settlement visualization
+│   ├── withdrawals/               # Withdraw USDC to bank account
+│   ├── api-webhooks/              # API documentation
+│   ├── logs/                      # API request logs
+│   ├── account/                   # User profile (CONSOLIDATED)
+│   ├── settings/                  # Account settings
 │   ├── checkout/
-│   │   └── [paymentId]/           # Public checkout page (S6)
-│   ├── processing/
-│   │   └── [paymentId]/           # Payment processing animation (S7)
-│   ├── confirmed/
-│   │   └── [paymentId]/           # Payment confirmation (S9)
-│   └── api/                       # Next.js API routes (if needed for server actions)
+│   │   └── [id]/                  # Public customer checkout page
+│   ├── processing/                # Payment processing animation
+│   ├── confirmed/                 # Payment success page
+│   ├── layout.tsx                 # Root layout with fonts, theme provider
+│   ├── page.tsx                   # Landing page
+│   └── globals.css                # Global styles + dark mode variables
 ├── components/
-│   ├── ui/                        # shadcn/ui components
-│   ├── layout/                    # Topbar, Sidebar, Footer
-│   ├── dashboard/                 # StatCard, PaymentTable, Sparkline
-│   ├── checkout/                  # CheckoutCard, PaymentMethodSelector, CurrencySelector
-│   ├── settlement/                # PathVisualization, ProgressList, StellarDetails
-│   └── common/                    # Reusable components (Avatar, Badge, NotificationPanel)
+│   ├── ui/                        # shadcn/ui primitives + custom components
+│   │   ├── data-table.tsx        # 🆕 Reusable table components
+│   │   ├── badge.tsx
+│   │   ├── button.tsx
+│   │   ├── input.tsx
+│   │   └── ... (14 more UI components)
+│   ├── layout/
+│   │   ├── dashboard-layout.tsx  # Dashboard wrapper
+│   │   ├── sidebar.tsx           # Navigation sidebar
+│   │   ├── topbar.tsx            # Top navigation bar
+│   │   └── notification-panel.tsx # Notification drawer
+│   ├── theme-provider.tsx        # Dark mode context
+│   └── theme-toggle.tsx          # Dark/light mode switcher
 ├── lib/
-│   ├── api.ts                     # ALL API calls — payments, withdrawals, webhooks, etc.
-│   ├── utils.ts                   # Utility functions (formatCurrency, formatDate, etc.)
-│   └── stellar.ts                 # Stellar-specific utilities (TX validation, explorer links)
+│   ├── api.ts                     # ALL API/localStorage logic
+│   ├── constants.ts               # 🆕 SUPPORTED_CURRENCIES + helpers
+│   ├── utils.ts                   # Utility functions (cn, formatting)
+│   └── stellar.ts                 # Stellar-specific utilities
 ├── types/
-│   ├── index.ts                   # Export all types
-│   ├── payment.ts                 # Payment, PaymentStatus, PaymentMethod
-│   ├── user.ts                    # User, Merchant, Account
-│   ├── withdrawal.ts              # Withdrawal, BankAccount
-│   ├── api.ts                     # APILog, WebhookEvent
-│   └── stellar.ts                 # StellarTransaction, PathPayment
-├── data/
-│   ├── payments.json              # Mock payment data
-│   ├── users.json                 # Mock user/payer data
-│   ├── withdrawals.json           # Mock withdrawal history
-│   ├── api-logs.json              # Mock API request logs
-│   └── notifications.json         # Mock notification data
-├── hooks/
-│   ├── use-payments.ts            # Payment data fetching and mutations
-│   ├── use-balance.ts             # Balance and stats
-│   └── use-notifications.ts       # Notification state management
-└── styles/
-    └── globals.css                # Global styles, CSS variables
+│   ├── index.ts                   # Exports all types
+│   ├── payment.ts                 # Payment types
+│   ├── user.ts                    # User/Merchant types
+│   ├── withdrawal.ts              # Withdrawal types
+│   ├── api.ts                     # API/Log types
+│   └── stellar.ts                 # Stellar transaction types
+├── hooks/                         # Custom React hooks
+│   ├── useBalance.ts
+│   ├── usePayments.ts
+│   ├── useWithdrawals.ts
+│   └── useCheckoutLinks.ts
+└── public/                        # Static assets
+
 ```
-
-### Folder Explanations
-
-- **`app/(auth)/`** — Authentication pages using Next.js route groups for layout separation
-- **`app/(dashboard)/`** — Protected merchant dashboard with shared layout (sidebar + topbar)
-- **`app/checkout/[paymentId]/`** — Public-facing checkout pages (no auth required)
-- **`components/ui/`** — All shadcn/ui primitives (button, input, table, etc.)
-- **`components/layout/`** — Topbar, Sidebar, and other layout components
-- **`components/dashboard/`** — Dashboard-specific components (stat cards, charts, tables)
-- **`lib/api.ts`** — Central API layer — ALL backend calls live here
-- **`types/`** — TypeScript interfaces for every data shape
-- **`data/`** — Mock JSON files for development (no inline mock data in components)
-- **`hooks/`** — Custom React hooks for data fetching and state management
 
 ---
 
-## Component Breakdown
+## 🎨 Code Quality & DRY Principles (Latest Refactor)
 
-### Authentication (S1 — Sign In)
+### ✨ New Reusable Components
 
-**Components to create:**
-- `LoginForm` — Maps to the sign-in form with email/password inputs
-- Uses `Input`, `Button`, `Checkbox` from shadcn/ui
+#### 1. **Data Table Components** (`components/ui/data-table.tsx`)
 
-**What it does:** 
-- Handles user authentication
-- Validates email/password
-- Redirects to dashboard on success
+We've eliminated repetitive table code across the entire codebase with reusable components:
+
+```typescript
+// Define columns once
+const PAYMENT_COLUMNS: TableColumn[] = [
+  { key: 'id', label: 'Payment ID' },
+  { key: 'payer', label: 'Payer' },
+  { key: 'amount', label: 'Amount' },
+  { key: 'status', label: 'Status', align: 'right' },
+];
+
+// Use in any table
+<DataTableHeader columns={PAYMENT_COLUMNS} />
+<DataTableLoading colSpan={8} message="Loading..." />
+<DataTableEmpty colSpan={8} message="No data yet" />
+```
+
+**Components Available:**
+- `DataTableHeader` - Consistent header styling with mapping
+- `DataTableCell` - Standard cell with alignment options
+- `DataTableRow` - Row with hover states
+- `DataTableEmpty` - Empty state messages
+- `DataTableLoading` - Loading state messages
+- `DataTable` - Complete table wrapper
+
+**Files Refactored:**
+- ✅ `app/dashboard/page.tsx` - Activity table
+- ✅ `app/payments/page.tsx` - Payments table
+- ✅ `app/withdrawals/page.tsx` - Withdrawals table
+- ✅ `app/logs/page.tsx` - API logs table
+- ✅ `app/checkout-links/page.tsx` - Checkout links table
+
+**Impact:** Eliminated ~200 lines of repetitive `<th>` declarations across 5 files.
+
+---
+
+### 2. **Currency Constants** (`lib/constants.ts`)
+
+Created a single source of truth for supported currencies:
+
+```typescript
+// ✅ NEW: Single source of truth
+export const SUPPORTED_CURRENCIES = ['GHS', 'USD', 'KES', 'XOF', 'NGN'] as const;
+export type SupportedCurrency = typeof SUPPORTED_CURRENCIES[number];
+
+// Helper functions
+export function isSupportedCurrency(code: string): code is SupportedCurrency;
+export function getCurrencyName(code: string): string;
+export function getCurrencySymbol(code: string): string;
+export function getCountryFromCurrency(currency: string): string;
+```
+
+**Before:** Hardcoded arrays scattered across files:
+```typescript
+// ❌ OLD: Hardcoded everywhere
+['GHS', 'USD', 'KES', 'XOF', 'NGN'].includes(curr)
+['GHS', 'USD', 'KES', 'XOF', 'EUR', 'GBP'].map(...)
+```
+
+**After:** Import from constants:
+```typescript
+// ✅ NEW: Import once, use everywhere
+import { SUPPORTED_CURRENCIES, isSupportedCurrency } from '@/lib/constants';
+
+acceptedCurrencies.filter(isSupportedCurrency)
+SUPPORTED_CURRENCIES.map((curr) => ...)
+```
+
+**Files Updated:**
+- ✅ `lib/constants.ts` - Added SUPPORTED_CURRENCIES constant
+- ✅ `app/checkout/[id]/page.tsx` - Uses isSupportedCurrency()
+- ✅ `app/checkout-links/page.tsx` - Uses SUPPORTED_CURRENCIES
+
+---
+
+### 3. **Consolidated Account Page**
+
+**Removed:** Duplicate `/app/dashboard/account/page.tsx`  
+**Kept:** `/app/account/page.tsx` (single account page)
+
+Both pages had identical UI but different data fetching. Now there's one source of truth:
+- Displays user profile information
+- Shows API keys
+- Account statistics
+- Uses proper semantic tokens for dark mode
+
+---
+
+## 🌙 Complete Dark Mode Implementation
+
+### Dark Mode Architecture
+
+**Theme System:**
+```css
+/* globals.css */
+.dark {
+  --background: oklch(0.12 0 0);        /* Dark background */
+  --foreground: oklch(0.98 0 0);        /* White text */
+  --card: oklch(0.17 0 0);              /* Card backgrounds */
+  --muted: oklch(0.25 0 0);             /* Muted backgrounds */
+  --muted-foreground: oklch(0.75 0 0);  /* Secondary text */
+  --border: oklch(0.35 0 0);            /* Visible borders */
+}
+```
+
+**Semantic Tokens (Use Everywhere):**
+- `text-foreground` - Primary text (white in dark, black in light)
+- `text-muted-foreground` - Secondary text (gray that adapts)
+- `bg-card` - Card backgrounds
+- `bg-muted` - Muted/subtle backgrounds
+- `border` - Border colors
+
+**Dark Mode Variants:**
+```tsx
+// Status badges with dark mode
+className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+
+// Danger sections
+className="border-red-200 bg-red-50/50 dark:border-red-900/30 dark:bg-red-950/20"
+```
+
+### Files With Complete Dark Mode Support
+
+**✅ All Pages:**
+- Dashboard, Payments, Withdrawals, Checkout Links, Logs
+- Settings, Account, API & Webhooks, Settlement
+- Login, Signup, Checkout, Processing, Confirmed
+
+**✅ All Components:**
+- Sidebar, Topbar, Notification Panel
+- All UI components (Button, Input, Badge, etc.)
+- Data tables with hover states
+
+**Key Changes:**
+1. **Replaced all `text-gray-{400|500|600|700|900}`** → semantic tokens
+2. **Added `dark:` variants** to status badges, alerts, special sections
+3. **Table headers use `bg-muted/50`** with `text-muted-foreground`
+4. **Input component has `text-foreground`** for proper text visibility
+5. **Sign Out section is now neutral** (no red danger zone styling)
+
+---
+
+## 💾 Data Storage: localStorage (MVP)
+
+### Current Implementation
+
+All data stored in browser's `localStorage` with per-user namespacing:
+
+```javascript
+// Global storage
+pave_users                     // Array of all users
+pave_current_user              // Currently logged-in user ID
+
+// Per-user storage
+pave_payments_{userId}         // User's payments
+pave_withdrawals_{userId}      // User's withdrawals
+pave_checkout_links_{userId}   // User's checkout links
+pave_balance_{userId}          // User's balance
+pave_api_logs_{userId}         // User's API logs
+pave_notifications_{userId}    // User's notifications
+```
+
+### Why localStorage?
+- ✅ No backend needed for MVP
+- ✅ Fast development iteration
+- ✅ Zero infrastructure costs
+- ❌ Not production-ready
+- ❌ Data lost on browser clear
+- ❌ No cross-device sync
+
+### Migration Path
+
+**All data operations go through `lib/api.ts`**. To migrate to a real backend:
+
+1. Keep the same function signatures in `lib/api.ts`
+2. Replace localStorage calls with API fetch calls
+3. Components don't need to change - they just call `getPayments()`
+
+```typescript
+// Current (localStorage)
+export async function getPayments(): Promise<Payment[]> {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/payments`, {
+    headers: { 'Authorization': `Bearer ${getToken()}` }
+  });
+  return response.json();
+}
+```
+
+---
+
+## 🔄 Complete Payment Flow
+
+### Step 1: Merchant Creates Checkout Link
+**Where**: `/checkout-links`  
+**Action**: Merchant creates a payment link
+
+```typescript
+createCheckoutLink({
+  amount: 45000,
+  currency: 'NGN',
+  description: 'PRO PLAN — NOVEMBER',
+  acceptedCurrencies: ['GHS', 'USD', 'KES', 'XOF', 'NGN']
+})
+```
+
+Pave generates URL: `http://localhost:3001/checkout/pay_abc123`
+
+### Step 2: Customer Visits Checkout
+**Route**: `/checkout/[id]`  
+**What customer sees**:
+- Merchant business info
+- Payment amount with live exchange rate
+- Payment methods (mobile money, card)
+- Currency selector (using SUPPORTED_CURRENCIES)
+
+### Step 3: Payment Processing
+**MVP**: Simulated 2-second delay → instant completion  
+**Production**: Flutterwave/Paystack → Stellar settlement
+
+### Step 4: Payment Success
+**Route**: `/confirmed/[id]`  
+Receipt with payment details and Stellar transaction hash
+
+### Step 5: Merchant Dashboard
+**Route**: `/payments`  
+Merchant sees payment in their dashboard, balance updated
+
+---
+
+## 🌟 Stellar Blockchain Integration
+
+### What is Stellar?
+Fast (5s finality), cheap ($0.00001/tx) blockchain for payments.
+
+### Key Concepts
+
+**Path Payments:**
+```
+Customer NGN → Stellar DEX → XLM → USDC → Merchant
+```
+
+**Atomic Transactions:** Either entire payment succeeds or gets rolled back (no partial failures)
+
+**Settlement:** Merchants receive USDC (stablecoin), avoiding currency volatility
+
+**Transparency:** Every transaction visible on [Stellar Expert](https://stellar.expert/explorer/testnet)
+
+---
+
+## 🔐 Authentication System
+
+### Current Flow (localStorage)
+5. Initialize empty arrays for payments, withdrawals, etc.
+6. Set `pave_current_user` = user.id
+7. Redirect to `/dashboard`
+
+### Login (`/login`)
+1. User enters email + password
+2. Fetch `pave_users` array from localStorage
+3. Find matching user:
+   ```typescript
+   const user = users.find(u => 
+     u.email === email && u.password === password
+   );
+   ```
+4. If found: set `pave_current_user`, redirect to `/dashboard`
+5. If not: show error "Invalid email or password"
+
+### Logout
+```typescript
+localStorage.removeItem('pave_current_user');
+router.push('/login');
+```
+
+---
+
+## 🎨 UI Components & Styling
+
+### Theme System
+- **Light mode** (default): White background, gray text
+- **Dark mode**: Dark gray background, light text
+- **Theme provider**: `/components/theme-provider.tsx`
+- **Theme toggle**: Sun/Moon icon in topbar
+- **Persistence**: Saves preference in `localStorage: 'pave-theme'`
+
+### Color Palette
+```css
+--pave-orange: #f25c00        /* Primary brand color */
+--stellar: #3b5bdb            /* Stellar blue */
+--success: #059669            /* Green for completed */
+--warning: #d97706            /* Orange for pending */
+--error: #dc2626              /* Red for failed */
+```
+
+### shadcn/ui Components Used (16 total)
+- `button`, `input`, `card`, `table`
+- `dialog`, `sheet`, `badge`, `select`
+- `checkbox`, `radio-group`, `switch`, `progress`
+- `dropdown-menu`, `tabs`, `separator`, `label`
+
+### Fonts
+- **Serif (Headings)**: Fraunces - Elegant, italic, lightweight
+- **Sans (Body)**: Geist - Clean, modern
+- **Mono (Code)**: Geist Mono - For IDs, TX hashes, API keys
+
+---
+
+## 📡 Future: Migrating from localStorage to Real Backend
+
+When ready to go production, you'll replace `lib/api.ts` with real API calls. Here's the plan:
+
+### Option 1: AWS Backend (Recommended for Scale)
+
+**Architecture**:
+```
+Next.js Frontend (Vercel)
+        ↓
+API Gateway + Lambda (AWS)
+        ↓
+DynamoDB (AWS)  +  Cognito (Auth)
+        ↓
+Stellar Network (Blockchain)
+```
+
+**Cost**: $0-10/month for first 1000 users
+
+**Changes needed** (ONLY in `lib/api.ts`):
+```typescript
+// Before (localStorage)
+export async function getPayments() {
+  return getUserData('payments', []);
+}
+
+// After (AWS API)
+export async function getPayments() {
+  const response = await fetch('https://api.pave.com/payments', {
+    headers: {
+      'Authorization': `Bearer ${getCognitoToken()}`
+    }
+  });
+  return response.json();
+}
+```
+
+### Option 2: Supabase (Easiest Migration)
+
+**What is Supabase**: PostgreSQL database + Auth + Realtime subscriptions + REST API (all auto-generated)
+
+**Cost**: FREE up to 500MB database + 50,000 monthly active users
+
+**Changes needed**:
+1. Install Supabase: `npm install @supabase/supabase-js`
+2. Create Supabase project → get URL + API key
+3. Update `lib/api.ts`:
+   ```typescript
+   import { createClient } from '@supabase/supabase-js'
+   
+   const supabase = createClient(
+     process.env.NEXT_PUBLIC_SUPABASE_URL,
+     process.env.NEXT_PUBLIC_SUPABASE_KEY
+   )
+   
+   export async function getPayments() {
+     const { data } = await supabase
+       .from('payments')
+       .select('*')
+       .eq('merchant_id', getCurrentUserId());
+     return data;
+   }
+   ```
+
+**That's it!** All your React components stay the same.
+
+---
+
+## 🚀 Quick Start Guide
+
+### Run the Development Server
+```bash
+npm run dev
+# Opens at http://localhost:3001
+```
+
+### Create a Test Account
+1. Go to http://localhost:3001/signup
+2. Fill in:
+   - Name: Tella Oyinkansola
+   - Email: tella@test.com
+   - Password: password123
+   - Business: Tella's Shop
+3. Click "Create Account"
+4. You'll be redirected to `/dashboard`
+
+### Test Payment Flow
+1. Go to `/checkout-links`
+2. Click "+ New Checkout Link"
+3. Fill in: Amount 45000, Currency NGN, Description "Test Payment"
+4. Click "Create Link"
+5. Copy the checkout URL (looks like: `/checkout/pay_...`)
+6. Open URL in new tab (simulating customer)
+7. Select payment method & currency
+8. Click "Pay" → watch processing animation
+9. View payment in `/payments` table
+10. Check Stellar TX hash (links to blockchain explorer)
+
+### View User Profile
+1. Click avatar in topbar/sidebar
+2. See your initials (TO for Tella Oyinkansola)
+3. View Stellar wallet address, API keys, plan
+
+### Toggle Dark Mode
+1. Click sun/moon icon in topbar
+2. Preference saves to localStorage
+
+---
+
+## 📝 Summary of Recent Changes
+
+### ✅ What Was Fixed
+
+1. **Routing Structure** 
+   - Changed from `/dashboard/payments` → `/payments`
+   - Changed from `/dashboard/checkout-links` → `/checkout-links`  
+   - Same for settlement, withdrawals, api-webhooks, logs
+   - `/account` is now root-level (not `/dashboard/account`)
+   - Dashboard layout still wraps all pages
+
+2. **Avatar Initials**
+   - Removed hardcoded "CE"
+   - Now dynamically shows user initials (Tella Oyinkansola → TO)
+   - Updates in sidebar bottom section AND topbar
+   - Loads from `getUserProfile()` in `lib/api.ts`
+
+3. **Checkout Link URL**
+   - Displays full URL: `http://localhost:3001/checkout/{id}`
+   - Copy button with "✓ Copied" feedback
+   - Clickable to open customer checkout page
+
+4. **Customer Checkout Page**
+   - Created `/checkout/[id]/page.tsx`
+   - Beautiful UI with merchant branding and payment options
+   - Shows merchant info, payment methods, currency selector
+   - Live exchange rate display
+   - "Pay" button navigates to processing
+
+5. **Dark Mode**
+   - Complete dark mode implementation
+   - Theme toggle in topbar
+   - Saves preference to localStorage
+   - CSS variables update automatically
+
+---
+
+## 🎓 Key Concepts to Understand
+
+### 1. **Stellar Path Payments = Magic**
+Normal payment flow:
+```
+Customer → Bank → Currency exchange → Another bank → Merchant
+(Takes days, high fees, manual reconciliation)
+```
+
+Stellar path payment:
+```
+Customer NGN → Stellar DEX → USDC → Merchant
+(Takes 5 seconds, $0.003 fee, automatic, on-chain proof)
+```
+
+###
 
 ---
 
@@ -809,59 +1272,228 @@ This ensures **zero component changes** are needed when switching from mock to r
 1. **Start with mock data** — Build all UI components using JSON files
 2. **Test all screens** — Ensure navigation and state transitions work
 3. **Validate types** — Ensure all data matches TypeScript interfaces
-4. **Test error states** — Add loading/error/empty states to all components
-5. **Backend ready?** — Update `.env.local` and `/lib/api.ts` functions one at a time
-6. **Deploy** — Ship to production
-
 ---
 
-## Font Configuration
+## 📋 Development Checklist
 
-The HTML uses custom fonts. Add to `/app/layout.tsx`:
+When working on this codebase, follow these principles:
 
-```typescript
-import { Fraunces, GeistSans, GeistMono } from 'next/font/google';
+### ✅ DRY Principles (Don't Repeat Yourself)
 
-const fraunces = Fraunces({
-  subsets: ['latin'],
-  variable: '--font-serif',
-  weight: ['300', '400', '500'],
-  style: ['normal', 'italic']
-});
+**Always check for existing solutions before coding:**
+1. **Tables?** Use `DataTableHeader` component from `components/ui/data-table.tsx`
+2. **Currencies?** Import `SUPPORTED_CURRENCIES` from `lib/constants.ts`
+3. **Text colors?** Use semantic tokens (`text-foreground`, `text-muted-foreground`)
+4. **Status badges?** Add `dark:` variants for dark mode
 
-const geistSans = GeistSans({
-  subsets: ['latin'],
-  variable: '--font-sans'
-});
+**Never hardcode:**
+- ❌ Currency arrays: `['GHS', 'USD', 'KES']`
+- ❌ Table headers: Repetitive `<th>` elements
+- ❌ Gray colors: `text-gray-500` (use `text-muted-foreground`)
+- ❌ Loading states: Custom empty/loading messages
 
-const geistMono = GeistMono({
-  subsets: ['latin'],
-  variable: '--font-mono'
-});
+**Always use:**
+- ✅ `SUPPORTED_CURRENCIES` constant
+- ✅ `DataTableHeader` with column mapping
+- ✅ Semantic color tokens
+- ✅ Reusable `DataTableLoading` / `DataTableEmpty` components
 
-export default function RootLayout({ children }) {
+### 🎨 Styling Guidelines
+
+**Dark Mode:**
+```tsx
+// ✅ Good: Semantic tokens
+className="text-foreground bg-card border"
+
+// ✅ Good: Dark variants
+className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+
+// ❌ Bad: Hardcoded gray
+className="text-gray-500"
+```
+
+**Tables:**
+```tsx
+// ✅ Good: Reusable component
+<DataTableHeader columns={COLUMNS} />
+
+// ❌ Bad: Repetitive code
+<thead>
+  <tr>
+    <th className="px-4 py-3 text-left...">Header 1</th>
+    <th className="px-4 py-3 text-left...">Header 2</th>
+  </tr>
+</thead>
+```
+
+### 🔧 Code Organization
+
+**File Structure:**
+- `lib/api.ts` - All data fetching/mutation
+- `lib/constants.ts` - Shared constants (currencies, etc.)
+- `components/ui/` - Reusable UI primitives
+- `hooks/` - Custom React hooks
+- `types/` - TypeScript interfaces
+
+**Component Pattern:**
+```tsx
+'use client';
+
+import { useState, useEffect } from 'react';
+import { getData } from '@/lib/api';
+import { SUPPORTED_CURRENCIES } from '@/lib/constants';
+import { DataTableHeader } from '@/components/ui/data-table';
+
+export default function MyPage() {
+  // 1. State
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // 2. Effects
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // 3. Functions
+  const loadData = async () => {
+    const result = await getData();
+    setData(result);
+    setLoading(false);
+  };
+
+  // 4. Render
   return (
-    <html lang="en" className={`${fraunces.variable} ${geistSans.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
-    </html>
+    <div>
+      <DataTableHeader columns={COLUMNS} />
+      {/* ... */}
+    </div>
   );
 }
 ```
 
 ---
 
-## Summary
+## 🚀 Next Steps
 
-This guide provides everything needed to convert the Pave HTML into a production-ready Next.js application:
+### For MVP Completion
 
-- ✅ Complete component breakdown for all 14 screens
-- ✅ shadcn/ui component mapping for every UI element
-- ✅ Centralized API layer in `/lib/api.ts`
-- ✅ Mock data structure in `/data` folder
-- ✅ TypeScript interfaces in `/types`
-- ✅ Clear backend integration checklist
-- ✅ Environment variable configuration
-- ✅ No hardcoded URLs anywhere
-- ✅ Consistent function signatures for seamless backend swap
+1. **Authentication improvements**
+   - Hash passwords properly (use bcrypt)
+   - Add password reset flow
+   - Session management with JWT
 
-**When the backend is ready:** Update `.env.local` and replace function bodies in `/lib/api.ts`. Nothing else changes.
+2. **Real backend integration**
+   - Replace localStorage with database (PostgreSQL/Supabase)
+   - Update `lib/api.ts` functions
+   - Keep same function signatures
+
+3. **Payment processor integration**
+   - Integrate Flutterwave/Paystack API
+   - Handle webhooks for payment confirmation
+   - Process refunds and failed payments
+
+4. **Stellar integration**
+   - Build settlement service
+   - Implement path payments
+   - Generate Stellar wallets for new merchants
+   - Monitor blockchain for confirmations
+
+5. **Production features**
+   - Rate limiting
+   - Error logging (Sentry)
+   - Analytics (PostHog, Mixpanel)
+   - Email notifications
+   - Webhook delivery system
+
+### For Scaling
+
+1. **Infrastructure**
+   - Deploy to Vercel/AWS
+   - Set up PostgreSQL database
+   - Redis for caching
+   - CDN for assets
+
+2. **Monitoring**
+   - Application performance monitoring
+   - Error tracking
+   - User analytics
+   - Transaction monitoring
+
+3. **Security**
+   - API key rotation
+   - Rate limiting per merchant
+   - Input validation on all endpoints
+   - PCI compliance for card payments
+
+---
+
+## 📚 Key Files Reference
+
+### Most Important Files
+
+| File | Purpose | When to Edit |
+|------|---------|--------------|
+| `lib/api.ts` | All data operations | Adding features, backend migration |
+| `lib/constants.ts` | Shared constants | Adding currencies, config |
+| `components/ui/data-table.tsx` | Reusable tables | Improving table UI |
+| `app/globals.css` | Dark mode variables | Adjusting colors, themes |
+| `types/index.ts` | TypeScript types | Adding data structures |
+
+### Common Tasks
+
+**Add a new currency:**
+1. Update `SUPPORTED_CURRENCIES` in `lib/constants.ts`
+2. Add to `CURRENCY_NAMES`, `CURRENCY_SYMBOLS`, `CURRENCY_COUNTRIES`
+3. Update conversion rates in `CONVERSION_RATES`
+
+**Add a new table:**
+1. Define columns: `const COLUMNS: TableColumn[] = [...]`
+2. Use `<DataTableHeader columns={COLUMNS} />`
+3. Use `<DataTableLoading>` and `<DataTableEmpty>` for states
+
+**Add dark mode to component:**
+1. Replace `text-gray-*` with `text-foreground` or `text-muted-foreground`
+2. Replace `bg-gray-*` with `bg-card` or `bg-muted`
+3. Add `dark:` variants for special colors (green, red, yellow)
+
+**Connect to real backend:**
+1. Add API URL to `.env.local`
+2. Update `lib/api.ts` functions one at a time
+3. Replace `localStorage` with `fetch()` calls
+4. Keep same function signatures - components don't change!
+
+---
+
+## 🎯 Summary
+
+This codebase implements a complete payment infrastructure platform with:
+
+**✅ Completed:**
+- Full merchant dashboard with stats and activity
+- Payment tracking and management
+- Checkout link generation and management
+- Customer-facing hosted checkout pages
+- Withdrawal system
+- API documentation and logs
+- Dark mode implementation across all pages
+- Reusable table components
+- Single source of truth for currencies
+- Type-safe TypeScript throughout
+
+**🔄 In Progress (MVP):**
+- localStorage for data (temporary)
+- Simulated payment processing
+- Mock Stellar transactions
+
+**📦 Ready for Production:**
+- Clean component architecture
+- Centralized API layer (`lib/api.ts`)
+- Easy backend migration path
+- Comprehensive type safety
+- DRY principles enforced
+
+**Next:** Connect real payment processors and Stellar blockchain, migrate from localStorage to database.
+
+---
+
+*This documentation is maintained alongside the codebase. Last updated: April 2026*
