@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pave — Payment Infrastructure for Africa
+
+Pave is a **payment infrastructure platform** (like Stripe Checkout) that enables platforms and merchants to accept payments across Africa with instant USDC settlement on the Stellar blockchain.
+
+## What is Pave?
+
+- **For Platforms/Apps**: Integrate Pave's API → get a hosted checkout page for African payments
+- **For Customers**: Pay using mobile money or cards via Pave's checkout UI
+- **For Merchants**: Receive settlements in USDC (via Stellar blockchain)
+
+## Features
+
+- **Multiple Payment Methods**: Mobile Money (MTN, Airtel, Vodafone) + Cards (Visa, Mastercard)
+- **Multi-Currency Support**: GHS, USD, KES, XOF, NGN
+- **Instant Settlement**: ~5 second finality on Stellar blockchain
+- **Dark Mode**: Full dark mode support across all pages
+- **Merchant Dashboard**: Track payments, withdrawals, and analytics
+- **Checkout Links**: Generate shareable payment links
+- **Webhooks**: Real-time payment notifications
+- **Mobile Friendly**: Responsive design for all devices
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/pave-mvp.git
+cd pave-mvp
+
+# Install dependencies
+npm install
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+pave-mvp/
+├── app/                    # Next.js App Router pages
+│   ├── (auth)/            # Authentication (login, signup)
+│   ├── dashboard/         # Merchant dashboard
+│   ├── payments/          # Payment management
+│   ├── checkout-links/    # Checkout link generation
+│   ├── checkout/[id]/     # Customer checkout page
+│   ├── withdrawals/       # Withdrawal management
+│   └── settings/          # Account settings
+├── components/
+│   ├── ui/               # Reusable UI components
+│   └── layout/           # Layout components (sidebar, topbar)
+├── lib/
+│   ├── api.ts            # API/data layer
+│   └── constants.ts      # Shared constants
+├── hooks/                # Custom React hooks
+└── types/                # TypeScript type definitions
+```
 
-## Learn More
+## Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui
+- **Blockchain**: Stellar (for USDC settlement)
+- **State**: React hooks + localStorage (MVP)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Supported Currencies
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Currency | Name | Country |
+|----------|------|---------|
+| GHS | Ghanaian Cedi | Ghana |
+| USD | US Dollar | USA |
+| KES | Kenyan Shilling | Kenya |
+| XOF | CFA Franc | West Africa |
+| NGN | Nigerian Naira | Nigeria |
 
-## Deploy on Vercel
+## Dark Mode
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Full dark mode support using CSS custom properties and Tailwind's `dark:` variants. Theme persists across sessions.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+MIT
+
+## Contributing
+
+Contributions are welcome! Please open an issue or submit a pull request.
+
+---
+
+Built for African payments
