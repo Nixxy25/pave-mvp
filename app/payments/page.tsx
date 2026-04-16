@@ -18,13 +18,12 @@ import { DataTableHeader, DataTableLoading, DataTableEmpty, type TableColumn } f
 
 const PAYMENT_COLUMNS: TableColumn[] = [
   { key: 'id', label: 'Payment ID' },
-  { key: 'payer', label: 'Payer' },
+  { key: 'payer', label: 'Customer' },
   { key: 'amount', label: 'Amount' },
   { key: 'usdcAmount', label: 'USDC Amount' },
   { key: 'paidWith', label: 'Paid With' },
   { key: 'status', label: 'Status' },
   { key: 'date', label: 'Date' },
-  { key: 'stellarTx', label: 'Stellar Tx' },
 ];
 
 export default function PaymentsPage() {
@@ -138,20 +137,6 @@ export default function PaymentsPage() {
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
                       {new Date(payment.createdAt).toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                      {payment.stellarTxHash ? (
-                        <a
-                          href={`https://stellar.expert/explorer/testnet/tx/${payment.stellarTxHash}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[var(--pave-orange)] hover:underline"
-                        >
-                          View →
-                        </a>
-                      ) : (
-                        '-'
-                      )}
                     </td>
                   </tr>
                 ))

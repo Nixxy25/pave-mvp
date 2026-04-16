@@ -15,7 +15,6 @@ const ACTIVITY_COLUMNS: TableColumn[] = [
   { key: 'customer', label: 'Customer / Destination', className: 'px-5' },
   { key: 'amount', label: 'Amount', className: 'px-5' },
   { key: 'usdc', label: 'USDC', className: 'px-5' },
-  { key: 'stellarTx', label: 'Stellar TX', className: 'px-5' },
   { key: 'time', label: 'Time', className: 'px-5' },
   { key: 'status', label: 'Status', align: 'right', className: 'px-5' },
 ];
@@ -288,11 +287,6 @@ export default function DashboardPage() {
                         <span className="font-mono text-[13.5px] font-medium text-[var(--success)]">
                           ${(isPayment ? activity.usdcAmount : activity.amount).toLocaleString()}
                         </span>
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <code className="font-mono text-[12px] text-[var(--stellar)]">
-                          {activity.stellarTxHash || 'pending...'}
-                        </code>
                       </td>
                       <td className="px-5 py-3.5">
                         <span className="font-mono text-[12px] text-muted-foreground">{timeStr}</span>
