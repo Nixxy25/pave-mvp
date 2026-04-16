@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { WalletConnectButton } from '@/components/layout/WalletConnectButton';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface TopbarProps {
@@ -20,7 +21,7 @@ export function Topbar({ onNotificationClick, hasUnreadNotifications = false, on
   const getInitials = (name: string) => {
     return name
       .split(' ')
-      .map(n => n[0])
+      .map((n) => n[0])
       .join('')
       .toUpperCase()
       .slice(0, 2);
@@ -34,21 +35,15 @@ export function Topbar({ onNotificationClick, hasUnreadNotifications = false, on
             Pave
           </span>
         </Link>
-        
-        {/* Mobile menu button */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-9 w-9 md:hidden "
-          onClick={onMenuClick}
-        >
+
+        <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden " onClick={onMenuClick}>
           <Menu className="h-5 w-5 text-foreground" />
         </Button>
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2.5">
-        <Badge 
-          variant="outline" 
+        <Badge
+          variant="outline"
           className="hidden border-[#c7d2fe] bg-[#eef2ff] font-mono text-[11.5px] text-[#3b5bdb] sm:flex"
         >
           <div className="mr-1.5 h-1.5 w-1.5 animate-blink rounded-full bg-[#3b5bdb]" />
@@ -56,6 +51,7 @@ export function Topbar({ onNotificationClick, hasUnreadNotifications = false, on
         </Badge>
 
         <ThemeToggle />
+        <WalletConnectButton />
 
         <Button
           variant="outline"
