@@ -25,7 +25,6 @@ export function Topbar({ onNotificationClick, hasUnreadNotifications = false, on
         const userData = await getUserProfile();
         setUser(userData);
       } catch (error) {
-        console.error('Failed to load user:', error);
       }
     };
     loadUser();

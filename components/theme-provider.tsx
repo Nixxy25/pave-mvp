@@ -16,7 +16,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>('system');
   const [mounted, setMounted] = useState(false);
 
-  // Get system preference
   const getSystemTheme = (): 'light' | 'dark' => {
     if (typeof window !== 'undefined') {
       return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -24,12 +23,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return 'light';
   };
 
-  // Calculate resolved theme
   const resolvedTheme: 'light' | 'dark' = theme === 'system' ? getSystemTheme() : theme;
 
   useEffect(() => {
     setMounted(true);
-    // Load theme from localStorage
     const stored = localStorage.getItem('pave-theme') as Theme;
     if (stored) {
       setThemeState(stored);
@@ -41,14 +38,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
     const root = document.documentElement;
     
-    // Remove both classes first
     root.classList.remove('light', 'dark');
     
-    // Add the resolved theme class
     root.classList.add(resolvedTheme);
   }, [resolvedTheme, mounted]);
 
-  // Listen to system theme changes when theme is 'system'
   useEffect(() => {
     if (theme !== 'system') return;
 
@@ -74,7 +68,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     resolvedTheme,
   };
 
-  // Prevent flash of unstyled content
   if (!mounted) {
     return null;
   }
