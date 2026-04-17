@@ -32,11 +32,10 @@ export async function POST(req: NextRequest) {
           stellarWalletAddress, expiresInHours, merchantName, merchantPersonName } = body;
 
   const conversionRates: Record<string, Record<string, number>> = {
-    NGN: { GHS: 0.00427, USD: 0.00062, KES: 0.081, XOF: 0.365 },
-    USD: { GHS: 13.7, NGN: 1605, KES: 129.5, XOF: 585 },
-    GHS: { NGN: 234, USD: 0.073, KES: 9.45, XOF: 42.7 },
-    KES: { NGN: 12.3, USD: 0.0077, GHS: 0.106, XOF: 4.52 },
-    XOF: { NGN: 2.74, USD: 0.0017, GHS: 0.0234, KES: 0.221 },
+    NGN: { GHS: 0.00427, USD: 0.00062, KES: 0.081 },
+    USD: { GHS: 13.7, NGN: 1605, KES: 129.5 },
+    GHS: { NGN: 234, USD: 0.073, KES: 9.45 },
+    KES: { NGN: 12.3, USD: 0.0077, GHS: 0.106 },
   };
 
   const equivalents: Record<string, number> = { [currency]: amount };
