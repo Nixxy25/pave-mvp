@@ -1,5 +1,5 @@
 export type PaymentStatus = 'pending' | 'routing' | 'settled' | 'failed' | 'completed';
-export type PaymentMethod = 'Mobile Money' | 'Card' | 'Stellar Wallet';
+export type PaymentMethod = 'Card' | 'Stellar Wallet' | 'Bank Transfer';
 export type PaymentSource = 'Checkout' | 'API';
 
 export interface Payer {
