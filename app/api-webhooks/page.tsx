@@ -9,7 +9,7 @@ export default function APIWebhooksPage() {
     "currency": "NGN",
     "description": "Premium subscription",
     "settlementAsset": "USDC",
-    "acceptedCurrencies": ["Mobile Money", "Card", "USDC"]
+    "acceptedCurrencies": ["Card", "USDC", "Bank Transfer"]
   }'`;
 
   const responseExample = `{
