@@ -1,30 +1,21 @@
-import { supabase } from '../supabase';
-import { getCurrentUserId, rowToPayment } from './helpers';
+import { authFetch } from '../fetch-api';
+import { rowToPayment } from './helpers';
 import type { Payment, PaymentFilters } from '@/types';
 
 export async function getPayments(filters?: PaymentFilters): Promise<Payment[]> {
-  const userId = await getCurrentUserId();
-  if (!userId) return [];
+  const params = new URLSearchParams({ type: 'list' });
+  if (filters?.status) params.set('status', filters.status);
+  if (filters?.search) params.set('search', filters.search);
 
-  let query = supabase
-    .from('payments')
-    .select('*')
-    .eq('merchant_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (filters?.status) {
-    query = query.eq('status', filters.status);
-  }
-
-  if (filters?.search) {
-    query = query.or(`payer_name.ilike.%${filters.search}%,id.ilike.%${filters.search}%`);
-  }
-
-  const { data } = await query;
+  const res = await authFetch(`/api/payments?${params}`);
+  if (!res.ok) return [];
+  const { data } = await res.json();
   return (data || []).map(rowToPayment);
 }
 
 export async function getPaymentById(id: string): Promise<Payment | null> {
-  const { data } = await supabase.from('payments').select('*').eq('id', id).single();
+  const res = await authFetch(`/api/payments?type=byId&id=${encodeURIComponent(id)}`);
+  if (!res.ok) return null;
+  const { data } = await res.json();
   return data ? rowToPayment(data) : null;
 }

@@ -4,4 +4,4 @@ export * from './user';
 export * from './withdrawal';
 export * from './api';
 export * from './stellar';
-export * from './notification';
+
