@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
   }
 
   const countryMap: Record<string, string> = {
-    GHS: 'GH', KES: 'KE', XOF: 'SN', NGN: 'NG', USD: 'US', XLM: 'US',
+    GHS: 'GH', KES: 'KE', NGN: 'NG', USD: 'US', XLM: 'US',
   };
 
   const isStellar = paymentMethod === 'stellar';
