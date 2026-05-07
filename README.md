@@ -74,7 +74,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3001) to view the application.
+Open [http://localhost:3001] to view the application.
 
 ### Scripts
 
