@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -57,16 +58,17 @@ export default function LoginPage() {
     try {
       await login(email, password);
       router.push('/dashboard');
-    } catch (err: any) {
-      if (err.name === 'UserNotFoundException') {
+    } catch (err: unknown) {
+      const e = err as { name?: string; message?: string };
+      if (e.name === 'UserNotFoundException') {
         setError('No account found with this email address');
-      } else if (err.name === 'NotAuthorizedException') {
+      } else if (e.name === 'NotAuthorizedException') {
         setError('Invalid email or password. Please check your credentials and try again.');
-      } else if (err.name === 'UserNotConfirmedException') {
+      } else if (e.name === 'UserNotConfirmedException') {
         router.push(`/verify?email=${encodeURIComponent(email)}`);
         return;
       } else {
-        setError(err.message || 'An error occurred during login');
+        setError(e.message || 'An error occurred during login');
       }
     } finally {
       setIsLoading(false);
@@ -78,7 +80,7 @@ export default function LoginPage() {
     setError('');
     try {
       await loginWithGoogle();
-    } catch (err: any) {
+    } catch {
       setError('Google sign-in failed. Please try again.');
       setIsGoogleLoading(false);
     }
@@ -96,13 +98,8 @@ export default function LoginPage() {
 
       <div className="w-full max-w-[480px] animate-fadeup rounded-[20px] border bg-card p-9 shadow-[0_20px_25px_-5px_rgba(0,0,0,.08),0_8px_10px_-6px_rgba(0,0,0,.04)]">
         {/* Logo */}
-        <div className="mb-7 flex items-center gap-2.5">
-          <div className="flex h-7 w-7 items-center justify-center rounded-lg">
-            <div className="h-full w-full" />
-          </div>
-          <span className="font-serif text-[24px] font-medium tracking-tight text-foreground">
-            Pave
-          </span>
+        <div className="mb-7">
+          <Image src="/pave2.png" alt="Pave" width={80} height={32} className="object-contain" />
         </div>
 
         {/* Header */}
@@ -198,26 +195,18 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="flex items-center justify-between text-[12.5px]">
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="remember"
-                checked={rememberMe}
-                onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-              />
-              <label
-                htmlFor="remember"
-                className="cursor-pointer text-muted-foreground"
-              >
-                Remember me
-              </label>
-            </div>
-            <Link
-              href="/forgot-password"
-              className="text-[var(--pave-orange)] hover:underline"
+          <div className="flex items-center gap-2 text-[12.5px]">
+            <Checkbox
+              id="remember"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+            />
+            <label
+              htmlFor="remember"
+              className="cursor-pointer text-muted-foreground"
             >
-              Forgot password?
-            </Link>
+              Remember me
+            </label>
           </div>
 
           <Button
@@ -253,7 +242,7 @@ export default function LoginPage() {
         <div className="my-6 h-px bg-[var(--border)]" />
 
         <div className="text-center text-[12.5px] text-muted-foreground">
-          Don't have an account?{' '}
+          Don&apos;t have an account?{' '}
           <Link
             href="/signup"
             className="font-medium text-[var(--pave-orange)] hover:underline"
