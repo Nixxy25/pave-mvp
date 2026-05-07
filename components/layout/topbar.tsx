@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Bell, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -31,9 +32,7 @@ export function Topbar({ onNotificationClick, hasUnreadNotifications = false, on
     <nav className="sticky top-0 z-50 flex h-[58px] items-center justify-between border-b bg-card px-4 md:px-7">
       <div className="flex items-center gap-1">
         <Link href="/dashboard">
-          <span className="font-serif text-[21px] font-medium tracking-tight text-foreground">
-            Pave
-          </span>
+          <Image src="/pave2.png" alt="Pave" width={70} height={28} className="object-contain" />
         </Link>
 
         <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden " onClick={onMenuClick}>

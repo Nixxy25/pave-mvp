@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -96,13 +97,14 @@ export default function SignupPage() {
       });
 
       router.push(`/verify?email=${encodeURIComponent(formData.email)}`);
-    } catch (err: any) {
-      if (err.name === 'UsernameExistsException') {
+    } catch (err: unknown) {
+      const e = err as { name?: string; message?: string };
+      if (e.name === 'UsernameExistsException') {
         setError('An account with this email already exists');
-      } else if (err.name === 'InvalidPasswordException') {
+      } else if (e.name === 'InvalidPasswordException') {
         setError('Password does not meet requirements. Must be at least 8 characters with uppercase, lowercase, and a number.');
       } else {
-        setError(err.message || 'An error occurred during signup');
+        setError(e.message || 'An error occurred during signup');
       }
     } finally {
       setLoading(false);
@@ -114,7 +116,7 @@ export default function SignupPage() {
     setError('');
     try {
       await loginWithGoogle();
-    } catch (err: any) {
+    } catch {
       setError('Google sign-up failed. Please try again.');
       setIsGoogleLoading(false);
     }
@@ -130,8 +132,8 @@ export default function SignupPage() {
       <div className="w-full max-w-md">
         {/* Logo/Branding */}
         <div className="mb-8 text-center">
-          <div className="mb-2 inline-block rounded-xl bg-gradient-to-r from-[var(--pave-orange)] to-orange-600 px-4 py-1.5">
-            <span className="font-mono text-sm font-semibold tracking-wide text-white">PAVE</span>
+          <div className="mb-4 flex justify-center">
+            <Image src="/pave2.png" alt="Pave" width={80} height={32} className="object-contain" />
           </div>
           <h1 className="font-serif text-3xl font-light italic text-foreground">
             Create your account
@@ -350,10 +352,6 @@ export default function SignupPage() {
           </div>
         </div>
 
-        {/* Footer */}
-        <div className="mt-6 text-center text-xs text-muted-foreground">
-          By signing up, you'll get instant access to Stellar testnet payments
-        </div>
       </div>
     </div>
   );
