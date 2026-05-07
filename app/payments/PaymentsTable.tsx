@@ -7,6 +7,7 @@ import {
   DataTableEmpty,
   type TableColumn,
 } from '@/components/ui/data-table';
+import { formatTimeAgo } from '@/lib/api/helpers';
 import type { Payment } from '@/types';
 
 const COLUMNS: TableColumn[] = [
@@ -90,7 +91,7 @@ export function PaymentsTable({ payments, loading }: PaymentsTableProps) {
                     <Badge className={getStatusColor(payment.status)}>{payment.status}</Badge>
                   </td>
                   <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {new Date(payment.createdAt).toLocaleDateString()}
+                    {formatTimeAgo(payment.createdAt)}
                   </td>
                 </tr>
               ))

@@ -1,5 +1,23 @@
 // Private helpers shared across domain modules — not re-exported from the barrel.
 
+
+export function formatTimeAgo(createdAt: string): string {
+  const diff = Date.now() - new Date(createdAt).getTime();
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(diff / 60_000);
+  const hours = Math.floor(diff / 3_600_000);
+  const days = Math.floor(diff / 86_400_000);
+  const weeks = Math.floor(diff / 604_800_000);
+  const months = Math.floor(diff / 2_592_000_000);
+
+  if (seconds < 60) return `${seconds}s ago`;
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days < 7) return `${days}d ago`;
+  if (weeks < 4) return `${weeks}w ago`;
+  return `${months}mo ago`;
+}
+
 import { getCurrentUser as getCognitoUser } from 'aws-amplify/auth';
 import type { CheckoutLink, Payment } from '@/types';
 

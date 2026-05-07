@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { DataTableHeader, type TableColumn } from '@/components/ui/data-table';
+import { formatTimeAgo } from '@/lib/api/helpers';
 import type { Payment, Withdrawal } from '@/types';
 
 const COLUMNS: TableColumn[] = [
@@ -40,13 +41,6 @@ function getStatusBadge(status: string) {
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </Badge>
   );
-}
-
-function formatTimeAgo(createdAt: string) {
-  const diff = Date.now() - new Date(createdAt).getTime();
-  if (diff < 60000) return `${Math.floor(diff / 1000)}s`;
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
-  return `${Math.floor(diff / 3600000)}h`;
 }
 
 interface RecentActivityTableProps {
