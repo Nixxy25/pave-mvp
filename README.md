@@ -16,7 +16,6 @@ Pave provides a complete payment solution for platforms and merchants:
 - Hosted checkout pages with shareable links
 - Multi-currency support: USD, NGN, GHS, KES
 - Payment methods: Cards (Visa, Mastercard), Stellar Wallet
-- QR codes for easy sharing
 
 **Settlement**
 - Instant USDC settlement on Stellar blockchain
@@ -60,17 +59,6 @@ Pave provides a complete payment solution for platforms and merchants:
 
 Create a `.env.local` file in the project root:
 
-```env
-# AWS Cognito
-NEXT_PUBLIC_AWS_REGION=eu-central-1
-NEXT_PUBLIC_COGNITO_USER_POOL_ID=your-user-pool-id
-NEXT_PUBLIC_COGNITO_CLIENT_ID=your-client-id
-NEXT_PUBLIC_COGNITO_DOMAIN=your-cognito-domain
-
-# Supabase
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-anon-key
-```
 
 ### Installation
 
@@ -86,7 +74,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the application.
+Open [http://localhost:3000](http://localhost:3001) to view the application.
 
 ### Scripts
 
