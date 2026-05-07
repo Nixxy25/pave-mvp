@@ -1,36 +1,82 @@
-# Pave — Payment Infrastructure for Africa
+# Pave
 
-Pave is a **payment infrastructure platform** (like Stripe Checkout) that enables platforms and merchants to accept payments across Africa with instant USDC settlement on the Stellar blockchain.
+Payment infrastructure for the modern internet. Accept payments globally with instant USDC settlement on the Stellar blockchain.
 
-## What is Pave?
+## Overview
 
-- **For Platforms/Apps**: Integrate Pave's API → get a hosted checkout page for African payments
-- **For Customers**: Pay using mobile money or cards via Pave's checkout UI
-- **For Merchants**: Receive settlements in USDC (via Stellar blockchain)
+Pave provides a complete payment solution for platforms and merchants:
+
+- **Platforms and Apps** integrate Pave's API to generate hosted checkout pages
+- **Customers** pay using cards or Stellar wallets
+- **Merchants** receive instant settlement in USDC with ~5 second finality
 
 ## Features
 
-- **Multiple Payment Methods**: Mobile Money (MTN, Airtel, Vodafone) + Cards (Visa, Mastercard)
-- **Multi-Currency Support**: GHS, USD, KES, XOF, NGN
-- **Instant Settlement**: ~5 second finality on Stellar blockchain
-- **Dark Mode**: Full dark mode support across all pages
-- **Merchant Dashboard**: Track payments, withdrawals, and analytics
-- **Checkout Links**: Generate shareable payment links
-- **Webhooks**: Real-time payment notifications
-- **Mobile Friendly**: Responsive design for all devices
+**Checkout**
+- Hosted checkout pages with shareable links
+- Multi-currency support: USD, NGN, GHS, KES
+- Payment methods: Cards (Visa, Mastercard), Stellar Wallet
+- QR codes for easy sharing
+
+**Settlement**
+- Instant USDC settlement on Stellar blockchain
+- Real-time balance tracking
+- Bank withdrawals
+
+**Dashboard**
+- Payment history and analytics
+- Checkout link management
+- API request logging
+- Webhook configuration
+
+**Developer Experience**
+- REST API for payment integration
+- Webhooks for payment.completed, payment.failed, withdrawal.completed events
+- API key management
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|------------|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript 5 |
+| Styling | Tailwind CSS 4 |
+| UI | shadcn/ui, Radix UI |
+| Authentication | AWS Cognito (via Amplify) |
+| Database | Supabase (PostgreSQL) |
+| Blockchain | Stellar (USDC settlement) |
+| Wallet | Stellar Wallets Kit |
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18+
+- Node.js 18 or later
 - npm or yarn
+- AWS Cognito User Pool
+- Supabase project
+
+### Environment Variables
+
+Create a `.env.local` file in the project root:
+
+```env
+# AWS Cognito
+NEXT_PUBLIC_AWS_REGION=eu-central-1
+NEXT_PUBLIC_COGNITO_USER_POOL_ID=your-user-pool-id
+NEXT_PUBLIC_COGNITO_CLIENT_ID=your-client-id
+NEXT_PUBLIC_COGNITO_DOMAIN=your-cognito-domain
+
+# Supabase
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+```
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/pave-mvp.git
+git clone https://github.com/Nixxy25/pave-mvp.git
 cd pave-mvp
 
 # Install dependencies
@@ -40,52 +86,106 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
+
+### Scripts
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server |
+| `npm run build` | Build for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run ESLint |
 
 ## Project Structure
 
 ```
 pave-mvp/
-├── app/                    # Next.js App Router pages
-│   ├── (auth)/            # Authentication (login, signup)
-│   ├── dashboard/         # Merchant dashboard
-│   ├── payments/          # Payment management
-│   ├── checkout-links/    # Checkout link generation
-│   ├── checkout/[id]/     # Customer checkout page
-│   ├── withdrawals/       # Withdrawal management
-│   └── settings/          # Account settings
+├── app/
+│   ├── (auth)/                 # Login, signup pages
+│   ├── api/                    # API routes
+│   │   ├── checkout/           # Public checkout completion
+│   │   ├── checkout-links/     # Checkout link CRUD
+│   │   └── payments/           # Payment queries
+│   ├── checkout/[id]/          # Public checkout page
+│   ├── confirmed/[id]/         # Payment confirmation
+│   ├── dashboard/              # Merchant dashboard
+│   ├── payments/               # Payment history
+│   ├── checkout-links/         # Link management
+│   ├── withdrawals/            # Withdrawal management
+│   ├── account/                # Profile and API keys
+│   ├── settings/               # Webhooks and preferences
+│   ├── logs/                   # API request logs
+│   └── api-webhooks/           # Developer documentation
 ├── components/
-│   ├── ui/               # Reusable UI components
-│   └── layout/           # Layout components (sidebar, topbar)
+│   ├── ui/                     # shadcn/ui components
+│   └── layout/                 # Dashboard layout
+├── contexts/                   # React contexts (Auth, Wallet)
+├── hooks/                      # Custom hooks
 ├── lib/
-│   ├── api.ts            # API/data layer
-│   └── constants.ts      # Shared constants
-├── hooks/                # Custom React hooks
-└── types/                # TypeScript type definitions
+│   ├── api/                    # Domain API functions
+│   ├── amplify-config.ts       # Cognito configuration
+│   ├── supabase.ts             # Database client
+│   ├── server-auth.ts          # JWT verification
+│   └── constants.ts            # Currencies, rates
+└── types/                      # TypeScript definitions
 ```
 
-## Tech Stack
+## Authentication
 
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **UI Components**: shadcn/ui
-- **Blockchain**: Stellar (for USDC settlement)
-- **State**: React hooks + localStorage (MVP)
+Pave supports two authentication methods:
+
+1. **Email and Password** - Standard signup with email verification
+2. **Google OAuth** - Sign in with Google (redirects to Cognito hosted UI)
+
+New Google users are prompted to provide a business name on first login.
+
+## Payment Flow
+
+**Creating a Checkout Link**
+
+1. Merchant creates a checkout link specifying amount, currency, description, and accepted currencies
+2. Optionally, merchant can add their Stellar wallet address to receive payments directly
+3. System calculates equivalent amounts in all accepted currencies using real-time conversion rates
+4. Merchant shares the checkout URL with their customer
+
+**Customer Payment**
+
+1. Customer opens the checkout page and sees the amount in the merchant's currency plus equivalents in other accepted currencies
+2. Customer selects their preferred payment method:
+   - **Card**: Enter card details, payment is processed, and settled to merchant's Pave balance
+   - **Stellar Wallet**: Connect wallet (Freighter, Lobstr, etc.), select currency to pay in, sign the XLM transaction, and submit to the Stellar network
+3. For Stellar payments, if the merchant provided a wallet address on the checkout link, XLM is sent directly to that address. Otherwise, it settles to the merchant's Pave balance as USDC.
+4. Customer is redirected to a confirmation page with transaction details
+
+**Settlement**
+
+- Card payments settle to the merchant's Pave balance
+- Stellar payments with merchant wallet address go directly to that wallet
+- Merchants can withdraw their Pave balance to a bank account
+
+## API Integration
+
+Platforms can integrate Pave to accept payments programmatically:
+
+1. **Create Payment**: POST to `/v1/payments` with amount, currency, and accepted payment methods
+2. **Redirect Customer**: Send customer to the returned `checkoutUrl`
+3. **Receive Webhook**: Get notified at your webhook URL when payment completes
+4. **Verify Payment**: Check payment status via GET `/v1/payments/{id}`
+
+Webhook events:
+- `payment.completed` - Payment successfully received
+- `payment.failed` - Payment attempt failed
+- `withdrawal.completed` - Withdrawal processed
 
 ## Supported Currencies
 
-| Currency | Name | Country |
-|----------|------|---------|
-| GHS | Ghanaian Cedi | Ghana |
-| USD | US Dollar | USA |
-| KES | Kenyan Shilling | Kenya |
-| XOF | CFA Franc | West Africa |
-| NGN | Nigerian Naira | Nigeria |
-
-## Dark Mode
-
-Full dark mode support using CSS custom properties and Tailwind's `dark:` variants. Theme persists across sessions.
+| Currency | Name |
+|----------|------|
+| USD | US Dollar |
+| NGN | Nigerian Naira |
+| GHS | Ghanaian Cedi |
+| KES | Kenyan Shilling |
 
 ## License
 
@@ -93,8 +193,4 @@ MIT
 
 ## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request.
-
----
-
-Built for African payments
+Contributions are welcome. Please open an issue to discuss proposed changes before submitting a pull request.
