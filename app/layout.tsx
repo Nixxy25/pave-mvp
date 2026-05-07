@@ -24,7 +24,12 @@ const fraunces = Fraunces({
 
 export const metadata: Metadata = {
   title: "Pave — Global Payment Infrastructure",
-  description: "Accept payments in 40+ currencies. Settle instantly in USDC via Stellar.",
+  description: "Accept payments from anywhere, send money globally, and manage transactions across borders with ease. Powering the future of commerce.",
+  icons: {
+    icon: "/pave.png",
+    shortcut: "/pave.png",
+    apple: "/pave.png",
+  },
 };
 
 export default function RootLayout({
