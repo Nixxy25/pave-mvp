@@ -45,30 +45,6 @@ Pave enables merchants to accept payments from customers worldwide and receive i
 - Supabase account
 - Privy account (for authentication)
 
-### Installation
-
-```bash
-# Clone the repository
-git clone https://github.com/Nixxy25/pave-mvp.git
-cd pave-mvp
-
-# Install dependencies
-npm install
-
-# Run development server
-npm run dev
-```
-
-Open [http://localhost:3001](http://localhost:3001)
-
-### Available Commands
-
-```bash
-npm run dev      # Start development server
-npm run build    # Build for production
-npm run start    # Start production server
-npm run lint     # Run ESLint
-```
 
 ## How It Works
 
