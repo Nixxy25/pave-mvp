@@ -31,19 +31,11 @@ export async function POST(req: NextRequest) {
   const { amount, currency, description, acceptedCurrencies, settlementAsset,
           stellarWalletAddress, expiresInHours, merchantName, merchantPersonName } = body;
 
-  const conversionRates: Record<string, Record<string, number>> = {
-    NGN: { GHS: 0.00427, USD: 0.00062, KES: 0.081 },
-    USD: { GHS: 13.7, NGN: 1605, KES: 129.5 },
-    GHS: { NGN: 234, USD: 0.073, KES: 9.45 },
-    KES: { NGN: 12.3, USD: 0.0077, GHS: 0.106 },
-  };
+  // Import the live exchange rate service
+  const { calculateEquivalents } = await import('@/lib/exchange-rates');
 
-  const equivalents: Record<string, number> = { [currency]: amount };
-  if (conversionRates[currency]) {
-    for (const [target, rate] of Object.entries(conversionRates[currency])) {
-      equivalents[target] = parseFloat((amount * rate).toFixed(2));
-    }
-  }
+  // Calculate equivalents using live rates
+  const equivalents = await calculateEquivalents(amount, currency);
 
   const expiresAt = expiresInHours
     ? new Date(Date.now() + expiresInHours * 60 * 60 * 1000).toISOString()
