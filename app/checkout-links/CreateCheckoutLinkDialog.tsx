@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createPayment } from '@/lib/api';
-import { useWallet } from '@/contexts/WalletContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { SUPPORTED_CURRENCIES, type SupportedCurrency } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,16 +45,25 @@ const DEFAULT_FORM: {
 };
 
 export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialogProps) {
-  const { address: walletAddress } = useWallet();
+  const { user, isAuthenticated, login } = useAuth();
+  const stellarAddress = user?.stellarAddress || '';
   const [open, setOpen] = useState(false);
   const [creating, setCreating] = useState(false);
   const [formData, setFormData] = useState(DEFAULT_FORM);
 
   useEffect(() => {
-    if (walletAddress) {
-      setFormData((prev) => ({ ...prev, stellarWalletAddress: walletAddress }));
+    if (stellarAddress) {
+      setFormData((prev) => ({ ...prev, stellarWalletAddress: stellarAddress }));
     }
-  }, [walletAddress]);
+  }, [stellarAddress]);
+
+  const handleTriggerClick = () => {
+    if (!isAuthenticated) {
+      login();
+      return;
+    }
+    setOpen(true);
+  };
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +79,7 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
         expiresInHours: formData.expiresInHours,
       });
       setOpen(false);
-      setFormData({ ...DEFAULT_FORM, stellarWalletAddress: walletAddress || '' });
+      setFormData({ ...DEFAULT_FORM, stellarWalletAddress: stellarAddress });
       onCreated();
     } catch {
     } finally {
@@ -89,11 +98,12 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="w-full bg-[var(--pave-orange)] hover:bg-[var(--pave-orange-hover)] sm:w-auto">
-          + New Checkout Link
-        </Button>
-      </DialogTrigger>
+      <Button 
+        onClick={handleTriggerClick}
+        className="w-full bg-[var(--pave-orange)] hover:bg-[var(--pave-orange-hover)] sm:w-auto"
+      >
+        + New Checkout Link
+      </Button>
       <DialogContent className="w-[50vw] max-w-[50vw]">
         <DialogHeader>
           <DialogTitle className="font-serif text-xl font-light italic">
@@ -193,7 +203,7 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
             <Label htmlFor="stellarWallet">
               Stellar wallet address{' '}
               <span className="text-xs text-muted-foreground">
-                (optional — for display on checkout)
+                (receives payments from customers)
               </span>
             </Label>
             <Input
