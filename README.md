@@ -100,6 +100,3 @@ POST /api/checkout-links
 
 MIT
 
-## Support
-
-For questions or issues, contact [paveng24@gmail.com](mailto:paveng24@gmail.com)
