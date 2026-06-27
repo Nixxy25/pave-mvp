@@ -54,7 +54,6 @@ export function rowToPayment(row: Record<string, unknown>): Payment {
     payer: {
       name: row.payer_name as string,
       email: row.payer_email as string | undefined,
-      country: row.payer_country as string | undefined,
     },
     amount: row.amount as number,
     currency: row.currency as string,

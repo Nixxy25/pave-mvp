@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useWallet } from '@/contexts/WalletContext';
+import { ShortAddress } from '@/components/ShortAddress';
+import { API_ENDPOINTS } from '@/lib/constants';
 
 interface StellarPaymentProps {
   merchantAddress: string;
@@ -10,10 +12,6 @@ interface StellarPaymentProps {
   onSuccess: (txHash: string) => void;
   onError: (message: string) => void;
   disabled?: boolean;
-}
-
-function truncateAddress(addr: string) {
-  return `${addr.slice(0, 6)}…${addr.slice(-6)}`;
 }
 
 export function StellarPayment({
@@ -25,13 +23,7 @@ export function StellarPayment({
 }: StellarPaymentProps) {
   const { address, connecting, connect } = useWallet();
   const [processing, setProcessing] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const copyAddress = () => {
-    navigator.clipboard.writeText(merchantAddress);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const [success, setSuccess] = useState(false);
 
   const handlePay = async () => {
     if (!address) return;
@@ -42,7 +34,7 @@ export function StellarPayment({
       const { TransactionBuilder, Asset, Networks, Operation, Memo } = await import('@stellar/stellar-sdk');
       const { Horizon } = await import('@stellar/stellar-sdk');
 
-      const server = new Horizon.Server('https://horizon-testnet.stellar.org');
+      const server = new Horizon.Server(API_ENDPOINTS.STELLAR_HORIZON_TESTNET);
 
       // Load the customer's account
       const account = await server.loadAccount(address);
@@ -75,9 +67,11 @@ export function StellarPayment({
       const signed = TB2.fromXDR(signedTxXdr, Networks.TESTNET);
       const response = await server.submitTransaction(signed);
 
+      setSuccess(true);
       onSuccess(response.hash);
-    } catch (err: any) {
-      const codes = err?.response?.data?.extras?.result_codes;
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { extras?: { result_codes?: { operations?: string[]; transaction?: string } } } }; message?: string };
+      const codes = error?.response?.data?.extras?.result_codes;
       const opCode = codes?.operations?.[0];
       const txCode = codes?.transaction;
 
@@ -94,7 +88,7 @@ export function StellarPayment({
         (txCode && friendlyErrors[txCode]) ||
         opCode ||
         txCode ||
-        err?.message ||
+        error?.message ||
         'Transaction failed';
 
       onError(msg);
@@ -106,8 +100,8 @@ export function StellarPayment({
   // Not connected
   if (!address) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-[var(--stellar)]/40 bg-[var(--stellar)]/5 p-6 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--stellar)]/10">
+      <div className="flex flex-col items-center gap-4 border border-dashed border-[var(--stellar)]/40 bg-[var(--stellar)]/5 p-6 text-center">
+        <div className="flex h-12 w-12 items-center justify-center bg-[var(--stellar)]/10">
           {/* Stellar-style icon */}
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M21.5 7.5L3 12l18.5 4.5" stroke="var(--stellar)" strokeWidth="2" strokeLinecap="round" />
@@ -117,7 +111,7 @@ export function StellarPayment({
         <div>
           <div className="text-[14px] font-medium text-foreground">Connect your Stellar wallet</div>
           <div className="mt-1 text-[12.5px] text-muted-foreground">
-            You'll send <span className="font-medium">{xlmAmount.toFixed(2)} XLM</span> on testnet
+            You&apos;ll send <span className="font-medium">{xlmAmount.toFixed(2)} XLM</span> on testnet
           </div>
         </div>
         <Button
@@ -135,31 +129,29 @@ export function StellarPayment({
   return (
     <div className="space-y-4">
       {/* Sending from */}
-      <div className="rounded-lg border bg-muted/40 p-3.5">
+      <div className="border bg-muted/40 p-3.5">
         <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Sending from
         </div>
-        <div className="font-mono text-[13px] text-foreground">{truncateAddress(address)}</div>
+        <ShortAddress address={address} className="text-[13px] text-foreground" />
       </div>
 
       {/* Sending to */}
-      <div className="flex items-center gap-3 rounded-lg border bg-muted/40 p-3.5">
+      <div className="flex items-center gap-3 border bg-muted/40 p-3.5">
         <div className="flex-1 min-w-0">
           <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
             Merchant wallet (destination)
           </div>
-          <div className="truncate font-mono text-[13px] text-foreground">{merchantAddress}</div>
+          <ShortAddress
+            address={merchantAddress}
+            showCopy
+            className="text-[13px] text-foreground"
+          />
         </div>
-        <button
-          onClick={copyAddress}
-          className="flex-shrink-0 text-[11.5px] text-[var(--pave-orange)] hover:underline"
-        >
-          {copied ? 'Copied!' : 'Copy'}
-        </button>
       </div>
 
       {/* Amount */}
-      <div className="flex items-center justify-between rounded-lg border border-[var(--stellar)]/20 bg-[var(--stellar)]/5 px-4 py-3">
+      <div className="flex items-center justify-between border border-[var(--stellar)]/20 bg-[var(--stellar)]/5 px-4 py-3">
         <span className="text-[13px] text-muted-foreground">You will send</span>
         <span className="font-mono text-[15px] font-semibold text-[var(--stellar)]">
           {xlmAmount.toFixed(2)} XLM
@@ -169,10 +161,12 @@ export function StellarPayment({
       {/* Pay button */}
       <Button
         onClick={handlePay}
-        disabled={processing || disabled}
+        disabled={processing || disabled || success}
         className="h-12 w-full bg-[var(--stellar)] text-[15px] font-medium text-white hover:bg-[var(--stellar)]/90 disabled:opacity-70"
       >
-        {processing ? (
+        {success ? (
+          'Payment Successful'
+        ) : processing ? (
           <span className="flex items-center gap-2">
             <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="32" strokeDashoffset="12" />

@@ -13,6 +13,7 @@
     "@privy-io/react-auth": "^3.32.2",
     "@stellar/stellar-sdk": "^13.3.0",
     "@supabase/supabase-js": "^2.103.3",
+    "@tanstack/react-query": "^5.101.1",
     "aws-amplify": "^6.16.4",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

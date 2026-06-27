@@ -4,7 +4,7 @@ import { Lock } from 'lucide-react';
 
 export default function WithdrawalsPage() {
   return (
-    <div className="mx-auto max-w-[1200px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
+    <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-7 sm:py-8">
       <div className="mb-6 animate-fadeup">
         <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
           Withdrawals
@@ -19,7 +19,7 @@ export default function WithdrawalsPage() {
 
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center bg-muted">
             <Lock className="h-8 w-8 text-muted-foreground" />
           </div>
           <h2 className="mb-2 text-lg font-medium text-foreground">Coming Soon</h2>

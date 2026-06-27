@@ -5,21 +5,12 @@ export interface User {
   name: string;
   email: string;
   avatar?: string;
-  country?: string;
   stellarWallet: string;
   kycStatus?: KYCStatus;
-  apiKey: string;
-  secretKey: string;
   createdAt: string;
 }
 
 export interface Merchant extends User {
-  apiKey: string;
-  secretKey: string;
-  apiKeys?: {
-    live?: string;
-    test?: string;
-  };
   webhookUrl?: string;
   preferences: {
     emailNotifications: boolean;

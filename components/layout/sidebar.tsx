@@ -94,7 +94,7 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13.5px] transition-all',
+                  'flex items-center gap-2.5 px-2.5 py-2 text-[13.5px] transition-all',
                   isActive
                     ? 'bg-[var(--pave-orange-light)] font-medium text-[var(--pave-orange)]'
                     : 'text-muted-foreground hover:bg-muted dark:hover:bg-accent hover:text-foreground'
@@ -122,7 +122,7 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
             key={item.href}
             href={item.href}
             className={cn(
-              'flex items-center gap-2.5 rounded-md px-2.5 py-2 text-[13.5px] transition-all',
+              'flex items-center gap-2.5 px-2.5 py-2 text-[13.5px] transition-all',
               isActive
                 ? 'bg-[var(--pave-orange-light)] font-medium text-[var(--pave-orange)]'
                 : 'text-muted-foreground hover:bg-muted dark:hover:bg-accent hover:text-foreground'
@@ -136,7 +136,7 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
 
       <div className="mt-auto">
         {isAuthenticated && user ? (
-          <Link href="/account" className="flex cursor-pointer items-center gap-2.5 rounded-md p-2.5 transition-all hover:bg-muted">
+          <Link href="/account" className="flex cursor-pointer items-center gap-2.5 p-2.5 transition-all hover:bg-muted">
             <Avatar className="h-7 w-7 flex-shrink-0 bg-gradient-to-br from-[var(--pave-orange)] to-[#ff8a00]">
               <AvatarFallback className="bg-transparent text-[11px] font-medium text-white">
                 {getInitials(user.fullName || user.email)}
@@ -152,7 +152,7 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
             </div>
           </Link>
         ) : (
-          <div className="rounded-md border border-dashed p-3">
+          <div className="border border-dashed p-3">
             <p className="mb-2 text-center text-xs text-muted-foreground">Sign in to access all features</p>
             <SignInButton size="sm" className="w-full" />
           </div>
@@ -184,7 +184,7 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
               <span className="font-serif text-[18px] font-medium text-foreground">Menu</span>
               <button 
                 onClick={onMobileClose}
-                className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
               >
                 <X className="h-5 w-5" />
               </button>

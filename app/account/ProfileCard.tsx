@@ -1,5 +1,7 @@
 'use client';
 
+import { ShortAddress } from '@/components/ShortAddress';
+
 interface ProfileCardProps {
   fullName: string;
   email: string;
@@ -13,7 +15,7 @@ export function ProfileCard({
 }: ProfileCardProps) {
   return (
     <div
-      className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6"
+      className="border bg-card p-4 shadow-sm animate-fadeup sm:p-6"
       style={{ animationDelay: '0.07s' }}
     >
       <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
@@ -34,16 +36,14 @@ export function ProfileCard({
         <div>
           <div className="mb-1 text-xs font-medium text-foreground">Stellar Wallet Address</div>
           {walletAddress ? (
-            <div className="flex items-center gap-3">
-              <div className="flex-1 overflow-x-auto rounded-lg bg-muted p-2.5 font-mono text-xs text-foreground">
-                {walletAddress}
-              </div>
-              <button
-                onClick={() => navigator.clipboard.writeText(walletAddress)}
-                className="flex-shrink-0 text-xs text-[var(--pave-orange)] hover:underline"
-              >
-                Copy
-              </button>
+            <div className="bg-muted p-2.5">
+              <ShortAddress
+                address={walletAddress}
+                startChars={8}
+                endChars={8}
+                showCopy
+                className="text-xs text-foreground"
+              />
             </div>
           ) : (
             <span className="text-sm text-muted-foreground">

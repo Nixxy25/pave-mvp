@@ -7,8 +7,6 @@ interface MerchantRow {
   full_name: string;
   stellar_address: string;
   stellar_wallet_id: string;
-  api_key: string;
-  api_secret: string;
   created_at: string;
 }
 
@@ -23,8 +21,6 @@ export async function getUserProfile(): Promise<Merchant> {
     name: merchant.full_name || merchant.email?.split('@')[0] || 'User',
     email: merchant.email,
     createdAt: merchant.created_at,
-    apiKey: merchant.api_key,
-    secretKey: merchant.api_secret,
     stellarWallet: merchant.stellar_address,
     stellarWalletAddress: merchant.stellar_address,
     preferences: {

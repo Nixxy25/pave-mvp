@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUserId } from '@/lib/server-auth';
 import { supabase } from '@/lib/supabase';
-import { CONVERSION_RATES } from '@/lib/constants';
+import { getFiatRates } from '@/lib/exchange-rates';
 
-// GET /api/payments?type=list&status=&search=
-// GET /api/payments?type=balance
-// GET /api/payments?type=stats
-// GET /api/payments?type=byId&id=xxx
 export async function GET(req: NextRequest) {
   const userId = await getAuthenticatedUserId(req);
   if (!userId) {
@@ -42,7 +38,9 @@ export async function GET(req: NextRequest) {
       0,
     );
 
-    const usdToNgnRate = (CONVERSION_RATES as Record<string, Record<string, number>>)['USD']?.['NGN'] || 1605;
+    // Get live exchange rate
+    const rates = await getFiatRates();
+    const usdToNgnRate = rates['NGN'] || 1605; // fallback to 1605 if API fails
     return NextResponse.json({ totalIn, usdToNgnRate });
   }
 
@@ -78,11 +76,29 @@ export async function GET(req: NextRequest) {
     .eq('merchant_id', userId)
     .order('created_at', { ascending: false });
 
-  if (status) query = query.eq('status', status);
-  if (search) query = query.or(`payer_name.ilike.%${search}%,id.ilike.%${search}%`);
+  if (status) {
+    query = query.eq('status', status);
+  }
+
+  if (search && search.trim()) {
+    const searchTerm = search.trim();
+    // Try to parse as number for amount search
+    const numericSearch = parseFloat(searchTerm);
+    
+    if (!isNaN(numericSearch)) {
+      // Search by name OR amount (numeric)
+      query = query.or(`payer_name.ilike.%${searchTerm}%,amount.eq.${numericSearch}`);
+    } else {
+      // Search by name only (non-numeric)
+      query = query.ilike('payer_name', `%${searchTerm}%`);
+    }
+  }
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    console.error('Payment query error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 
   return NextResponse.json({ data: data || [] });
 }

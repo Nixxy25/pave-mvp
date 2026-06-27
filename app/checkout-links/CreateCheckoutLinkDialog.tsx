@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPayment } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { SUPPORTED_CURRENCIES, type SupportedCurrency } from '@/lib/constants';
+import { ShortAddress } from '@/components/ShortAddress';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,7 +13,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -25,6 +25,26 @@ import {
 interface CreateCheckoutLinkDialogProps {
   onCreated: () => void;
 }
+
+// Define select field configurations 
+const CURRENCY_OPTIONS = [
+  { value: 'NGN', label: 'NGN' },
+  { value: 'KES', label: 'KES' },
+  { value: 'GHS', label: 'GHS' },
+  { value: 'USD', label: 'USD' },
+] as const;
+
+const SETTLEMENT_OPTIONS = [
+  { value: 'USDC', label: 'USDC (Stellar)' },
+  { value: 'XLM', label: 'XLM' },
+] as const;
+
+const EXPIRY_OPTIONS = [
+  { value: '24', label: '24 hours' },
+  { value: '48', label: '48 hours' },
+  { value: '168', label: '7 days' },
+  { value: '0', label: 'No expiry' },
+] as const;
 
 const DEFAULT_FORM: {
   amount: string;
@@ -104,7 +124,7 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
       >
         + New Checkout Link
       </Button>
-      <DialogContent className="w-[50vw] max-w-[50vw]">
+      <DialogContent className="max-h-[90vh] w-[95vw] max-w-[600px] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-serif text-xl font-light italic">
             Create checkout link
@@ -121,12 +141,13 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Pro Plan — November"
+              placeholder="Add Description"
               required
+              className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none hover:outline-none border-input"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label htmlFor="amount">
                 Amount{' '}
@@ -140,7 +161,7 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 placeholder="45000"
                 required
-                className="font-mono [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                className="font-mono focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none hover:outline-none border-input [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </div>
             <div>
@@ -149,32 +170,36 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
                 value={formData.currency}
                 onValueChange={(value) => setFormData({ ...formData, currency: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none hover:outline-none border-input">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="NGN">NGN</SelectItem>
-                  <SelectItem value="KES">KES</SelectItem>
-                  <SelectItem value="GHS">GHS</SelectItem>
-                  <SelectItem value="USD">USD</SelectItem>
+                  {CURRENCY_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <div>
               <Label htmlFor="settlement">Settlement asset</Label>
               <Select
                 value={formData.settlementAsset}
                 onValueChange={(value) => setFormData({ ...formData, settlementAsset: value })}
               >
-                <SelectTrigger>
+                <SelectTrigger className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none hover:outline-none border-input">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="USDC">USDC (Stellar)</SelectItem>
-                  <SelectItem value="XLM">XLM</SelectItem>
+                  {SETTLEMENT_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -186,14 +211,15 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
                   setFormData({ ...formData, expiresInHours: parseInt(value) })
                 }
               >
-                <SelectTrigger>
+                <SelectTrigger className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none hover:outline-none border-input">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="24">24 hours</SelectItem>
-                  <SelectItem value="48">48 hours</SelectItem>
-                  <SelectItem value="168">7 days</SelectItem>
-                  <SelectItem value="0">No expiry</SelectItem>
+                  {EXPIRY_OPTIONS.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -206,16 +232,27 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
                 (receives payments from customers)
               </span>
             </Label>
-            <Input
-              id="stellarWallet"
-              value={formData.stellarWalletAddress}
-              onChange={(e) => setFormData({ ...formData, stellarWalletAddress: e.target.value })}
-              placeholder="G..."
-              className="font-mono text-xs"
-            />
+            {formData.stellarWalletAddress ? (
+              <div className="flex items-center gap-2 border border-input bg-muted/50 px-3 py-2">
+                <ShortAddress
+                  address={formData.stellarWalletAddress}
+                  startChars={8}
+                  endChars={8}
+                  className="flex-1 text-xs"
+                />
+              </div>
+            ) : (
+              <Input
+                id="stellarWallet"
+                value={formData.stellarWalletAddress}
+                onChange={(e) => setFormData({ ...formData, stellarWalletAddress: e.target.value })}
+                placeholder="G..."
+                className="font-mono text-xs focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none hover:outline-none border-input"
+              />
+            )}
           </div>
 
-          <div className="border-t pt-4">
+          <div className="pt-4">
             <Label className="mb-2 block">
               Accept currencies from customers{' '}
               <span className="text-xs text-muted-foreground">— payer&apos;s local currency</span>
@@ -226,7 +263,7 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
                   key={curr}
                   type="button"
                   onClick={() => toggleCurrency(curr)}
-                  className={`rounded-full border px-3 py-1 text-sm font-medium transition-all ${
+                  className={`border px-3 py-1 text-sm font-medium transition-all focus:outline-none ${
                     formData.acceptedCurrencies.includes(curr)
                       ? 'border-[var(--pave-orange)] bg-[var(--pave-orange)] text-white'
                       : 'border-gray-300 bg-card text-muted-foreground hover:border-gray-400 dark:border-gray-700'
@@ -238,19 +275,19 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
             </div>
           </div>
 
-          <div className="flex gap-2 pt-2">
+          <div className="flex flex-col gap-2 pt-2 sm:flex-row">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="flex-1"
+              className="flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={creating}
-              className="flex-1 bg-[var(--pave-orange)] hover:bg-[var(--pave-orange-hover)]"
+              className="flex-1 bg-[var(--pave-orange)] hover:bg-[var(--pave-orange-hover)] focus:outline-none"
             >
               {creating ? 'Creating...' : 'Generate Checkout Link'}
               {!creating && (

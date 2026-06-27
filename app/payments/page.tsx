@@ -1,40 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { usePayments } from '@/hooks';
+import { usePayments, useDebounce } from '@/hooks';
 import { PaymentsFilters } from './PaymentsFilters';
 import { PaymentsTable } from './PaymentsTable';
 import type { PaymentStatus } from '@/types';
 
 export default function PaymentsPage() {
-  const { isAuthenticated, login } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   
-  const { payments, loading, refetch } = usePayments({
+  // Debounce search query to avoid excessive re-fetches
+  const debouncedSearch = useDebounce(searchQuery, 400);
+  
+  const { payments, loading } = usePayments({
     status: statusFilter !== 'all' ? (statusFilter as PaymentStatus) : undefined,
-    search: searchQuery,
+    search: debouncedSearch,
   });
 
-  const handleRefresh = () => {
-    if (!isAuthenticated) {
-      login();
-      return;
-    }
-    refetch();
-  };
-
-  if (loading) {
-    return (
-      <div className="flex h-96 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[var(--pave-orange)]" />
-      </div>
-    );
-  }
-
   return (
-    <div className="mx-auto max-w-[1200px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
+    <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-7 sm:py-8">
       <div className="mb-6 animate-fadeup">
         <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
           Payments
@@ -52,7 +37,6 @@ export default function PaymentsPage() {
         setSearchQuery={setSearchQuery}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
-        onApply={handleRefresh}
       />
 
       <PaymentsTable payments={payments} loading={loading} />

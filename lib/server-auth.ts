@@ -1,17 +1,13 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { NextRequest } from 'next/server';
-
-const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID!;
+import { API_ENDPOINTS, PRIVY_APP_ID } from './constants';
 
 // Privy signs access tokens with keys published at this JWKS endpoint
 const jwks = createRemoteJWKSet(
-  new URL(`https://auth.privy.io/api/v1/apps/${PRIVY_APP_ID}/jwks.json`),
+  new URL(`${API_ENDPOINTS.PRIVY_AUTH_BASE}/apps/${PRIVY_APP_ID}/jwks.json`),
 );
 
-/**
- * Verifies the Privy JWT in the Authorization header and returns the userId (DID).
- * Returns null if the token is missing or invalid.
- */
+
 export async function getAuthenticatedUserId(req: NextRequest): Promise<string | null> {
   const authHeader = req.headers.get('Authorization');
   if (!authHeader?.startsWith('Bearer ')) return null;

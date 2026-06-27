@@ -1,6 +1,5 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -15,7 +14,6 @@ interface PaymentsFiltersProps {
   setSearchQuery: (value: string) => void;
   statusFilter: string;
   setStatusFilter: (value: string) => void;
-  onApply: () => void;
 }
 
 export function PaymentsFilters({
@@ -23,7 +21,6 @@ export function PaymentsFilters({
   setSearchQuery,
   statusFilter,
   setStatusFilter,
-  onApply,
 }: PaymentsFiltersProps) {
   return (
     <div
@@ -47,9 +44,6 @@ export function PaymentsFilters({
           <SelectItem value="failed">Failed</SelectItem>
         </SelectContent>
       </Select>
-      <Button onClick={onApply} variant="outline" className="w-full sm:w-auto">
-        Apply Filters
-      </Button>
     </div>
   );
 }

@@ -9,7 +9,7 @@ interface AccountStatsCardProps {
 export function AccountStatsCard({ stats }: AccountStatsCardProps) {
   return (
     <div
-      className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6"
+      className="border bg-card p-4 shadow-sm animate-fadeup sm:p-6"
       style={{ animationDelay: '0.21s' }}
     >
       <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">

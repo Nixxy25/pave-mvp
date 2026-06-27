@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { StellarPayment } from './StellarPayment';
 import { CheckoutHeader } from './CheckoutHeader';
@@ -9,106 +10,96 @@ import { PaymentMethodSelector } from './PaymentMethodSelector';
 import { CurrencySelector } from './CurrencySelector';
 import { getCheckoutLinkById, getMerchantInfo, completeCheckoutPayment } from '@/lib/api';
 import { isSupportedCurrency } from '@/lib/constants';
+import { useExchangeRates, convertCurrency } from '@/hooks/useExchangeRates';
 import type { CheckoutLink } from '@/types';
 
 type PaymentMethod = 'card' | 'stellar';
 
 export default function CheckoutPage() {
   const params = useParams();
+  const { data: exchangeRates } = useExchangeRates();
   const [checkoutData, setCheckoutData] = useState<CheckoutLink | null>(null);
-  const [merchantInfo, setMerchantInfo] = useState<any>(null);
+  const [merchantInfo, setMerchantInfo] = useState<{ name: string; personName: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState(false);
   const [selectedCurrency, setSelectedCurrency] = useState('GHS');
   const [customerName, setCustomerName] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
 
   useEffect(() => {
-    loadCheckoutData();
-  }, []);
-
-  const loadCheckoutData = async () => {
-    try {
-      const checkoutId = params.id as string;
-      const link = await getCheckoutLinkById(checkoutId);
-      
-      if (link) {
-        setCheckoutData(link);
+    const loadCheckoutData = async () => {
+      try {
+        const checkoutId = params.id as string;
+        const link = await getCheckoutLinkById(checkoutId);
         
-        const merchant = await getMerchantInfo(checkoutId);
-        if (merchant) {
-          setMerchantInfo(merchant);
-        }
-        
-        const acceptedCurrencies = link.acceptedCurrencies || [];
-        const availableCurrencies = acceptedCurrencies.filter(isSupportedCurrency);
-        if (availableCurrencies.length > 0) {
-          setSelectedCurrency(availableCurrencies[0]);
-        } else if (link.equivalents) {
-          const currencyKeys = Object.keys(link.equivalents).filter(isSupportedCurrency);
-          if (currencyKeys.length > 0) {
-            setSelectedCurrency(currencyKeys[0]);
+        if (link) {
+          setCheckoutData(link);
+          
+          const merchant = await getMerchantInfo(checkoutId);
+          if (merchant) {
+            setMerchantInfo(merchant);
+          }
+          
+          const acceptedCurrencies = link.acceptedCurrencies || [];
+          const availableCurrencies = acceptedCurrencies.filter(isSupportedCurrency);
+          if (availableCurrencies.length > 0) {
+            setSelectedCurrency(availableCurrencies[0]);
+          } else if (link.equivalents) {
+            const currencyKeys = Object.keys(link.equivalents).filter(isSupportedCurrency);
+            if (currencyKeys.length > 0) {
+              setSelectedCurrency(currencyKeys[0]);
+            }
           }
         }
+      } catch {
+        // Silently fail - checkout might not exist
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+
+    loadCheckoutData();
+  }, [params.id]);
 
   const handleCardPayment = async () => {
     if (!checkoutData) return;
     if (!customerName.trim()) {
-      alert('Please enter your name to continue');
+      toast.error('Please enter your name to continue');
       return;
     }
-    setProcessing(true);
     
-    const exchangeAmount = checkoutData.equivalents[selectedCurrency] || checkoutData.amount;
-    
-    setTimeout(async () => {
-      try {
-        const result = await completeCheckoutPayment({
+    // This is disabled but keeping the handler for potential future use
+    try {
+      const result = await completeCheckoutPayment({
           checkoutLinkId: checkoutData.id,
           customerName: customerName.trim(),
-          amount: exchangeAmount,
-          currency: selectedCurrency,
-          usdcAmount: checkoutData.equivalents['USD'] || checkoutData.amount,
-          description: checkoutData.description,
           paymentMethod: 'card',
         });
         
-        window.location.href = `/confirmed/${params.id}?amount=${exchangeAmount}&currency=${selectedCurrency}&txId=${result.paymentId}&method=card`;
-      } catch (error) {
-        alert('Payment failed. Please try again.');
-        setProcessing(false);
+        // Redirect to secure confirmation page (server fetches payment details)
+        window.location.href = `/confirmed/${result.paymentId}`;
+      } catch {
+        toast.error('Payment failed. Please try again.');
       }
-    }, 2000);
   };
 
   const handleStellarSuccess = async (txHash: string) => {
     if (!checkoutData) return;
-    const usdcAmount = checkoutData.equivalents['USD'] || checkoutData.amount;
     try {
-      await completeCheckoutPayment({
+      const result = await completeCheckoutPayment({
         checkoutLinkId: checkoutData.id,
         customerName: customerName.trim() || 'Stellar User',
-        amount: usdcAmount,
-        currency: 'XLM',
-        usdcAmount,
-        description: checkoutData.description,
         paymentMethod: 'stellar',
         stellarTxHash: txHash,
       });
-      window.location.href = `/confirmed/${params.id}?amount=${usdcAmount}&currency=XLM&txId=${txHash}&method=stellar`;
+      // Redirect to secure confirmation page (server fetches payment details)
+      window.location.href = `/confirmed/${result.paymentId}`;
     } catch {
-      alert('Payment sent but record failed. TX: ' + txHash);
+      toast.error('Payment sent but record failed. TX: ' + txHash);
     }
   };
 
   const handleStellarError = (msg: string) => {
-    alert(`Stellar payment failed: ${msg}`);
+    toast.error(`Stellar payment failed: ${msg}`);
   };
 
   if (loading) {
@@ -130,9 +121,43 @@ export default function CheckoutPage() {
     );
   }
 
-  const { amount, currency, description, equivalents } = checkoutData;
-  const exchangeAmount = equivalents[selectedCurrency] || amount;
-  const usdcAmount = equivalents['USD'] || amount;
+  // Check if checkout link is completed or expired
+  if (checkoutData.status === 'completed' || checkoutData.status === 'expired') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-[520px] border bg-card p-8 text-center shadow-lg">
+          <div className="mb-4 flex justify-center">
+            <div className="flex h-16 w-16 items-center justify-center bg-muted">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none" className="text-muted-foreground">
+                <path d="M8 16V12a8 8 0 0116 0v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                <rect x="4" y="14" width="24" height="14" rx="3" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </div>
+          </div>
+          <h1 className="mb-2 font-serif text-2xl font-light italic text-foreground">
+            {checkoutData.status === 'completed' ? 'Payment Completed' : 'Link Expired'}
+          </h1>
+          <p className="text-muted-foreground">
+            {checkoutData.status === 'completed'
+              ? 'This checkout link has already been used and is no longer active.'
+              : 'This checkout link has expired and can no longer be used for payment.'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const { amount, currency, description } = checkoutData;
+  
+  // Calculate live exchange amounts using React Query
+  const exchangeAmount = exchangeRates 
+    ? convertCurrency(amount, currency, selectedCurrency, exchangeRates)
+    : amount;
+
+  const xlmAmount = exchangeRates
+    ? convertCurrency(amount, currency, 'XLM', exchangeRates)
+    : amount;
+
   const hasStellarOption = Boolean(checkoutData.stellarWalletAddress);
 
   return (
@@ -155,7 +180,7 @@ export default function CheckoutPage() {
 
       {/* Main Content */}
       <div className="flex justify-center px-4 py-8 sm:py-12">
-        <div className="w-full max-w-[520px] animate-fadeup rounded-[20px] border bg-card shadow-lg">
+        <div className="w-full max-w-[520px] animate-fadeup border bg-card shadow-lg">
           <CheckoutHeader
             merchantInfo={merchantInfo}
             currency={currency}
@@ -164,7 +189,7 @@ export default function CheckoutPage() {
             paymentMethod={paymentMethod}
             selectedCurrency={selectedCurrency}
             exchangeAmount={exchangeAmount}
-            usdcAmount={usdcAmount}
+            xlmAmount={xlmAmount}
           />
 
           {/* Body */}
@@ -176,8 +201,8 @@ export default function CheckoutPage() {
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="John Doe"
-                className="h-11 w-full rounded-lg border border-gray-300 px-3.5 text-[14px] outline-none transition-all focus:border-[var(--pave-orange)] focus:ring-2 focus:ring-[var(--pave-orange)]/20"
+                placeholder="Your name"
+                className="h-11 w-full border border-gray-300 px-3.5 text-[14px] outline-none transition-all focus:border-[var(--pave-orange)] focus:ring-2 focus:ring-[var(--pave-orange)]/20"
               />
             </div>
 
@@ -187,26 +212,44 @@ export default function CheckoutPage() {
               hasStellarOption={hasStellarOption}
             />
 
-            {paymentMethod === 'card' && (
+            {paymentMethod === 'card' && exchangeRates && (
               <CurrencySelector
                 selectedCurrency={selectedCurrency}
                 setSelectedCurrency={setSelectedCurrency}
-                equivalents={equivalents}
+                equivalents={{
+                  USD: convertCurrency(amount, currency, 'USD', exchangeRates),
+                  NGN: convertCurrency(amount, currency, 'NGN', exchangeRates),
+                  GHS: convertCurrency(amount, currency, 'GHS', exchangeRates),
+                  KES: convertCurrency(amount, currency, 'KES', exchangeRates),
+                  XLM: convertCurrency(amount, currency, 'XLM', exchangeRates),
+                }}
                 acceptedCurrencies={checkoutData.acceptedCurrencies}
               />
+            )}
+
+            {paymentMethod === 'card' && !exchangeRates && (
+              <div className="border bg-muted/20 p-4 text-center text-sm text-muted-foreground">
+                Loading exchange rates...
+              </div>
             )}
 
             {/* Stellar Payment */}
             {paymentMethod === 'stellar' && checkoutData.stellarWalletAddress && (
               <div className="mb-1">
-                <StellarPayment
-                  merchantAddress={checkoutData.stellarWalletAddress}
-                  xlmAmount={usdcAmount}
-                  onSuccess={handleStellarSuccess}
-                  onError={handleStellarError}
-                  disabled={!customerName.trim()}
-                />
-                {!customerName.trim() && (
+                {exchangeRates ? (
+                  <StellarPayment
+                    merchantAddress={checkoutData.stellarWalletAddress}
+                    xlmAmount={xlmAmount}
+                    onSuccess={handleStellarSuccess}
+                    onError={handleStellarError}
+                    disabled={!customerName.trim()}
+                  />
+                ) : (
+                  <div className="border bg-muted/20 p-4 text-center text-sm text-muted-foreground">
+                    Loading exchange rates...
+                  </div>
+                )}
+                {!customerName.trim() && exchangeRates && (
                   <p className="mt-2 text-center text-[12px] text-muted-foreground">
                     Enter your name above to enable payment
                   </p>
@@ -220,15 +263,14 @@ export default function CheckoutPage() {
             <div className="border-t p-6 pt-5">
               <Button
                 onClick={handleCardPayment}
-                disabled={processing || !customerName.trim()}
-                className="h-12 w-full bg-[var(--pave-orange)] text-[15px] font-medium hover:bg-[var(--pave-orange-hover)] disabled:cursor-not-allowed disabled:opacity-70"
+                disabled={true}
+                className="h-12 w-full bg-muted text-[15px] font-medium text-muted-foreground cursor-not-allowed opacity-70"
               >
-                {processing ? 'Processing...' : `Pay ${selectedCurrency} ${exchangeAmount.toLocaleString()}`}
-                {!processing && (
-                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" className="ml-2">
-                    <path d="M2 7.5h11M9 3.5l4 4-4 4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
+                Coming Soon
+                <svg width="10" height="12" viewBox="0 0 10 12" fill="none" className="ml-2">
+                  <path d="M1 5.5V3.5a4 4 0 018 0v2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+                  <rect x=".5" y="5" width="9" height="6.5" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
+                </svg>
               </Button>
 
               <div className="mt-4 flex items-center justify-center gap-4 text-[11.5px]">
