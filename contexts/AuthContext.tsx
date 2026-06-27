@@ -1,228 +1,174 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import {
-  signIn,
-  signUp,
-  signOut,
-  confirmSignUp,
-  getCurrentUser,
-  fetchUserAttributes,
-  signInWithRedirect,
-  updateUserAttributes,
-  resendSignUpCode,
-  fetchAuthSession,
-} from 'aws-amplify/auth';
-import { Hub } from 'aws-amplify/utils';
-import { configureAmplify } from '@/lib/amplify-config';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from 'react';
+import { usePrivy } from '@privy-io/react-auth';
+import { setTokenGetter, setUserIdGetter } from '@/lib/fetch-api';
 
-if (typeof window !== 'undefined') {
-  configureAmplify();
-}
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface User {
   userId: string;
   email: string;
   fullName: string;
-  businessName: string;
   emailVerified: boolean;
-  authProvider: 'cognito' | 'google';
-}
-
-interface SignUpData {
-  email: string;
-  password: string;
-  fullName: string;
-  businessName: string;
+  authProvider: 'email' | 'google' | 'wallet';
+  stellarAddress: string;
+  apiKey: string;
+  apiSecret: string;
 }
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  needsBusinessName: boolean;
-  login: (email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => Promise<void>;
-  register: (data: SignUpData) => Promise<void>;
-  confirmAccount: (email: string, code: string) => Promise<void>;
-  resendCode: (email: string) => Promise<void>;
+  login: () => void;
   logout: () => Promise<void>;
-  updateBusinessName: (businessName: string) => Promise<void>;
-  refreshUser: () => Promise<void>;
+  refreshUser: () => void;
 }
+
+// Shape of a row from the Supabase merchants table
+interface MerchantRow {
+  privy_user_id: string;
+  email: string;
+  full_name: string;
+  stellar_address: string;
+  stellar_wallet_id: string;
+  api_key: string;
+  api_secret: string;
+  created_at: string;
+}
+
+// ─── Context ──────────────────────────────────────────────────────────────────
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [needsBusinessName, setNeedsBusinessName] = useState(false);
+  const {
+    ready,
+    authenticated,
+    user: privyUser,
+    logout: privyLogout,
+    getAccessToken,
+    login: privyLogin,
+  } = usePrivy();
 
+  const [merchant, setMerchant] = useState<MerchantRow | null>(null);
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  // ── Bridge: expose Privy token + userId to non-React API modules ──────────
   useEffect(() => {
-    checkAuth();
+    setTokenGetter(getAccessToken);
+    setUserIdGetter(() => privyUser?.id ?? null);
+  }, [getAccessToken, privyUser?.id]);
 
-    const unsubscribe = Hub.listen('auth', ({ payload }) => {
-      switch (payload.event) {
-        case 'signInWithRedirect':
-          checkAuth();
-          break;
-        case 'signInWithRedirect_failure':
-          setIsLoading(false);
-          break;
-        case 'signedIn':
-          checkAuth();
-          break;
-        case 'signedOut':
-          setUser(null);
-          setNeedsBusinessName(false);
-          setIsLoading(false);
-          break;
-        case 'tokenRefresh_failure':
-          setUser(null);
-          setNeedsBusinessName(false);
-          break;
-      }
-    });
+  // ── Derive email/name from Privy at component level so they can be used as deps ──
+  const privyEmail = useMemo(
+    () =>
+      privyUser?.email?.address ||
+      (privyUser?.google as { email?: string } | null)?.email ||
+      '',
+    [privyUser]
+  );
+  const privyFullName = useMemo(
+    () =>
+      (privyUser?.google as { name?: string } | null)?.name ||
+      privyEmail.split('@')[0] ||
+      '',
+    [privyUser, privyEmail]
+  );
 
-    return () => unsubscribe();
-  }, []);
+  // ── Load or create merchant profile whenever auth state changes ───────────
+  useEffect(() => {
+    if (!ready) return;
 
-  async function checkAuth() {
-    try {
-      const currentUser = await getCurrentUser();
-      
-      const isGoogleUser = currentUser.username?.startsWith('google_') || false;
-      
-      let email = '';
-      let fullName = '';
-      let businessName = '';
-      let emailVerified = false;
-      
-      if (isGoogleUser) {
-        const session = await fetchAuthSession();
-        const idToken = session.tokens?.idToken;
-        if (idToken?.payload) {
-          email = (idToken.payload.email as string) || '';
-          fullName = (idToken.payload.name as string) || '';
-          emailVerified = (idToken.payload.email_verified as boolean) || false;
+    const doLoad = async (): Promise<MerchantRow | null> => {
+      if (!authenticated || !privyUser?.id) return null;
+
+      const token = await getAccessToken();
+      const authHeader = { Authorization: `Bearer ${token}` };
+
+      // 1. Try to load existing merchant record
+      const res = await fetch('/api/merchant', { headers: authHeader });
+
+      if (res.ok) {
+        const { merchant: existing } = (await res.json()) as { merchant: MerchantRow };
+
+        // 2a. Create Stellar wallet if not yet assigned
+        if (!existing.stellar_address) {
+          const walletRes = await fetch('/api/stellar-wallet', {
+            method: 'POST',
+            headers: authHeader,
+          });
+          if (walletRes.ok) {
+            const { address } = await walletRes.json();
+            return { ...existing, stellar_address: address };
+          }
         }
-
-        // businessName is saved to Cognito nickname by complete-profile
-        const attributes = await fetchUserAttributes();
-        businessName = attributes.nickname || '';
-      } else {
-        const attributes = await fetchUserAttributes();
-        email = attributes.email || '';
-        fullName = attributes.name || '';
-        businessName = attributes.nickname || '';
-        emailVerified = attributes.email_verified === 'true';
+        return existing;
       }
-      
-      const needsBusiness = isGoogleUser && (!businessName || businessName === fullName);
-      setNeedsBusinessName(needsBusiness);
 
-      const userData: User = {
-        userId: currentUser.userId,
-        email: email,
-        fullName: fullName,
-        businessName: businessName,
-        emailVerified: emailVerified,
-        authProvider: isGoogleUser ? 'google' : 'cognito',
-      };
+      if (res.status === 404) {
+        // 3. First login — create merchant row in Supabase
+        const createRes = await fetch('/api/merchant', {
+          method: 'POST',
+          headers: { ...authHeader, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: privyEmail, full_name: privyFullName }),
+        });
+        if (!createRes.ok) return null;
+        const { merchant: created } = (await createRes.json()) as { merchant: MerchantRow };
 
-      setUser(userData);
-
-    } catch (error) {
-      setUser(null);
-      setNeedsBusinessName(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  async function login(email: string, password: string) {
-    try {
-      try {
-        await signOut({ global: false });
-      } catch (err) {
+        // 2b. Create Stellar wallet immediately after merchant creation
+        const walletRes = await fetch('/api/stellar-wallet', {
+          method: 'POST',
+          headers: authHeader,
+        });
+        if (walletRes.ok) {
+          const { address } = await walletRes.json();
+          return { ...created, stellar_address: address };
+        }
+        return created;
       }
-      
-      const result = await signIn({ username: email, password });
-      
-      if (result.isSignedIn) {
-        await checkAuth();
-      } else {
-        throw new Error('Sign in requires additional steps');
+
+      return null;
+    };
+
+    doLoad()
+      .then((m) => setMerchant(m))
+      .catch(console.error);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, authenticated, privyUser?.id, privyEmail, privyFullName, refreshTick]);
+
+  // ── Derived user object from Supabase merchant row ────────────────────────
+  const user: User | null = merchant
+    ? {
+        userId: merchant.privy_user_id,
+        email: merchant.email,
+        fullName: merchant.full_name,
+        stellarAddress: merchant.stellar_address,
+        emailVerified: true,
+        authProvider: (privyUser?.google ? 'google' : 'email') as 'email' | 'google',
+        apiKey: merchant.api_key,
+        apiSecret: merchant.api_secret,
       }
-    } catch (error: any) {
-      throw error;
-    }
-  }
+    : null;
 
-  async function loginWithGoogle() {
-    try {
-      await signInWithRedirect({ provider: 'Google' });
-    } catch (error) {
-      throw error;
-    }
-  }
+  // ── Actions ───────────────────────────────────────────────────────────────
+  const refreshUser = useCallback(() => setRefreshTick((t) => t + 1), []);
 
-  async function register(data: SignUpData) {
-    await signUp({
-      username: data.email,
-      password: data.password,
-      options: {
-        userAttributes: {
-          email: data.email,
-          name: data.fullName,
-          nickname: data.businessName,
-        },
-      },
-    });
-  }
-
-  async function confirmAccount(email: string, code: string) {
-    await confirmSignUp({ username: email, confirmationCode: code });
-  }
-
-  async function resendCode(email: string) {
-    await resendSignUpCode({ username: email });
-  }
-
-  async function logout() {
-    await signOut();
-    setUser(null);
-    setNeedsBusinessName(false);
-  }
-
-  async function updateBusinessName(businessName: string) {
-    await updateUserAttributes({
-      userAttributes: {
-        nickname: businessName,
-      },
-    });
-    setNeedsBusinessName(false);
-    await checkAuth();
-  }
-
-  async function refreshUser() {
-    await checkAuth();
-  }
+  const isLoading = !ready || (authenticated && merchant === null);
+  const isAuthenticated = authenticated && !!merchant;
 
   return (
     <AuthContext.Provider
       value={{
         user,
         isLoading,
-        isAuthenticated: !!user,
-        needsBusinessName,
-        login,
-        loginWithGoogle,
-        register,
-        confirmAccount,
-        resendCode,
-        logout,
-        updateBusinessName,
+        isAuthenticated,
+        login: privyLogin,
+        logout: async () => {
+          await privyLogout();
+          setMerchant(null);
+        },
         refreshUser,
       }}
     >
@@ -232,9 +178,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within AuthProvider');
-  }
-  return context;
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
+  return ctx;
 }
