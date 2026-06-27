@@ -1,16 +1,15 @@
 import { createRemoteJWKSet, jwtVerify } from 'jose';
 import { NextRequest } from 'next/server';
 
-const region = process.env.NEXT_PUBLIC_AWS_REGION!;
-const userPoolId = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID!;
+const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID!;
 
-const JWKS_URL = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}/.well-known/jwks.json`;
-const ISSUER = `https://cognito-idp.${region}.amazonaws.com/${userPoolId}`;
-
-const jwks = createRemoteJWKSet(new URL(JWKS_URL));
+// Privy signs access tokens with keys published at this JWKS endpoint
+const jwks = createRemoteJWKSet(
+  new URL(`https://auth.privy.io/api/v1/apps/${PRIVY_APP_ID}/jwks.json`),
+);
 
 /**
- * Verifies the Cognito JWT in the Authorization header and returns the userId (sub).
+ * Verifies the Privy JWT in the Authorization header and returns the userId (DID).
  * Returns null if the token is missing or invalid.
  */
 export async function getAuthenticatedUserId(req: NextRequest): Promise<string | null> {
@@ -18,9 +17,11 @@ export async function getAuthenticatedUserId(req: NextRequest): Promise<string |
   if (!authHeader?.startsWith('Bearer ')) return null;
 
   const token = authHeader.slice(7);
-
   try {
-    const { payload } = await jwtVerify(token, jwks, { issuer: ISSUER });
+    const { payload } = await jwtVerify(token, jwks, {
+      issuer: 'privy.io',
+      audience: PRIVY_APP_ID,
+    });
     return (payload.sub as string) ?? null;
   } catch {
     return null;

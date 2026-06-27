@@ -1,16 +1,23 @@
-import { fetchAuthSession } from 'aws-amplify/auth';
+type TokenFn = () => Promise<string | null>;
+type UserIdFn = () => string | null;
 
-async function getToken(): Promise<string | null> {
-  try {
-    const session = await fetchAuthSession();
-    return session.tokens?.idToken?.toString() ?? null;
-  } catch {
-    return null;
-  }
+let _getToken: TokenFn = async () => null;
+let _getUserId: UserIdFn = () => null;
+
+export function setTokenGetter(fn: TokenFn) {
+  _getToken = fn;
+}
+
+export function setUserIdGetter(fn: UserIdFn) {
+  _getUserId = fn;
+}
+
+export function getCurrentUserId(): string | null {
+  return _getUserId();
 }
 
 export async function authFetch(path: string, options: RequestInit = {}): Promise<Response> {
-  const token = await getToken();
+  const token = await _getToken();
   return fetch(path, {
     ...options,
     headers: {
