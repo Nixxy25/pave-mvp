@@ -38,7 +38,6 @@ export default function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-[980px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
-      {/* Greeting */}
       <div className="mb-6.5 animate-fadeup">
         <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
           Dashboard
@@ -57,15 +56,6 @@ export default function DashboardPage() {
             year: 'numeric',
           })}
         </p>
-      </div>
-
-      {/* Testnet badge */}
-      <div
-        className="mb-5.5 flex animate-fadeup items-center gap-3 rounded-lg border border-[var(--success-medium)] bg-[var(--success-light)] p-3 px-4"
-        style={{ animationDelay: '0.07s' }}
-      >
-        <div className="h-2 w-2 flex-shrink-0 animate-blink rounded-full bg-[var(--success)]" />
-        <div className="text-[13px] font-medium text-[var(--success)]">Pave testnet</div>
       </div>
 
       <StatsCards
