@@ -55,8 +55,8 @@ export function RecentActivityTable({ activities }: RecentActivityTableProps) {
   const { data: exchangeRates } = useExchangeRates();
 
   return (
-    <div className="border bg-card shadow-sm animate-fadeup" style={{ animationDelay: '0.21s' }}>
-      <div className="flex items-center justify-between border-b p-5 pb-4">
+    <div className="border bg-card shadow-sm animate-fadeup max-h-[calc(100vh-420px)] overflow-hidden flex flex-col" style={{ animationDelay: '0.21s' }}>
+      <div className="flex items-center justify-between border-b p-5 pb-4 flex-shrink-0">
         <div>
           <h2 className="font-serif text-[19px] font-light italic text-foreground">
             Recent Activity
@@ -73,7 +73,7 @@ export function RecentActivityTable({ activities }: RecentActivityTableProps) {
         </Link>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto flex-1">
         {activities.length === 0 ? (
           <div className="px-6 py-12 text-center text-[13.5px] text-muted-foreground">
             No activity yet.{' '}
@@ -124,7 +124,7 @@ export function RecentActivityTable({ activities }: RecentActivityTableProps) {
                     {/* Amount */}
                     <td className="px-3 py-2.5 sm:px-5 sm:py-3.5">
                       <div className="whitespace-nowrap text-[12.5px] font-medium text-foreground sm:text-[13.5px]">
-                        {activity.currency === 'XLM' && exchangeRates && payment.usdcAmount
+                        {payment.method === 'Stellar Wallet' && exchangeRates && payment.usdcAmount
                           ? `XLM ${convertCurrency(payment.usdcAmount, 'USD', 'XLM', exchangeRates).toFixed(2)}`
                           : `${activity.currency} ${activity.amount.toLocaleString()}`}
                       </div>

@@ -111,15 +111,15 @@ export default function ConfirmedPage() {
           <div className="mb-6 bg-[var(--success-light)] p-4 text-center">
             <div className="mb-1 text-[13px] font-medium text-[var(--success)]">Amount Paid</div>
             <div className="font-serif text-[32px] font-light italic text-foreground">
-              {paymentDetails.currency === 'XLM' && exchangeRates ? (
-                // For XLM, calculate amount from USDC using live rate
+              {paymentDetails.method === 'Stellar Wallet' && exchangeRates ? (
+                // For Stellar Wallet payments, show XLM amount calculated from USDC using live rate
                 <>XLM {convertCurrency(paymentDetails.usdcAmount, 'USD', 'XLM', exchangeRates).toFixed(2)}</>
               ) : (
-                // For other currencies, show stored amount
+                // For other payment methods, show stored amount in original currency
                 <>{paymentDetails.currency} {paymentDetails.amount.toLocaleString()}</>
               )}
             </div>
-            {exchangeRates && paymentDetails.currency !== 'USD' && paymentDetails.currency !== 'XLM' && (
+            {exchangeRates && paymentDetails.method !== 'Stellar Wallet' && paymentDetails.currency !== 'USD' && (
               <div className="mt-2 text-[13px] text-muted-foreground">
                 ≈ ${paymentDetails.usdcAmount.toLocaleString()} USD
                 {' · '}
@@ -200,17 +200,6 @@ export default function ConfirmedPage() {
             >
               Download Receipt
             </Button>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="mt-6 text-center">
-          <div className="flex items-center justify-center gap-2 text-[12px] text-muted-foreground">
-            <svg width="12" height="13" viewBox="0 0 12 13" fill="none">
-              <path d="M2 6V4a4 4 0 018 0v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-              <rect x="1" y="5.5" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-            </svg>
-            Secured by Pave
           </div>
         </div>
       </div>

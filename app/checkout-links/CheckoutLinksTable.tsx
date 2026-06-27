@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Pencil } from 'lucide-react';
 import {
   DataTableHeader,
   DataTableLoading,
@@ -24,18 +25,19 @@ interface CheckoutLinksTableProps {
   loading: boolean;
   copiedId: string | null;
   onCopy: (url: string, id: string) => void;
+  onEdit: (link: CheckoutLink) => void;
 }
 
-export function CheckoutLinksTable({ links, loading, copiedId, onCopy }: CheckoutLinksTableProps) {
+export function CheckoutLinksTable({ links, loading, copiedId, onCopy, onEdit }: CheckoutLinksTableProps) {
   const getCheckoutUrl = (linkId: string) =>
     `${typeof window !== 'undefined' ? window.location.origin : ''}/checkout/${linkId}`;
 
   return (
     <div
-      className="border bg-card shadow-sm animate-fadeup"
+      className="border bg-card shadow-sm animate-fadeup max-h-[calc(100vh-280px)] overflow-hidden flex flex-col"
       style={{ animationDelay: '0.07s' }}
     >
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto flex-1">
         <table className="w-full">
           <DataTableHeader columns={COLUMNS} />
           <tbody>
@@ -66,15 +68,26 @@ export function CheckoutLinksTable({ links, loading, copiedId, onCopy }: Checkou
                       </code>
                     </td>
                     <td className="px-4 py-3">
-                      <Badge
-                        className={
-                          link.status === 'active'
-                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
-                            : 'bg-muted text-muted-foreground'
-                        }
-                      >
-                        {link.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          className={
+                            link.status === 'active'
+                              ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                              : 'bg-muted text-muted-foreground'
+                          }
+                        >
+                          {link.status}
+                        </Badge>
+                        {link.status === 'active' && (
+                          <button
+                            onClick={() => onEdit(link)}
+                            className="p-1 text-muted-foreground transition-colors hover:text-foreground"
+                            title="Edit checkout link"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3">
                       <Button

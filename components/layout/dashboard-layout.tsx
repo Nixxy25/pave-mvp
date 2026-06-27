@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Topbar } from './topbar';
 import { Sidebar } from './sidebar';
 import { NotificationPanel } from './notification-panel';
+import { Footer } from './footer';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -17,7 +18,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
 
   return (
-    <div className="flex min-h-screen flex-col bg-card">
+    <div className="flex h-screen flex-col bg-card">
       <Topbar 
         onNotificationClick={() => setIsNotificationOpen(!isNotificationOpen)}
         hasUnreadNotifications={true}
@@ -34,6 +35,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </main>
       </div>
+
+      <Footer />
 
       <NotificationPanel 
         isOpen={isNotificationOpen}

@@ -37,7 +37,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1280px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
+    <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-7 sm:py-8">
       <div className="mb-6.5 animate-fadeup">
         <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
           Dashboard

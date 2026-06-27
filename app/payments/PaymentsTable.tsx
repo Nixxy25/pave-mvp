@@ -48,10 +48,10 @@ export function PaymentsTable({ payments, loading }: PaymentsTableProps) {
 
   return (
     <div
-      className="border bg-card shadow-sm animate-fadeup"
+      className="border bg-card shadow-sm animate-fadeup max-h-[calc(100vh-280px)] overflow-hidden flex flex-col"
       style={{ animationDelay: '0.14s' }}
     >
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto overflow-y-auto flex-1">
         <table className="w-full">
           <DataTableHeader columns={COLUMNS} />
           <tbody>
@@ -79,7 +79,7 @@ export function PaymentsTable({ payments, loading }: PaymentsTableProps) {
                     <div className="text-[11px] text-muted-foreground sm:text-xs">{payment.payer.email}</div>
                   </td>
                   <td className="whitespace-nowrap px-3 py-2.5 text-[12.5px] font-medium text-foreground sm:px-4 sm:py-3 sm:text-sm">
-                    {payment.currency === 'XLM' && exchangeRates && payment.usdcAmount
+                    {payment.method === 'Stellar Wallet' && exchangeRates && payment.usdcAmount
                       ? `XLM ${convertCurrency(payment.usdcAmount, 'USD', 'XLM', exchangeRates).toFixed(2)}`
                       : `${payment.currency} ${payment.amount.toLocaleString()}`}
                   </td>
