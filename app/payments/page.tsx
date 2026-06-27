@@ -1,30 +1,37 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getPayments } from '@/lib/api';
+import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { usePayments } from '@/hooks';
 import { PaymentsFilters } from './PaymentsFilters';
 import { PaymentsTable } from './PaymentsTable';
-import type { Payment } from '@/types';
+import type { PaymentStatus } from '@/types';
 
 export default function PaymentsPage() {
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { isAuthenticated, login } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  
+  const { payments, loading, refetch } = usePayments({
+    status: statusFilter !== 'all' ? (statusFilter as PaymentStatus) : undefined,
+    search: searchQuery,
+  });
 
-  useEffect(() => {
-    loadPayments();
-  }, [statusFilter]);
-
-  const loadPayments = async () => {
-    setLoading(true);
-    const data = await getPayments({
-      status: statusFilter !== 'all' ? (statusFilter as any) : undefined,
-      search: searchQuery,
-    });
-    setPayments(data);
-    setLoading(false);
+  const handleRefresh = () => {
+    if (!isAuthenticated) {
+      login();
+      return;
+    }
+    refetch();
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[var(--pave-orange)]" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
@@ -45,7 +52,7 @@ export default function PaymentsPage() {
         setSearchQuery={setSearchQuery}
         statusFilter={statusFilter}
         setStatusFilter={setStatusFilter}
-        onApply={loadPayments}
+        onApply={handleRefresh}
       />
 
       <PaymentsTable payments={payments} loading={loading} />
