@@ -1,48 +1,37 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useBalance, usePayments } from '@/hooks';
 import { getUserProfile, getStats } from '@/lib/api';
-import { useBalance } from '@/hooks/useBalance';
-import { usePayments } from '@/hooks/usePayments';
-import { useWithdrawals } from '@/hooks/useWithdrawals';
 import { StatsCards } from './StatsCards';
 import { RecentActivityTable } from './RecentActivityTable';
-import type { Merchant, Payment, Withdrawal } from '@/types';
+import type { Merchant, Payment } from '@/types';
 
 export default function DashboardPage() {
+  const { isAuthenticated } = useAuth();
   const [user, setUser] = useState<Merchant | null>(null);
   const { balance, loading: balanceLoading } = useBalance();
   const { payments, loading: paymentsLoading } = usePayments();
-  const { withdrawals, loading: withdrawalsLoading } = useWithdrawals();
-  const [activities, setActivities] = useState<
-    Array<(Payment & { type: 'payment' }) | (Withdrawal & { type: 'withdrawal' })>
-  >([]);
 
   useEffect(() => {
-    getUserProfile()
-      .then(setUser)
-      .catch(() => {});
+    if (!isAuthenticated) return;
+    getUserProfile().then(setUser).catch(() => {});
     getStats().catch(() => {});
-  }, []);
+  }, [isAuthenticated]);
 
-  useEffect(() => {
-    if (!paymentsLoading && !withdrawalsLoading) {
-      const merged = [
-        ...payments.map((p: Payment) => ({ ...p, type: 'payment' as const })),
-        ...withdrawals.map((w: Withdrawal) => ({ ...w, type: 'withdrawal' as const })),
-      ]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 10);
-      setActivities(merged);
-    }
-  }, [payments, withdrawals, paymentsLoading, withdrawalsLoading]);
+  // Derive activities directly from payments
+  const activities = payments
+    .map((p: Payment) => ({ ...p, type: 'payment' as const }))
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 10);
 
-  const loading = balanceLoading || paymentsLoading || withdrawalsLoading;
+  const loading = balanceLoading || paymentsLoading;
 
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <div className="text-muted-foreground">Loading dashboard...</div>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[var(--pave-orange)]" />
       </div>
     );
   }
@@ -82,7 +71,6 @@ export default function DashboardPage() {
       <StatsCards
         balance={balance}
         payments={payments}
-        withdrawals={withdrawals}
         activities={activities}
       />
 
