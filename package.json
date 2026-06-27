@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@creit.tech/stellar-wallets-kit": "^2.1.0",
+    "@privy-io/react-auth": "^3.32.2",
     "@stellar/stellar-sdk": "^13.3.0",
     "@supabase/supabase-js": "^2.103.3",
     "aws-amplify": "^6.16.4",
