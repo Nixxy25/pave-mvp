@@ -31,8 +31,7 @@ export default function APIWebhooksPage() {
     "usdcAmount": 35.21,
     "payer": {
       "name": "John Doe",
-      "email": "john@example.com",
-      "country": "NG"
+      "email": "john@example.com"
     },
     "stellarTxHash": "abc123...xyz789",
     "status": "completed",
@@ -52,11 +51,14 @@ export default function APIWebhooksPage() {
         <p className="mt-1 text-[13.5px] text-muted-foreground">
           Integrate Pave payments into your application
         </p>
+        <div className="mt-3 border-l-2 border-[var(--pave-orange)] bg-[var(--pave-orange)]/5 px-3 py-2 text-[13px] text-muted-foreground">
+          <span className="font-medium text-foreground">Note:</span> This is demo documentation meant as an overview, and will be updated.
+        </div>
       </div>
 
       <div className="grid gap-6">
         {/* Create Payment */}
-        <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.07s' }}>
+        <div className="border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.07s' }}>
           <h2 className="mb-2 font-serif text-lg font-light italic text-foreground">
             Create a Payment
           </h2>
@@ -65,18 +67,18 @@ export default function APIWebhooksPage() {
           </p>
           
           <div className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">Request</div>
-          <pre className="overflow-x-auto rounded-lg bg-gray-900 p-3 text-xs text-gray-100 sm:p-4">
+          <pre className="overflow-x-auto bg-gray-900 p-3 text-xs text-gray-100 sm:p-4">
             <code>{curlExample}</code>
           </pre>
           
           <div className="mb-3 mt-4 text-xs font-medium text-muted-foreground uppercase tracking-wide">Response</div>
-          <pre className="overflow-x-auto rounded-lg bg-gray-900 p-3 text-xs text-gray-100 sm:p-4">
+          <pre className="overflow-x-auto bg-gray-900 p-3 text-xs text-gray-100 sm:p-4">
             <code>{responseExample}</code>
           </pre>
         </div>
 
         {/* Webhooks */}
-        <div className="rounded-[14px] border bg-card p-6 shadow-sm animate-fadeup" style={{ animationDelay: '0.14s' }}>
+        <div className="border bg-card p-6 shadow-sm animate-fadeup" style={{ animationDelay: '0.14s' }}>
           <h2 className="mb-2 font-serif text-lg font-light italic text-foreground">
             Webhook Events
           </h2>
@@ -100,7 +102,7 @@ export default function APIWebhooksPage() {
           </div>
           
           <div className="mb-3 text-xs font-medium text-muted-foreground uppercase tracking-wide">Example Payload</div>
-          <pre className="overflow-x-auto rounded-lg bg-gray-900 p-4 text-xs text-gray-100">
+          <pre className="overflow-x-auto bg-gray-900 p-4 text-xs text-gray-100">
             <code>{webhookExample}</code>
           </pre>
         </div>

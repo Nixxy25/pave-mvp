@@ -52,7 +52,7 @@ export function ShortAddress({
           className="text-xs text-[var(--pave-orange)] hover:underline"
           title={copied ? 'Copied!' : 'Copy full address'}
         >
-          {copied ? '✓ Copied' : 'Copy'}
+          {copied ? 'Copied' : 'Copy'}
         </button>
       </div>
     );

@@ -7,7 +7,6 @@ export interface Payer {
   email?: string;
   location?: string;
   avatar?: string;
-  country?: string;
   businessType?: string;
 }
 

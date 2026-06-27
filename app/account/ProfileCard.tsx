@@ -15,7 +15,7 @@ export function ProfileCard({
 }: ProfileCardProps) {
   return (
     <div
-      className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6"
+      className="border bg-card p-4 shadow-sm animate-fadeup sm:p-6"
       style={{ animationDelay: '0.07s' }}
     >
       <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
@@ -36,7 +36,7 @@ export function ProfileCard({
         <div>
           <div className="mb-1 text-xs font-medium text-foreground">Stellar Wallet Address</div>
           {walletAddress ? (
-            <div className="rounded-lg bg-muted p-2.5">
+            <div className="bg-muted p-2.5">
               <ShortAddress
                 address={walletAddress}
                 startChars={8}

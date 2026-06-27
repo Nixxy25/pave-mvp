@@ -31,7 +31,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[var(--pave-orange)]" />
+        <div className="h-8 w-8 animate-spin border-4 border-gray-200 border-t-[var(--pave-orange)]" />
       </div>
     );
   }
@@ -43,7 +43,7 @@ export default function DashboardPage() {
           Dashboard
         </div>
         <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
-          Good morning,{' '}
+          Welcome,{' '}
           <strong className="font-medium not-italic">{user?.name.split(' ')[0] || 'there'}</strong>{' '}
           👋
         </h1>

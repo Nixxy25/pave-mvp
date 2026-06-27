@@ -16,7 +16,7 @@ export default function SettlementPage() {
       </div>
 
       {/* Settlement Visualization */}
-      <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-8" style={{ animationDelay: '0.07s' }}>
+      <div className="border bg-card p-4 shadow-sm animate-fadeup sm:p-8" style={{ animationDelay: '0.07s' }}>
         <div className="mb-6 text-center">
           <h2 className="font-serif text-lg font-light italic text-foreground sm:text-xl">
             How Pave Settles Payments
@@ -30,7 +30,7 @@ export default function SettlementPage() {
         <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between sm:gap-0">
           {/* Source */}
           <div className="flex-1 text-center">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-blue-100 sm:h-16 sm:w-16">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center bg-blue-100 sm:h-16 sm:w-16">
               <svg className="h-7 w-7 text-blue-600 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -48,7 +48,7 @@ export default function SettlementPage() {
 
           {/* Bridge */}
           <div className="flex-1 text-center">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-purple-100 sm:h-16 sm:w-16">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center bg-purple-100 sm:h-16 sm:w-16">
               <svg className="h-7 w-7 text-purple-600 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
@@ -66,7 +66,7 @@ export default function SettlementPage() {
 
           {/* Destination */}
           <div className="flex-1 text-center">
-            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-green-100 sm:h-16 sm:w-16">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center bg-green-100 sm:h-16 sm:w-16">
               <svg className="h-7 w-7 text-green-600 sm:h-8 sm:w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -95,13 +95,13 @@ export default function SettlementPage() {
 
       {/* Benefits - responsive grid */}
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border bg-card p-5 animate-fadeup" style={{ animationDelay: '0.14s' }}>
+        <div className="border bg-card p-5 animate-fadeup" style={{ animationDelay: '0.14s' }}>
           <div className="mb-2 text-sm font-medium text-foreground">No Partial Failures</div>
           <p className="text-sm text-muted-foreground">
             Either the entire payment succeeds or it's rolled back — no stuck funds
           </p>
         </div>
-        <div className="rounded-lg border bg-card p-5 animate-fadeup" style={{ animationDelay: '0.21s' }}>
+        <div className="border bg-card p-5 animate-fadeup" style={{ animationDelay: '0.21s' }}>
           <div className="mb-2 text-sm font-medium text-foreground">Real-time Settlement</div>
           <p className="text-sm text-muted-foreground">
             Funds arrive in your wallet within seconds, not days

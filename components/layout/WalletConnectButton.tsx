@@ -13,9 +13,9 @@ export function WalletConnectButton() {
     return (
       <button
         title={address}
-        className="hidden items-center gap-1.5 rounded-full border border-[var(--stellar)]/30 bg-[var(--stellar)]/10 px-3 py-1 text-[11.5px] text-[var(--stellar)] transition-colors hover:bg-[var(--stellar)]/20 sm:flex"
+        className="hidden items-center gap-1.5 border border-[var(--stellar)]/30 bg-[var(--stellar)]/10 px-3 py-1 text-[11.5px] text-[var(--stellar)] transition-colors hover:bg-[var(--stellar)]/20 sm:flex"
       >
-        <span className="h-1.5 w-1.5 rounded-full bg-[var(--stellar)]" />
+        <span className="h-1.5 w-1.5 bg-[var(--stellar)]" />
         <ShortAddress address={address} startChars={4} endChars={4} />
       </button>
     );

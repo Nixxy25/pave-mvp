@@ -1,3 +1,8 @@
+// ──────────────────────────────────────────────────────────────────────────────
+// WITHDRAWALS FEATURE: COMING SOON
+// These types are defined but the withdrawal feature is not yet implemented
+// ──────────────────────────────────────────────────────────────────────────────
+
 export type WithdrawalStatus = 'pending' | 'processing' | 'settled' | 'failed' | 'completed';
 
 export interface BankAccount {
@@ -6,7 +11,6 @@ export interface BankAccount {
   bankCode: string;
   accountNumber: string;
   accountName: string;
-  country: string;
   isDefault?: boolean;
 }
 

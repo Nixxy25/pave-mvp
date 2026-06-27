@@ -208,7 +208,6 @@
 
 ::-webkit-scrollbar-thumb {
   background: var(--gray-200);
-  border-radius: 2px;
 }
 
 /* Animations */

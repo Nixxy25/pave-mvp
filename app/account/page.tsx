@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
-import { getUserProfile, getStats } from '@/lib/api';
+import { getStats } from '@/lib/api';
 import { SignInPrompt } from '@/components/SignInPrompt';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,6 @@ import { AccountStatsCard } from './AccountStatsCard';
 export default function AccountPage() {
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuth();
-  const [apiData, setApiData] = useState({ apiKey: '', secretKey: '', stellarWallet: '' });
   const [stats, setStats] = useState<AccountStats | null>(null);
   const [settings, setSettings] = useState({
     webhookUrl: '',
@@ -28,14 +27,6 @@ export default function AccountPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    
-    getUserProfile().then(profile => {
-      setApiData({
-        apiKey: profile.apiKey,
-        secretKey: profile.secretKey,
-        stellarWallet: profile.stellarWallet,
-      });
-    }).catch(() => {});
     
     getStats().then(setStats).catch(() => {});
   }, [isAuthenticated]);
@@ -95,15 +86,12 @@ export default function AccountPage() {
             walletAddress={user?.stellarAddress || null}
           />
 
-          <APICredentialsCard
-            apiKey={apiData?.apiKey}
-            secretKey={apiData?.secretKey}
-          />
+          <APICredentialsCard />
 
           <AccountStatsCard stats={stats} />
 
           {/* Webhooks */}
-          <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.21s' }}>
+          <div className="border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.21s' }}>
             <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
               Webhook Configuration
             </h2>
@@ -127,7 +115,7 @@ export default function AccountPage() {
           </div>
 
           {/* Notifications */}
-          <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.28s' }}>
+          <div className="border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.28s' }}>
             <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
               Notifications
             </h2>
@@ -158,7 +146,7 @@ export default function AccountPage() {
           </div>
 
           {/* Settlement */}
-          <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.35s' }}>
+          <div className="border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.35s' }}>
             <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
               Settlement Preferences
             </h2>
@@ -178,7 +166,7 @@ export default function AccountPage() {
           </div>
 
           {/* Sign Out */}
-          <div className="rounded-[14px] border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.42s' }}>
+          <div className="border bg-card p-4 shadow-sm animate-fadeup sm:p-6" style={{ animationDelay: '0.42s' }}>
             <h2 className="mb-4 font-serif text-lg font-light italic text-foreground">
               Sign Out
             </h2>

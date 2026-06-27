@@ -49,8 +49,7 @@ export async function createPayment(data: CreatePaymentData): Promise<CheckoutLi
 
 export async function getMerchantInfo(
   checkoutLinkId?: string,
-): Promise<{ name: string; personName: string; country: string; verified: boolean } | null> {
-  // Public checkout page: read from checkout_link row via API (no auth needed)
+): Promise<{ name: string; personName: string; verified: boolean } | null> {
   if (checkoutLinkId) {
     const res = await fetch(`/api/checkout?id=${encodeURIComponent(checkoutLinkId)}`);
     if (!res.ok) return null;
@@ -59,7 +58,6 @@ export async function getMerchantInfo(
       return {
         name: data.merchant_name || 'Business',
         personName: data.merchant_person_name || '',
-        country: 'Nigeria',
         verified: data.merchant_verified ?? true,
       };
     }
@@ -75,7 +73,6 @@ export async function getMerchantInfo(
     return {
       name: merchant?.full_name || 'Business',
       personName: merchant?.full_name || '',
-      country: 'Nigeria',
       verified: true,
     };
   } catch {

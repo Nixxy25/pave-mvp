@@ -8,6 +8,8 @@ import {
   type TableColumn,
 } from '@/components/ui/data-table';
 import { formatTimeAgo } from '@/lib/api/helpers';
+import { useExchangeRates, convertCurrency } from '@/hooks';
+import { ShortAddress } from '@/components/ShortAddress';
 import type { Payment } from '@/types';
 
 const COLUMNS: TableColumn[] = [
@@ -19,6 +21,7 @@ const COLUMNS: TableColumn[] = [
   { key: 'txId', label: 'TX ID' },
   { key: 'status', label: 'Status' },
   { key: 'date', label: 'Date' },
+  { key: 'receipt', label: 'Receipt' },
 ];
 
 function getStatusColor(status: Payment['status']) {
@@ -40,9 +43,11 @@ interface PaymentsTableProps {
 }
 
 export function PaymentsTable({ payments, loading }: PaymentsTableProps) {
+  const { data: exchangeRates } = useExchangeRates();
+
   return (
     <div
-      className="rounded-[14px] border bg-card shadow-sm animate-fadeup"
+      className="border bg-card shadow-sm animate-fadeup"
       style={{ animationDelay: '0.14s' }}
     >
       <div className="overflow-x-auto">
@@ -59,39 +64,71 @@ export function PaymentsTable({ payments, loading }: PaymentsTableProps) {
             ) : (
               payments.map((payment) => (
                 <tr key={payment.id} className="border-b transition-colors hover:bg-muted/50">
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{payment.id}</td>
-                  <td className="px-4 py-3">
-                    <div className="text-sm font-medium text-foreground">{payment.payer.name}</div>
-                    <div className="text-xs text-muted-foreground">{payment.payer.email}</div>
+                  <td className="px-3 py-2.5 sm:px-4 sm:py-3">
+                    <ShortAddress
+                      address={payment.id}
+                      startChars={8}
+                      endChars={4}
+                      showCopy={true}
+                      className="text-[11px] text-muted-foreground sm:text-xs"
+                    />
                   </td>
-                  <td className="px-4 py-3 text-sm font-medium text-foreground">
-                    {payment.currency} {payment.amount.toLocaleString()}
+                  <td className="px-3 py-2.5 sm:px-4 sm:py-3">
+                    <div className="text-[12.5px] font-medium text-foreground sm:text-sm">{payment.payer.name}</div>
+                    <div className="text-[11px] text-muted-foreground sm:text-xs">{payment.payer.email}</div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    ${payment.usdcAmount?.toLocaleString() || '0'}
+                  <td className="whitespace-nowrap px-3 py-2.5 text-[12.5px] font-medium text-foreground sm:px-4 sm:py-3 sm:text-sm">
+                    {payment.currency === 'XLM' && exchangeRates && payment.usdcAmount
+                      ? `XLM ${convertCurrency(payment.usdcAmount, 'USD', 'XLM', exchangeRates).toFixed(2)}`
+                      : `${payment.currency} ${payment.amount.toLocaleString()}`}
                   </td>
-                  <td className="px-4 py-3 text-sm text-foreground">{payment.paidWith}</td>
-                  <td className="px-4 py-3">
+                  <td className="whitespace-nowrap px-3 py-2.5 text-[12.5px] text-foreground sm:px-4 sm:py-3 sm:text-sm">
+                    USDC {payment.usdcAmount?.toLocaleString() || '0'}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-2.5 text-[12.5px] text-foreground sm:px-4 sm:py-3 sm:text-sm">{payment.paidWith}</td>
+                  <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                     {payment.method === 'Stellar Wallet' && payment.stellarTxHash ? (
                       <a
                         href={`https://stellar.expert/explorer/testnet/tx/${payment.stellarTxHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-mono text-[11.5px] text-[var(--stellar)] hover:underline"
+                        className="hover:underline"
                       >
-                        {payment.stellarTxHash.slice(0, 8)}…{payment.stellarTxHash.slice(-6)}
+                        <ShortAddress
+                          address={payment.stellarTxHash}
+                          startChars={8}
+                          endChars={6}
+                          className="text-[11px] text-[var(--stellar)] sm:text-[11.5px]"
+                        />
                       </a>
                     ) : (
-                      <span className="font-mono text-[11.5px] text-muted-foreground">
-                        {payment.id.slice(0, 8)}…{payment.id.slice(-4)}
-                      </span>
+                      <ShortAddress
+                        address={payment.id}
+                        startChars={8}
+                        endChars={4}
+                        className="text-[11px] text-muted-foreground sm:text-[11.5px]"
+                      />
                     )}
                   </td>
-                  <td className="px-4 py-3">
+                  <td className="px-3 py-2.5 sm:px-4 sm:py-3">
                     <Badge className={getStatusColor(payment.status)}>{payment.status}</Badge>
                   </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                  <td className="whitespace-nowrap px-3 py-2.5 text-[12.5px] text-muted-foreground sm:px-4 sm:py-3 sm:text-sm">
                     {formatTimeAgo(payment.createdAt)}
+                  </td>
+                  <td className="px-3 py-2.5 sm:px-4 sm:py-3">
+                    {payment.status === 'completed' ? (
+                      <a
+                        href={`/confirmed/${payment.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[12.5px] font-medium text-[var(--pave-orange)] hover:underline sm:text-sm"
+                      >
+                        View →
+                      </a>
+                    ) : (
+                      <span className="text-[12.5px] text-muted-foreground sm:text-sm">—</span>
+                    )}
                   </td>
                 </tr>
               ))

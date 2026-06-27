@@ -43,9 +43,9 @@ export function Topbar({ onNotificationClick, hasUnreadNotifications = false, on
       <div className="flex items-center gap-1.5 sm:gap-2.5">
         <Badge
           variant="outline"
-          className="hidden border-[#c7d2fe] bg-[#eef2ff] font-mono text-[11.5px] text-[#3b5bdb] sm:flex"
+          className="hidden border-green-500 bg-green-50 font-mono text-[13px] font-medium text-green-600 dark:border-green-600 dark:bg-green-950 dark:text-green-400 sm:flex"
         >
-          <div className="mr-1.5 h-1.5 w-1.5 animate-blink rounded-full bg-[#3b5bdb]" />
+          <div className="mr-1.5 h-1.5 w-1.5 animate-blink text-lg bg-green-600 dark:bg-green-400" />
           Testnet
         </Badge>
 
@@ -61,7 +61,7 @@ export function Topbar({ onNotificationClick, hasUnreadNotifications = false, on
             >
               <Bell className="h-4 w-4 text-muted-foreground" />
               {hasUnreadNotifications && (
-                <span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full bg-[var(--pave-orange)] ring-2 ring-white" />
+                <span className="absolute right-2 top-1.5 h-1.5 w-1.5 bg-[var(--pave-orange)] ring-2 ring-white" />
               )}
             </Button>
 

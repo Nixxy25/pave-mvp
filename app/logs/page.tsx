@@ -59,7 +59,7 @@ export default function LogsPage() {
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[var(--pave-orange)]" />
+        <div className="h-8 w-8 animate-spin border-4 border-gray-200 border-t-[var(--pave-orange)]" />
       </div>
     );
   }
@@ -79,7 +79,7 @@ export default function LogsPage() {
       </div>
 
       {/* Logs Table */}
-      <div className="rounded-[14px] border bg-card shadow-sm animate-fadeup" style={{ animationDelay: '0.07s' }}>
+      <div className="border bg-card shadow-sm animate-fadeup" style={{ animationDelay: '0.07s' }}>
         <div className="overflow-x-auto">
           <table className="w-full">
             <DataTableHeader columns={LOG_COLUMNS} />

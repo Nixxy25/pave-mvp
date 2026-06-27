@@ -22,6 +22,7 @@ export function StellarPayment({
 }: StellarPaymentProps) {
   const { address, connecting, connect } = useWallet();
   const [processing, setProcessing] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   const handlePay = async () => {
     if (!address) return;
@@ -65,6 +66,7 @@ export function StellarPayment({
       const signed = TB2.fromXDR(signedTxXdr, Networks.TESTNET);
       const response = await server.submitTransaction(signed);
 
+      setSuccess(true);
       onSuccess(response.hash);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { extras?: { result_codes?: { operations?: string[]; transaction?: string } } } }; message?: string };
@@ -97,8 +99,8 @@ export function StellarPayment({
   // Not connected
   if (!address) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed border-[var(--stellar)]/40 bg-[var(--stellar)]/5 p-6 text-center">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--stellar)]/10">
+      <div className="flex flex-col items-center gap-4 border border-dashed border-[var(--stellar)]/40 bg-[var(--stellar)]/5 p-6 text-center">
+        <div className="flex h-12 w-12 items-center justify-center bg-[var(--stellar)]/10">
           {/* Stellar-style icon */}
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <path d="M21.5 7.5L3 12l18.5 4.5" stroke="var(--stellar)" strokeWidth="2" strokeLinecap="round" />
@@ -126,7 +128,7 @@ export function StellarPayment({
   return (
     <div className="space-y-4">
       {/* Sending from */}
-      <div className="rounded-lg border bg-muted/40 p-3.5">
+      <div className="border bg-muted/40 p-3.5">
         <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Sending from
         </div>
@@ -134,7 +136,7 @@ export function StellarPayment({
       </div>
 
       {/* Sending to */}
-      <div className="flex items-center gap-3 rounded-lg border bg-muted/40 p-3.5">
+      <div className="flex items-center gap-3 border bg-muted/40 p-3.5">
         <div className="flex-1 min-w-0">
           <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
             Merchant wallet (destination)
@@ -148,7 +150,7 @@ export function StellarPayment({
       </div>
 
       {/* Amount */}
-      <div className="flex items-center justify-between rounded-lg border border-[var(--stellar)]/20 bg-[var(--stellar)]/5 px-4 py-3">
+      <div className="flex items-center justify-between border border-[var(--stellar)]/20 bg-[var(--stellar)]/5 px-4 py-3">
         <span className="text-[13px] text-muted-foreground">You will send</span>
         <span className="font-mono text-[15px] font-semibold text-[var(--stellar)]">
           {xlmAmount.toFixed(2)} XLM
@@ -158,10 +160,12 @@ export function StellarPayment({
       {/* Pay button */}
       <Button
         onClick={handlePay}
-        disabled={processing || disabled}
+        disabled={processing || disabled || success}
         className="h-12 w-full bg-[var(--stellar)] text-[15px] font-medium text-white hover:bg-[var(--stellar)]/90 disabled:opacity-70"
       >
-        {processing ? (
+        {success ? (
+          'Payment Successful'
+        ) : processing ? (
           <span className="flex items-center gap-2">
             <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
               <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="32" strokeDashoffset="12" />

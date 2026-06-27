@@ -32,7 +32,7 @@ export function CheckoutLinksTable({ links, loading, copiedId, onCopy }: Checkou
 
   return (
     <div
-      className="rounded-[14px] border bg-card shadow-sm animate-fadeup"
+      className="border bg-card shadow-sm animate-fadeup"
       style={{ animationDelay: '0.07s' }}
     >
       <div className="overflow-x-auto">
@@ -54,8 +54,10 @@ export function CheckoutLinksTable({ links, loading, copiedId, onCopy }: Checkou
                     <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                       {link.id}
                     </td>
-                    <td className="px-4 py-3 text-sm text-foreground">{link.description}</td>
-                    <td className="px-4 py-3 text-sm font-medium text-foreground">
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      <div className="max-w-[200px] truncate">{link.description}</div>
+                    </td>
+                    <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground">
                       {link.currency} {link.amount.toLocaleString()}
                     </td>
                     <td className="px-4 py-3">

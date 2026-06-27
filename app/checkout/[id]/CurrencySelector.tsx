@@ -16,7 +16,7 @@ export function CurrencySelector({
   acceptedCurrencies,
 }: CurrencySelectorProps) {
   return (
-    <div className="mb-5 flex items-center gap-3 rounded-lg border bg-gray-50 px-4 py-3">
+    <div className="mb-5 flex items-center gap-3 border bg-gray-50 px-4 py-3">
       <span className="text-[13px] text-muted-foreground">Pay in</span>
       <select
         value={selectedCurrency}

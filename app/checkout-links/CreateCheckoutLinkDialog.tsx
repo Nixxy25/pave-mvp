@@ -233,7 +233,7 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
               </span>
             </Label>
             {formData.stellarWalletAddress ? (
-              <div className="flex items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2">
+              <div className="flex items-center gap-2 border border-input bg-muted/50 px-3 py-2">
                 <ShortAddress
                   address={formData.stellarWalletAddress}
                   startChars={8}
@@ -263,7 +263,7 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
                   key={curr}
                   type="button"
                   onClick={() => toggleCurrency(curr)}
-                  className={`rounded-full border px-3 py-1 text-sm font-medium transition-all focus:outline-none ${
+                  className={`border px-3 py-1 text-sm font-medium transition-all focus:outline-none ${
                     formData.acceptedCurrencies.includes(curr)
                       ? 'border-[var(--pave-orange)] bg-[var(--pave-orange)] text-white'
                       : 'border-gray-300 bg-card text-muted-foreground hover:border-gray-400 dark:border-gray-700'

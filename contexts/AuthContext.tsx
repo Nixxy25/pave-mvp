@@ -13,8 +13,6 @@ export interface User {
   emailVerified: boolean;
   authProvider: 'email' | 'google' | 'wallet';
   stellarAddress: string;
-  apiKey: string;
-  apiSecret: string;
 }
 
 interface AuthContextType {
@@ -33,8 +31,6 @@ interface MerchantRow {
   full_name: string;
   stellar_address: string;
   stellar_wallet_id: string;
-  api_key: string;
-  api_secret: string;
   created_at: string;
 }
 
@@ -147,8 +143,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         stellarAddress: merchant.stellar_address,
         emailVerified: true,
         authProvider: (privyUser?.google ? 'google' : 'email') as 'email' | 'google',
-        apiKey: merchant.api_key,
-        apiSecret: merchant.api_secret,
       }
     : null;
 

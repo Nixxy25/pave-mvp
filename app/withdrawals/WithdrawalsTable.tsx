@@ -1,5 +1,10 @@
 'use client';
 
+// ──────────────────────────────────────────────────────────────────────────────
+// WITHDRAWALS FEATURE: COMING SOON
+// This component is disabled until the withdrawal feature is ready for launch
+// ──────────────────────────────────────────────────────────────────────────────
+
 import { Badge } from '@/components/ui/badge';
 import {
   DataTableHeader,
@@ -39,7 +44,7 @@ interface WithdrawalsTableProps {
 export function WithdrawalsTable({ withdrawals, loading }: WithdrawalsTableProps) {
   return (
     <div
-      className="rounded-[14px] border bg-card shadow-sm animate-fadeup"
+      className="border bg-card shadow-sm animate-fadeup"
       style={{ animationDelay: '0.07s' }}
     >
       <div className="overflow-x-auto">

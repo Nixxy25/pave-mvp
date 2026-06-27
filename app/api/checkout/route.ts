@@ -38,10 +38,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Checkout link not found' }, { status: 404 });
   }
 
-  const countryMap: Record<string, string> = {
-    GHS: 'GH', KES: 'KE', NGN: 'NG', USD: 'US', XLM: 'US',
-  };
-
   const isStellar = paymentMethod === 'stellar';
 
   const { data: inserted, error } = await supabase
@@ -50,7 +46,6 @@ export async function POST(req: NextRequest) {
       merchant_id: linkRow.merchant_id,
       checkout_link_id: checkoutLinkId,
       payer_name: customerName,
-      payer_country: countryMap[currency] || 'NG',
       amount,
       currency,
       usdc_amount: usdcAmount,

@@ -1,5 +1,10 @@
 'use client';
 
+// ──────────────────────────────────────────────────────────────────────────────
+// WITHDRAWALS FEATURE: COMING SOON
+// This component is disabled until the withdrawal feature is ready for launch
+// ──────────────────────────────────────────────────────────────────────────────
+
 import { useState } from 'react';
 import { createWithdrawal } from '@/lib/api';
 import type { BalanceData } from '@/types';
@@ -66,7 +71,7 @@ export function WithdrawalDialog({ balance, onSuccess }: WithdrawalDialogProps) 
           <DialogTitle className="font-serif text-xl font-light">Withdraw to Bank</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleWithdraw} className="mt-2 space-y-4">
-          <div className="rounded-lg border bg-muted p-4">
+          <div className="border bg-muted p-4">
             <div className="mb-1 text-xs text-muted-foreground">Available Balance</div>
             <div className="font-serif text-3xl font-light italic text-foreground">
               ${balance.usdc.toLocaleString()}
