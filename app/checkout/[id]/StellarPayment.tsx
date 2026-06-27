@@ -77,10 +77,26 @@ export function StellarPayment({
 
       onSuccess(response.hash);
     } catch (err: any) {
+      const codes = err?.response?.data?.extras?.result_codes;
+      const opCode = codes?.operations?.[0];
+      const txCode = codes?.transaction;
+
+      // Translate common Stellar error codes into readable messages
+      const friendlyErrors: Record<string, string> = {
+        op_no_destination: 'Merchant wallet not yet activated on testnet. Please try again in a moment.',
+        op_underfunded: 'Your wallet has insufficient XLM. Fund it at laboratory.stellar.org.',
+        op_no_account: 'Your Stellar account is not activated. Fund it via Friendbot first.',
+        tx_bad_seq: 'Sequence number mismatch — please retry.',
+      };
+
       const msg =
-        err?.response?.data?.extras?.result_codes?.transaction ||
+        (opCode && friendlyErrors[opCode]) ||
+        (txCode && friendlyErrors[txCode]) ||
+        opCode ||
+        txCode ||
         err?.message ||
         'Transaction failed';
+
       onError(msg);
     } finally {
       setProcessing(false);
