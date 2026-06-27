@@ -32,6 +32,9 @@ export const CONVERSION_RATES: Record<SupportedCurrency, Partial<Record<Supporte
   'KES': { 'NGN': 12.3, 'USD': 0.0077, 'GHS': 0.106 },
 };
 
+// NOTE: CONVERSION_RATES above are fallback/legacy values.
+// For live rates, use the functions from @/lib/exchange-rates instead.
+
 export function getCurrencyName(code: string): string {
   return CURRENCY_NAMES[code as SupportedCurrency] || code;
 }
@@ -48,6 +51,10 @@ export function isSupportedCurrency(code: string): code is SupportedCurrency {
   return SUPPORTED_CURRENCIES.includes(code as SupportedCurrency);
 }
 
+/**
+ * Calculate equivalent amounts in all supported currencies
+ * @deprecated Use calculateEquivalents from @/lib/exchange-rates for live rates
+ */
 export function calculateEquivalents(
   baseAmount: number,
   baseCurrency: string
