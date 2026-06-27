@@ -1,24 +1,15 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-
 interface ProfileCardProps {
   fullName: string;
-  businessName: string;
   email: string;
   walletAddress: string | null;
-  connecting: boolean;
-  onConnect: () => void;
 }
 
 export function ProfileCard({
   fullName,
-  businessName,
   email,
   walletAddress,
-  connecting,
-  onConnect,
 }: ProfileCardProps) {
   return (
     <div
@@ -30,15 +21,9 @@ export function ProfileCard({
       </h2>
 
       <div className="space-y-4">
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <div className="mb-1 text-xs font-medium text-foreground">Full Name</div>
-            <div className="text-sm text-foreground">{fullName}</div>
-          </div>
-          <div>
-            <div className="mb-1 text-xs font-medium text-foreground">Business Name</div>
-            <div className="text-sm text-foreground">{businessName}</div>
-          </div>
+        <div>
+          <div className="mb-1 text-xs font-medium text-foreground">Full Name</div>
+          <div className="text-sm text-foreground">{fullName}</div>
         </div>
 
         <div>
@@ -61,24 +46,10 @@ export function ProfileCard({
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground">No wallet connected</span>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={connecting}
-                onClick={onConnect}
-                className="h-7 px-3 text-[12px]"
-              >
-                {connecting ? 'Connecting…' : 'Connect Wallet'}
-              </Button>
-            </div>
+            <span className="text-sm text-muted-foreground">
+              Sign in to get your Stellar wallet
+            </span>
           )}
-        </div>
-
-        <div>
-          <div className="mb-1 text-xs font-medium text-foreground">Plan</div>
-          <Badge className="bg-purple-100 text-purple-700">Free</Badge>
         </div>
       </div>
     </div>
