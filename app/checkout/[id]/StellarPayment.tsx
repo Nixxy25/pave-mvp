@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useWallet } from '@/contexts/WalletContext';
+import { ShortAddress } from '@/components/ShortAddress';
 
 interface StellarPaymentProps {
   merchantAddress: string;
@@ -10,10 +11,6 @@ interface StellarPaymentProps {
   onSuccess: (txHash: string) => void;
   onError: (message: string) => void;
   disabled?: boolean;
-}
-
-function truncateAddress(addr: string) {
-  return `${addr.slice(0, 6)}…${addr.slice(-6)}`;
 }
 
 export function StellarPayment({
@@ -25,13 +22,6 @@ export function StellarPayment({
 }: StellarPaymentProps) {
   const { address, connecting, connect } = useWallet();
   const [processing, setProcessing] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const copyAddress = () => {
-    navigator.clipboard.writeText(merchantAddress);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   const handlePay = async () => {
     if (!address) return;
@@ -76,8 +66,9 @@ export function StellarPayment({
       const response = await server.submitTransaction(signed);
 
       onSuccess(response.hash);
-    } catch (err: any) {
-      const codes = err?.response?.data?.extras?.result_codes;
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { extras?: { result_codes?: { operations?: string[]; transaction?: string } } } }; message?: string };
+      const codes = error?.response?.data?.extras?.result_codes;
       const opCode = codes?.operations?.[0];
       const txCode = codes?.transaction;
 
@@ -94,7 +85,7 @@ export function StellarPayment({
         (txCode && friendlyErrors[txCode]) ||
         opCode ||
         txCode ||
-        err?.message ||
+        error?.message ||
         'Transaction failed';
 
       onError(msg);
@@ -117,7 +108,7 @@ export function StellarPayment({
         <div>
           <div className="text-[14px] font-medium text-foreground">Connect your Stellar wallet</div>
           <div className="mt-1 text-[12.5px] text-muted-foreground">
-            You'll send <span className="font-medium">{xlmAmount.toFixed(2)} XLM</span> on testnet
+            You&apos;ll send <span className="font-medium">{xlmAmount.toFixed(2)} XLM</span> on testnet
           </div>
         </div>
         <Button
@@ -139,7 +130,7 @@ export function StellarPayment({
         <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
           Sending from
         </div>
-        <div className="font-mono text-[13px] text-foreground">{truncateAddress(address)}</div>
+        <ShortAddress address={address} className="text-[13px] text-foreground" />
       </div>
 
       {/* Sending to */}
@@ -148,14 +139,12 @@ export function StellarPayment({
           <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
             Merchant wallet (destination)
           </div>
-          <div className="truncate font-mono text-[13px] text-foreground">{merchantAddress}</div>
+          <ShortAddress
+            address={merchantAddress}
+            showCopy
+            className="text-[13px] text-foreground"
+          />
         </div>
-        <button
-          onClick={copyAddress}
-          className="flex-shrink-0 text-[11.5px] text-[var(--pave-orange)] hover:underline"
-        >
-          {copied ? 'Copied!' : 'Copy'}
-        </button>
       </div>
 
       {/* Amount */}
