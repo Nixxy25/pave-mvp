@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { WalletConnectButton } from '@/components/layout/WalletConnectButton';
 import { useAuth } from '@/contexts/AuthContext';
+import { SignInButton } from '@/components/SignInButton';
 
 interface TopbarProps {
   onNotificationClick?: () => void;
@@ -17,7 +17,7 @@ interface TopbarProps {
 }
 
 export function Topbar({ onNotificationClick, hasUnreadNotifications = false, onMenuClick }: TopbarProps) {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
 
   const getInitials = (name: string) => {
     return name
@@ -50,28 +50,34 @@ export function Topbar({ onNotificationClick, hasUnreadNotifications = false, on
         </Badge>
 
         <ThemeToggle />
-        <WalletConnectButton />
 
-        <Button
-          variant="outline"
-          size="icon"
-          className="relative h-[34px] w-[34px]"
-          onClick={onNotificationClick}
-        >
-          <Bell className="h-4 w-4 text-muted-foreground" />
-          {hasUnreadNotifications && (
-            <span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full bg-[var(--pave-orange)] ring-2 ring-white" />
-          )}
-        </Button>
+        {isAuthenticated ? (
+          <>
+            <Button
+              variant="outline"
+              size="icon"
+              className="relative h-[34px] w-[34px]"
+              onClick={onNotificationClick}
+            >
+              <Bell className="h-4 w-4 text-muted-foreground" />
+              {hasUnreadNotifications && (
+                <span className="absolute right-2 top-1.5 h-1.5 w-1.5 rounded-full bg-[var(--pave-orange)] ring-2 ring-white" />
+              )}
+            </Button>
 
-        <Link href="/account">
-          <Avatar className="h-8 w-8 cursor-pointer bg-gradient-to-br from-[var(--pave-orange)] to-[#ff8a00] ring-2 ring-white ring-offset-2 ring-offset-[var(--border)]">
-            <AvatarFallback className="bg-transparent text-[11.5px] font-medium text-white">
-              {user ? getInitials(user.fullName) : '?'}
-            </AvatarFallback>
-          </Avatar>
-        </Link>
+            <Link href="/account">
+              <Avatar className="h-8 w-8 cursor-pointer bg-gradient-to-br from-[var(--pave-orange)] to-[#ff8a00] ring-2 ring-white ring-offset-2 ring-offset-[var(--border)]">
+                <AvatarFallback className="bg-transparent text-[11.5px] font-medium text-white">
+                  {user ? getInitials(user.fullName || user.email) : '?'}
+                </AvatarFallback>
+              </Avatar>
+            </Link>
+          </>
+        ) : (
+          <SignInButton />
+        )}
       </div>
     </nav>
   );
 }
+
