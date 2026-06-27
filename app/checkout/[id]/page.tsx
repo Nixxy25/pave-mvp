@@ -201,7 +201,7 @@ export default function CheckoutPage() {
                 type="text"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="John Doe"
+                placeholder="Your name"
                 className="h-11 w-full border border-gray-300 px-3.5 text-[14px] outline-none transition-all focus:border-[var(--pave-orange)] focus:ring-2 focus:ring-[var(--pave-orange)]/20"
               />
             </div>

@@ -1,64 +1,49 @@
 # Pave
 
-Payment infrastructure for the modern internet. Accept payments globally with instant USDC settlement on the Stellar blockchain.
+Global payment infrastructure with instant USDC settlement on Stellar blockchain.
 
-## Overview
+## What is Pave?
 
-Pave provides a complete payment solution for platforms and merchants:
+Pave enables merchants to accept payments from customers worldwide and receive instant settlement in USDC stablecoin on the Stellar network. Customers can pay using traditional payment methods or directly with Stellar wallets, while merchants get their funds in seconds instead of days.
 
-- **Platforms and Apps** integrate Pave's API to generate hosted checkout pages
-- **Customers** pay using cards or Stellar wallets
-- **Merchants** receive instant settlement in USDC with ~5 second finality
+## Key Features
 
-## Features
-
-**Checkout**
-- Hosted checkout pages with shareable links
-- Multi-currency support: USD, NGN, GHS, KES
-- Payment methods: Cards (Visa, Mastercard), Stellar Wallet
-
-**Settlement**
-- Instant USDC settlement on Stellar blockchain
-- Real-time balance tracking
-- Bank withdrawals
-
-**Dashboard**
-- Payment history and analytics
-- Checkout link management
-- API request logging
-- Webhook configuration
-
-**Developer Experience**
-- REST API for payment integration
-- Webhooks for payment.completed, payment.failed, withdrawal.completed events
-- API key management
+- **Hosted Checkout Pages** - Generate shareable payment links in seconds
+- **Multi-Currency Support** - Accept payments in USD, NGN, GHS, and KES
+- **Instant Settlement** - Receive USDC on Stellar with ~5 second finality
+- **Flexible Payment Methods** - Cards and Stellar Wallet payments
+- **Real-Time Dashboard** - Track payments, manage checkout links, and view analytics
+- **Developer API** - RESTful API with webhooks for seamless integration
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Next.js 16 (App Router) |
-| Language | TypeScript 5 |
-| Styling | Tailwind CSS 4 |
-| UI | shadcn/ui, Radix UI |
-| Authentication | AWS Cognito (via Amplify) |
-| Database | Supabase (PostgreSQL) |
-| Blockchain | Stellar (USDC settlement) |
-| Wallet | Stellar Wallets Kit |
+**Frontend & Framework**
+- **Next.js 16** - React framework with App Router for server and client components
+- **TypeScript 5** - Type-safe development
+- **Tailwind CSS 4** - Utility-first styling
+- **shadcn/ui** - Accessible component library built on Radix UI
+
+**Backend & Infrastructure**
+- **Supabase** - PostgreSQL database for checkout links, payments, and merchant data
+- **Privy** - Authentication provider with JWKS token verification
+- **Stellar SDK** - Blockchain integration for payment verification and settlement
+
+**Payment & Settlement**
+- **Stellar Network** - Testnet blockchain for USDC transfers
+- **Stellar Wallets Kit** - Browser wallet integration (Freighter, Lobstr, etc.)
+- **Live Exchange Rates** - Binance API for XLM rates, Open Exchange Rates for fiat
+
+**Data & State Management**
+- **React Query** - Server state management with caching
+- **React Context** - Authentication and wallet state
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 18 or later
-- npm or yarn
-- AWS Cognito User Pool
-- Supabase project
-
-### Environment Variables
-
-Create a `.env.local` file in the project root:
-
+- Node.js 18+
+- Supabase account
+- Privy account (for authentication)
 
 ### Installation
 
@@ -74,111 +59,71 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) to view the application.
+Open [http://localhost:3001](http://localhost:3001)
 
-### Scripts
+### Available Commands
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-
-## Project Structure
-
-```
-pave-mvp/
-├── app/
-│   ├── (auth)/                 # Login, signup pages
-│   ├── api/                    # API routes
-│   │   ├── checkout/           # Public checkout completion
-│   │   ├── checkout-links/     # Checkout link CRUD
-│   │   └── payments/           # Payment queries
-│   ├── checkout/[id]/          # Public checkout page
-│   ├── confirmed/[id]/         # Payment confirmation
-│   ├── dashboard/              # Merchant dashboard
-│   ├── payments/               # Payment history
-│   ├── checkout-links/         # Link management
-│   ├── withdrawals/            # Withdrawal management
-│   ├── account/                # Profile and API keys
-│   ├── settings/               # Webhooks and preferences
-│   ├── logs/                   # API request logs
-│   └── api-webhooks/           # Developer documentation
-├── components/
-│   ├── ui/                     # shadcn/ui components
-│   └── layout/                 # Dashboard layout
-├── contexts/                   # React contexts (Auth, Wallet)
-├── hooks/                      # Custom hooks
-├── lib/
-│   ├── api/                    # Domain API functions
-│   ├── amplify-config.ts       # Cognito configuration
-│   ├── supabase.ts             # Database client
-│   ├── server-auth.ts          # JWT verification
-│   └── constants.ts            # Currencies, rates
-└── types/                      # TypeScript definitions
+```bash
+npm run dev      # Start development server
+npm run build    # Build for production
+npm run start    # Start production server
+npm run lint     # Run ESLint
 ```
 
-## Authentication
+## How It Works
 
-Pave supports two authentication methods:
+**For Merchants**
 
-1. **Email and Password** - Standard signup with email verification
-2. **Google OAuth** - Sign in with Google (redirects to Cognito hosted UI)
+1. Create a checkout link with amount and currency
+2. Share the link with your customer
+3. Receive instant USDC settlement when payment completes
 
-New Google users are prompted to provide a business name on first login.
+**For Customers**
 
-## Payment Flow
+1. Open the checkout link
+2. Choose payment method:
+   - **Card Payment**
+   - **Stellar Wallet** - Connect wallet and pay with XLM
+3. Complete payment and get instant confirmation
 
-**Creating a Checkout Link**
+**Payment Flow**
 
-1. Merchant creates a checkout link specifying amount, currency, description, and accepted currencies
-2. Optionally, merchant can add their Stellar wallet address to receive payments directly
-3. System calculates equivalent amounts in all accepted currencies using real-time conversion rates
-4. Merchant shares the checkout URL with their customer
+- All payments are verified on the Stellar blockchain
+- Server-side amount validation prevents tampering
+- Transaction hashes are checked to prevent reuse
+- USDC settlement completes in ~5 seconds
 
-**Customer Payment**
+## Security
 
-1. Customer opens the checkout page and sees the amount in the merchant's currency plus equivalents in other accepted currencies
-2. Customer selects their preferred payment method:
-   - **Card**: Enter card details, payment is processed, and settled to merchant's Pave balance
-   - **Stellar Wallet**: Connect wallet (Freighter, Lobstr, etc.), select currency to pay in, sign the XLM transaction, and submit to the Stellar network
-3. For Stellar payments, if the merchant provided a wallet address on the checkout link, XLM is sent directly to that address. Otherwise, it settles to the merchant's Pave balance as USDC.
-4. Customer is redirected to a confirmation page with transaction details
+Pave implements comprehensive security measures:
 
-**Settlement**
-
-- Card payments settle to the merchant's Pave balance
-- Stellar payments with merchant wallet address go directly to that wallet
-- Merchants can withdraw their Pave balance to a bank account
+- **Server-Side Validation** - All payment amounts calculated and verified server-side
+- **Blockchain Verification** - Every Stellar transaction verified on-chain before acceptance
+- **Transaction Deduplication** - Database checks prevent transaction reuse
+- **JWT Authentication** - Secure merchant authentication with Privy JWKS verification
 
 ## API Integration
 
-Platforms can integrate Pave to accept payments programmatically:
+Developers can integrate Pave programmatically:
 
-1. **Create Payment**: POST to `/v1/payments` with amount, currency, and accepted payment methods
-2. **Redirect Customer**: Send customer to the returned `checkoutUrl`
-3. **Receive Webhook**: Get notified at your webhook URL when payment completes
-4. **Verify Payment**: Check payment status via GET `/v1/payments/{id}`
+```typescript
+// Create a checkout link
+POST /api/checkout-links
+{
+  "amount": 100,
+  "currency": "USD",
+  "description": "Product purchase",
+  "acceptedCurrencies": ["USD", "NGN", "GHS"],
+  "settlementAsset": "USDC"
+}
 
-Webhook events:
-- `payment.completed` - Payment successfully received
-- `payment.failed` - Payment attempt failed
-- `withdrawal.completed` - Withdrawal processed
-
-## Supported Currencies
-
-| Currency | Name |
-|----------|------|
-| USD | US Dollar |
-| NGN | Nigerian Naira |
-| GHS | Ghanaian Cedi |
-| KES | Kenyan Shilling |
+// Response includes checkoutUrl to redirect customer
+```
 
 ## License
 
 MIT
 
-## Contributing
+## Support
 
-Contributions are welcome. Please open an issue to discuss proposed changes before submitting a pull request.
+For questions or issues, contact [paveng24@gmail.com](mailto:paveng24@gmail.com)

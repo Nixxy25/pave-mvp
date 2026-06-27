@@ -21,7 +21,6 @@ export default function AccountPage() {
   const [settings, setSettings] = useState({
     webhookUrl: '',
     emailNotifications: true,
-    stellarExplorerLinks: true,
     autoConvert: false,
   });
 
@@ -129,17 +128,6 @@ export default function AccountPage() {
                 <Switch
                   checked={settings.emailNotifications}
                   onCheckedChange={(checked) => setSettings({ ...settings, emailNotifications: checked })}
-                />
-              </div>
-              
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex-1">
-                  <div className="font-medium text-foreground">Stellar Explorer Links</div>
-                  <div className="text-sm text-muted-foreground">Show blockchain explorer links in the dashboard</div>
-                </div>
-                <Switch
-                  checked={settings.stellarExplorerLinks}
-                  onCheckedChange={(checked) => setSettings({ ...settings, stellarExplorerLinks: checked })}
                 />
               </div>
             </div>
