@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { authFetch } from '@/lib/fetch-api';
-import type { Payment } from '@/types';
+import type { Payment, PaymentStatus } from '@/types';
 
 function rowToPayment(row: Record<string, unknown>): Payment {
   return {
@@ -26,7 +26,7 @@ function rowToPayment(row: Record<string, unknown>): Payment {
   };
 }
 
-export function usePayments() {
+export function usePayments(filters?: { status?: PaymentStatus; search?: string }) {
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -35,7 +35,11 @@ export function usePayments() {
     try {
       setLoading(true);
       setError(null);
-      const res = await authFetch('/api/payments?type=list');
+      const params = new URLSearchParams({ type: 'list' });
+      if (filters?.status) params.append('status', filters.status);
+      if (filters?.search) params.append('search', filters.search);
+      
+      const res = await authFetch(`/api/payments?${params}`);
       if (!res.ok) throw new Error('Failed to fetch payments');
       const { data } = await res.json();
       setPayments((data || []).map(rowToPayment));
@@ -48,7 +52,8 @@ export function usePayments() {
 
   useEffect(() => {
     loadPayments();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters?.status, filters?.search]);
 
   return { payments, loading, error, refetch: loadPayments };
 }

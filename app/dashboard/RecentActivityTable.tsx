@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { DataTableHeader, type TableColumn } from '@/components/ui/data-table';
 import { formatTimeAgo } from '@/lib/api/helpers';
-import type { Payment, Withdrawal } from '@/types';
+import type { Payment } from '@/types';
 
 const COLUMNS: TableColumn[] = [
   { key: 'type', label: 'Type', className: 'px-5' },
-  { key: 'customer', label: 'Customer / Destination', className: 'px-5' },
+  { key: 'customer', label: 'Customer', className: 'px-5' },
   { key: 'amount', label: 'Amount', className: 'px-5' },
   { key: 'usdc', label: 'USDC', className: 'px-5' },
   { key: 'txId', label: 'TX ID', className: 'px-5' },
@@ -44,7 +44,7 @@ function getStatusBadge(status: string) {
 }
 
 interface RecentActivityTableProps {
-  activities: Array<(Payment & { type: 'payment' }) | (Withdrawal & { type: 'withdrawal' })>;
+  activities: Array<Payment & { type: 'payment' }>;
 }
 
 export function RecentActivityTable({ activities }: RecentActivityTableProps) {
@@ -84,58 +84,35 @@ export function RecentActivityTable({ activities }: RecentActivityTableProps) {
             <DataTableHeader columns={COLUMNS} />
             <tbody>
               {activities.map((activity) => {
-                const isPayment = activity.type === 'payment';
-                const payment = isPayment ? (activity as Payment & { type: 'payment' }) : null;
-                const withdrawal = !isPayment ? (activity as Withdrawal & { type: 'withdrawal' }) : null;
+                const payment = activity;
 
                 return (
                   <tr key={activity.id} className="border-b transition-colors hover:bg-muted/50">
                     {/* Type */}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-2">
-                        {isPayment ? (
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--success-light)]">
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[var(--success)]">
-                              <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                            </svg>
-                          </div>
-                        ) : (
-                          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-100">
-                            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-orange-600">
-                              <path d="M7 12V2M4 9l3 3 3-3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                            </svg>
-                          </div>
-                        )}
-                        <span className="text-[13px] font-medium text-foreground">
-                          {isPayment ? 'Payment' : 'Withdrawal'}
-                        </span>
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--success-light)]">
+                          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="text-[var(--success)]">
+                            <path d="M7 2v10M2 7h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+                          </svg>
+                        </div>
+                        <span className="text-[13px] font-medium text-foreground">Payment</span>
                       </div>
                     </td>
 
-                    {/* Customer / Destination */}
+                    {/* Customer */}
                     <td className="px-5 py-3.5">
-                      {isPayment && payment ? (
-                        <div className="flex items-center gap-2.5">
-                          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[var(--pave-orange)] to-[#ff8a00] font-mono text-[11px] font-medium text-white">
-                            {getInitials(payment.payer.name)}
-                          </div>
-                          <div>
-                            <div className="text-[13.5px] font-medium text-foreground">{payment.payer.name}</div>
-                            <div className="font-mono text-[11.5px] text-muted-foreground">
-                              {payment.description || payment.source} · {payment.payer.country}
-                            </div>
-                          </div>
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-[var(--pave-orange)] to-[#ff8a00] font-mono text-[11px] font-medium text-white">
+                          {getInitials(payment.payer.name)}
                         </div>
-                      ) : withdrawal ? (
                         <div>
-                          <div className="text-[13.5px] font-medium text-foreground">
-                            {withdrawal.destination?.bankName || 'Bank Account'}
-                          </div>
+                          <div className="text-[13.5px] font-medium text-foreground">{payment.payer.name}</div>
                           <div className="font-mono text-[11.5px] text-muted-foreground">
-                            {withdrawal.destination?.accountNumber || 'N/A'}
+                            {payment.description || payment.source} · {payment.payer.country}
                           </div>
                         </div>
-                      ) : null}
+                      </div>
                     </td>
 
                     {/* Amount */}
@@ -144,14 +121,14 @@ export function RecentActivityTable({ activities }: RecentActivityTableProps) {
                         {activity.currency} {activity.amount.toLocaleString()}
                       </div>
                       <div className="font-mono text-[11.5px] text-muted-foreground">
-                        {isPayment && payment ? payment.method : 'Bank transfer'}
+                        {payment.method}
                       </div>
                     </td>
 
                     {/* USDC */}
                     <td className="px-5 py-3.5">
                       <span className="font-mono text-[13.5px] font-medium text-[var(--success)]">
-                        ${(isPayment && payment ? (payment.usdcAmount ?? 0) : activity.amount).toLocaleString()}
+                        ${(payment.usdcAmount ?? 0).toLocaleString()}
                       </span>
                     </td>
 
@@ -159,12 +136,12 @@ export function RecentActivityTable({ activities }: RecentActivityTableProps) {
                     <td className="px-5 py-3.5">
                       {(() => {
                         const txId = activity.id;
-                        const stellarHash = payment?.method === 'Stellar Wallet'
+                        const stellarHash = payment.method === 'Stellar Wallet'
                           ? payment.stellarTxHash
                           : undefined;
                         if (!txId) return <span className="text-[12px] text-muted-foreground">—</span>;
                         const short = `${txId.slice(0, 6)}…${txId.slice(-4)}`;
-                        if (isPayment && stellarHash) {
+                        if (stellarHash) {
                           return (
                             <a
                               href={`https://stellar.expert/explorer/testnet/tx/${stellarHash}`}

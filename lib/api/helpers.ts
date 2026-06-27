@@ -1,55 +1,28 @@
 // Private helpers shared across domain modules — not re-exported from the barrel.
 
+import type { CheckoutLink, Payment } from '@/types';
+
 
 export function formatTimeAgo(createdAt: string): string {
-  const diff = Date.now() - new Date(createdAt).getTime();
+  const date = new Date(createdAt);
+  const diff = Date.now() - date.getTime();
   const seconds = Math.floor(diff / 1000);
   const minutes = Math.floor(diff / 60_000);
   const hours = Math.floor(diff / 3_600_000);
   const days = Math.floor(diff / 86_400_000);
-  const weeks = Math.floor(diff / 604_800_000);
-  const months = Math.floor(diff / 2_592_000_000);
 
+  // Show relative time for recent activity
   if (seconds < 60) return `${seconds}s ago`;
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
   if (days < 7) return `${days}d ago`;
-  if (weeks < 4) return `${weeks}w ago`;
-  return `${months}mo ago`;
-}
 
-import { getCurrentUser as getCognitoUser } from 'aws-amplify/auth';
-import type { CheckoutLink, Payment } from '@/types';
-
-// ─── Auth ──────────────────────────────────────────────────────────────────────
-
-export async function getCurrentUserId(): Promise<string | null> {
-  if (typeof window === 'undefined') return null;
-  try {
-    const user = await getCognitoUser();
-    return user.userId;
-  } catch {
-    return null;
-  }
-}
-
-// ─── localStorage (per-user keyed storage) ────────────────────────────────────
-
-export async function getUserData<T>(key: string, defaultValue: T): Promise<T> {
-  if (typeof window === 'undefined') return defaultValue;
-  const userId = await getCurrentUserId();
-  if (!userId) return defaultValue;
-
-  const data = localStorage.getItem(`pave_${key}_${userId}`);
-  return data ? JSON.parse(data) : defaultValue;
-}
-
-export async function setUserData<T>(key: string, value: T): Promise<void> {
-  if (typeof window === 'undefined') return;
-  const userId = await getCurrentUserId();
-  if (!userId) return;
-
-  localStorage.setItem(`pave_${key}_${userId}`, JSON.stringify(value));
+  // Show full date with month for older dates
+  return date.toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
+  });
 }
 
 // ─── Row mappers ──────────────────────────────────────────────────────────────

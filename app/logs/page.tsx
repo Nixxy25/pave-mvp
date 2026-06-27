@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 import { getAPILogs } from '@/lib/api';
-import type { APILog } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { DataTableHeader, DataTableLoading, DataTableEmpty, type TableColumn } from '@/components/ui/data-table';
+import type { APILog } from '@/types';
 
 const LOG_COLUMNS: TableColumn[] = [
   { key: 'timestamp', label: 'Timestamp' },
@@ -16,19 +17,21 @@ const LOG_COLUMNS: TableColumn[] = [
 ];
 
 export default function LogsPage() {
+  const { isAuthenticated } = useAuth();
   const [logs, setLogs] = useState<APILog[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadLogs();
-  }, []);
-
-  const loadLogs = async () => {
-    setLoading(true);
-    const data = await getAPILogs();
-    setLogs(data);
-    setLoading(false);
-  };
+    if (!isAuthenticated) return;
+    
+    const fetchLogs = async () => {
+      setLoading(true);
+      const data = await getAPILogs();
+      setLogs(data);
+      setLoading(false);
+    };
+    fetchLogs();
+  }, [isAuthenticated]);
 
   const getStatusColor = (status: number) => {
     if (status >= 200 && status < 300) return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
@@ -52,6 +55,14 @@ export default function LogsPage() {
         return 'bg-muted text-muted-foreground';
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[var(--pave-orange)]" />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto max-w-[1400px] px-4 py-6 pb-20 sm:px-7 sm:py-8">

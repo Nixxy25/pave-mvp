@@ -12,11 +12,12 @@ import {
   Code,
   FileText,
   User,
-  Settings,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/AuthContext';
+import { SignInButton } from '@/components/SignInButton';
 
 interface NavItem {
   href: string;
@@ -56,23 +57,11 @@ const navSections = [
 
 const bottomItems = [
   { href: '/account', label: 'Account', icon: User },
-  { href: '/settings', label: 'Settings', icon: Settings },
 ];
 
 export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
-
-  useEffect(() => {
-    const loadUser = async () => {
-      try {        const { getUserProfile } = await import('@/lib/api');
-        const userData = await getUserProfile();
-        setUser(userData);
-      } catch (error) {
-      }
-    };
-    loadUser();
-  }, []);
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
     onMobileClose?.();
@@ -146,21 +135,28 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
       })}
 
       <div className="mt-auto">
-        <Link href="/account" className="flex cursor-pointer items-center gap-2.5 rounded-md p-2.5 transition-all hover:bg-muted">
-          <Avatar className="h-7 w-7 flex-shrink-0 bg-gradient-to-br from-[var(--pave-orange)] to-[#ff8a00]">
-            <AvatarFallback className="bg-transparent text-[11px] font-medium text-white">
-              {user ? getInitials(user.name) : '...'}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex-1">
-            <div className="text-[12.5px] font-medium text-foreground">
-              {user ? user.name.split(' ')[0] : 'Loading...'}
+        {isAuthenticated && user ? (
+          <Link href="/account" className="flex cursor-pointer items-center gap-2.5 rounded-md p-2.5 transition-all hover:bg-muted">
+            <Avatar className="h-7 w-7 flex-shrink-0 bg-gradient-to-br from-[var(--pave-orange)] to-[#ff8a00]">
+              <AvatarFallback className="bg-transparent text-[11px] font-medium text-white">
+                {getInitials(user.fullName || user.email)}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex-1">
+              <div className="text-[12.5px] font-medium text-foreground">
+                {user.fullName?.split(' ')[0] || user.email.split('@')[0]}
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                {user.email}
+              </div>
             </div>
-            <div className="text-[11px] text-muted-foreground">
-              {user ? user.plan : 'Plan'}
-            </div>
+          </Link>
+        ) : (
+          <div className="rounded-md border border-dashed p-3">
+            <p className="mb-2 text-center text-xs text-muted-foreground">Sign in to access all features</p>
+            <SignInButton size="sm" className="w-full" />
           </div>
-        </Link>
+        )}
       </div>
     </>
   );

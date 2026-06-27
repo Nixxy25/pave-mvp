@@ -1,16 +1,13 @@
 export type KYCStatus = 'pending' | 'verified' | 'rejected';
-export type UserPlan = 'starter' | 'growth' | 'scale' | 'enterprise';
 
 export interface User {
   id: string;
   name: string;
   email: string;
   avatar?: string;
-  businessName: string;
   country?: string;
   stellarWallet: string;
   kycStatus?: KYCStatus;
-  plan: UserPlan | 'Free' | 'Starter' | 'Growth' | 'Enterprise';
   apiKey: string;
   secretKey: string;
   createdAt: string;

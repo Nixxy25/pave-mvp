@@ -15,6 +15,14 @@ export default function CheckoutLinksPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-200 border-t-[var(--pave-orange)]" />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
       <div className="mb-6 flex animate-fadeup flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">

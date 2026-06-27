@@ -1,44 +1,46 @@
-import { getUserData, setUserData } from './helpers';
-import { getBalance } from './balance';
+import { authFetch } from '../fetch-api';
 import { logAPICall } from './logs';
 import type { Withdrawal, CreateWithdrawalData } from '@/types';
 
+function rowToWithdrawal(row: Record<string, unknown>): Withdrawal {
+  return {
+    id: row.id as string,
+    amount: row.amount as number,
+    currency: row.currency as string,
+    destination: {
+      id: `bank_${row.id as string}`,
+      bankName: row.bank_name as string,
+      bankCode: row.bank_code as string,
+      accountNumber: row.account_number as string,
+      accountName: row.account_name as string,
+      country: row.country as string,
+    },
+    narration: row.narration as string | undefined,
+    stellarTxHash: row.stellar_tx_hash as string | undefined,
+    status: row.status as Withdrawal['status'],
+    createdAt: row.created_at as string,
+    estimatedArrival: row.estimated_arrival as string | undefined,
+  };
+}
+
 export async function getWithdrawals(): Promise<Withdrawal[]> {
-  return getUserData<Withdrawal[]>('withdrawals', []);
+  const res = await authFetch('/api/withdrawals');
+  if (!res.ok) return [];
+  const { data } = await res.json();
+  return (data || []).map(rowToWithdrawal);
 }
 
 export async function createWithdrawal(data: CreateWithdrawalData): Promise<Withdrawal> {
-  const withdrawals = await getUserData<Withdrawal[]>('withdrawals', []);
-  const currentBalance = await getBalance();
-
-  if (currentBalance.usdc < data.amount) throw new Error('Insufficient balance');
-
-  const bankAccountId = `bank_${data.bankName.toLowerCase().replace(/\s+/g, '_')}_${Date.now().toString().slice(-4)}`;
-  const maskedAccountNumber =
-    data.accountNumber.slice(0, -4).replace(/./g, '•') + data.accountNumber.slice(-4);
-
-  const newWithdrawal: Withdrawal = {
-    id: `pout_${Date.now()}_${Math.random().toString(36).substring(7)}`,
-    amount: data.amount,
-    currency: data.currency,
-    destination: {
-      id: bankAccountId,
-      bankName: data.bankName,
-      bankCode: '000',
-      accountNumber: maskedAccountNumber,
-      accountName: data.accountName,
-      country: 'NG',
-    },
-    narration: data.narration,
-    stellarTxHash: `${Math.random().toString(36).substring(2, 8)}...${Math.random().toString(36).substring(2, 6)}`,
-    status: 'completed',
-    createdAt: new Date().toISOString(),
-    estimatedArrival: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-  };
-
-  withdrawals.push(newWithdrawal);
-  await setUserData('withdrawals', withdrawals);
+  const res = await authFetch('/api/withdrawals', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const { error } = await res.json();
+    throw new Error(error || 'Failed to create withdrawal');
+  }
+  const { data: created } = await res.json();
   await logAPICall('POST', '/v1/payouts', 201, JSON.stringify(data));
-
-  return newWithdrawal;
+  return rowToWithdrawal(created);
 }
+

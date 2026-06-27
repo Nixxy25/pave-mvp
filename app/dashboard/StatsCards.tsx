@@ -1,28 +1,23 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import type { BalanceData, Payment, Withdrawal } from '@/types';
+import type { BalanceData, Payment } from '@/types';
 
 interface StatsCardsProps {
   balance: BalanceData;
   payments: Payment[];
-  withdrawals: Withdrawal[];
-  activities: Array<Payment | Withdrawal>;
+  activities: Array<Payment>;
 }
 
-export function StatsCards({ balance, payments, withdrawals, activities }: StatsCardsProps) {
+export function StatsCards({ balance, payments, activities }: StatsCardsProps) {
   const today = new Date().toDateString();
 
   const todayPayments = payments.filter(
     (p) => p.status === 'completed' && new Date(p.createdAt).toDateString() === today,
   );
-  const todayWithdrawals = withdrawals.filter(
-    (w) => w.status === 'completed' && new Date(w.createdAt).toDateString() === today,
-  );
 
   const paymentsTotal = todayPayments.reduce((sum, p) => sum + (p.usdcAmount || 0), 0);
-  const withdrawalsTotal = todayWithdrawals.reduce((sum, w) => sum + w.amount, 0);
-  const usdcChange = paymentsTotal - withdrawalsTotal;
+  const usdcChange = paymentsTotal;
   const ngnChange = usdcChange * 1605;
 
   const todayActivityCount = activities.filter(
@@ -47,7 +42,7 @@ export function StatsCards({ balance, payments, withdrawals, activities }: Stats
     {
       label: 'Activity Today',
       value: todayActivityCount.toString(),
-      sub: 'Payments & withdrawals',
+      sub: 'Payment transactions',
       change:
         todayActivityCount === 0
           ? 'Just started'

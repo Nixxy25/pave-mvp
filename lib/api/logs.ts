@@ -1,5 +1,24 @@
-import { getUserData, setUserData } from './helpers';
+import { getCurrentUserId } from '@/lib/fetch-api';
 import type { APILog, HTTPMethod, HTTPStatus } from '@/types';
+
+// Logs are lightweight audit data — stored in localStorage per user.
+function storageKey(userId: string) {
+  return `pave_api_logs_${userId}`;
+}
+
+function readLogs(userId: string): APILog[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    return JSON.parse(localStorage.getItem(storageKey(userId)) || '[]');
+  } catch {
+    return [];
+  }
+}
+
+function writeLogs(userId: string, logs: APILog[]) {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(storageKey(userId), JSON.stringify(logs));
+}
 
 export async function logAPICall(
   method: string,
@@ -7,7 +26,8 @@ export async function logAPICall(
   status: number,
   requestBody?: string,
 ): Promise<void> {
-  const logs = await getUserData<APILog[]>('api_logs', []);
+  const userId = getCurrentUserId();
+  if (!userId) return;
 
   const validMethods: HTTPMethod[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
   const validStatuses: HTTPStatus[] = [200, 201, 400, 401, 404, 422, 500];
@@ -22,12 +42,15 @@ export async function logAPICall(
     requestBody,
   };
 
+  const logs = readLogs(userId);
   logs.unshift(newLog);
   if (logs.length > 100) logs.splice(100);
-
-  await setUserData('api_logs', logs);
+  writeLogs(userId, logs);
 }
 
 export async function getAPILogs(): Promise<APILog[]> {
-  return getUserData<APILog[]>('api_logs', []);
+  const userId = getCurrentUserId();
+  if (!userId) return [];
+  return readLogs(userId);
 }
+
