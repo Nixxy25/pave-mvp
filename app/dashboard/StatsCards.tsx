@@ -1,7 +1,7 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
 import type { BalanceData, Payment } from '@/types';
+import { useExchangeRates } from '@/hooks/useExchangeRates';
 
 interface StatsCardsProps {
   balance: BalanceData;
@@ -10,6 +10,7 @@ interface StatsCardsProps {
 }
 
 export function StatsCards({ balance, payments, activities }: StatsCardsProps) {
+  const { data: exchangeRates } = useExchangeRates();
   const today = new Date().toDateString();
 
   const todayPayments = payments.filter(
@@ -18,7 +19,11 @@ export function StatsCards({ balance, payments, activities }: StatsCardsProps) {
 
   const paymentsTotal = todayPayments.reduce((sum, p) => sum + (p.usdcAmount || 0), 0);
   const usdcChange = paymentsTotal;
-  const ngnChange = usdcChange * 1605;
+  
+  const ngnRate = exchangeRates 
+    ? exchangeRates.fiat.NGN 
+    : (balance.usdc > 0 ? balance.ngn / balance.usdc : 1605);
+  const ngnChange = usdcChange * ngnRate;
 
   const todayActivityCount = activities.filter(
     (a) => new Date(a.createdAt).toDateString() === today,
