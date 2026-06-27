@@ -1,37 +1,33 @@
 'use client';
 
-import { useBalance } from '@/hooks/useBalance';
-import { useWithdrawals } from '@/hooks/useWithdrawals';
-import { WithdrawalDialog } from './WithdrawalDialog';
-import { WithdrawalsTable } from './WithdrawalsTable';
+import { Lock } from 'lucide-react';
 
 export default function WithdrawalsPage() {
-  const { withdrawals, loading, refetch: refetchWithdrawals } = useWithdrawals();
-  const { balance, refetch: refetchBalance } = useBalance();
-
-  const handleSuccess = async () => {
-    await Promise.all([refetchWithdrawals(), refetchBalance()]);
-  };
-
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-6 pb-20 sm:px-7 sm:py-8">
-      <div className="mb-6 flex animate-fadeup flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
-            Withdrawals
-          </div>
-          <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
-            Bank Withdrawals
-          </h1>
-          <p className="mt-1 text-[13.5px] text-muted-foreground">
-            Move USDC from your Pave wallet to any local bank
-          </p>
+      <div className="mb-6 animate-fadeup">
+        <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
+          Withdrawals
         </div>
-
-        <WithdrawalDialog balance={balance} onSuccess={handleSuccess} />
+        <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
+          Bank Withdrawals
+        </h1>
+        <p className="mt-1 text-[13.5px] text-muted-foreground">
+          Move USDC from your Pave wallet to any local bank
+        </p>
       </div>
 
-      <WithdrawalsTable withdrawals={withdrawals} loading={loading} />
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+            <Lock className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h2 className="mb-2 text-lg font-medium text-foreground">Coming Soon</h2>
+          <p className="text-sm text-muted-foreground">
+            Bank withdrawals will be available shortly
+          </p>
+        </div>
+      </div>
     </div>
   );
 }
