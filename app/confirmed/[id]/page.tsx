@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useExchangeRates, convertCurrency } from '@/hooks/useExchangeRates';
+import { API_ENDPOINTS } from '@/lib/constants';
 
 interface PaymentDetails {
   id: string;
@@ -142,15 +143,15 @@ export default function ConfirmedPage() {
                 </span>
                 {paymentDetails.method === 'Stellar Wallet' ? (
                   <a
-                    href={`https://stellar.expert/explorer/testnet/tx/${paymentDetails.stellarTxHash}`}
+                    href={`${API_ENDPOINTS.STELLAR_EXPLORER_TESTNET}/tx/${paymentDetails.stellarTxHash}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="font-mono text-[12px] font-medium text-[var(--stellar)] hover:underline break-all text-right max-w-[200px]"
+                    className="font-mono text-[12px] font-medium text-[var(--stellar)] underline whitespace-nowrap"
                   >
                     {paymentDetails.stellarTxHash.slice(0, 8)}…{paymentDetails.stellarTxHash.slice(-6)}
                   </a>
                 ) : (
-                  <span className="font-mono text-[12px] font-medium text-foreground break-all text-right max-w-[200px]">
+                  <span className="font-mono text-[12px] font-medium text-foreground underline whitespace-nowrap">
                     {paymentDetails.stellarTxHash}
                   </span>
                 )}
@@ -192,11 +193,6 @@ export default function ConfirmedPage() {
 
           {/* Action Buttons */}
           <div className="space-y-2">
-            <Link href="/dashboard" className="block">
-              <Button className="h-11 w-full bg-[var(--pave-orange)] text-[14px] font-medium hover:bg-[var(--pave-orange-hover)]">
-                View in Dashboard
-              </Button>
-            </Link>
             <Button 
               variant="outline" 
               className="h-11 w-full text-[14px]"

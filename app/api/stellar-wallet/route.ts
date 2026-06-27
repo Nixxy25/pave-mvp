@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUserId } from '@/lib/server-auth';
 import { supabase } from '@/lib/supabase';
-
-const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID!;
+import { API_ENDPOINTS, PRIVY_APP_ID } from '@/lib/constants';
 const PRIVY_APP_SECRET = process.env.PRIVY_APP_SECRET!;
 
 export async function POST(req: NextRequest) {
@@ -13,7 +12,7 @@ export async function POST(req: NextRequest) {
     const credentials = Buffer.from(`${PRIVY_APP_ID}:${PRIVY_APP_SECRET}`).toString('base64');
 
     // Create the Stellar server wallet in Privy, owned by this user
-    const response = await fetch('https://auth.privy.io/api/v1/wallets', {
+    const response = await fetch(`${API_ENDPOINTS.PRIVY_AUTH_BASE}/wallets`, {
       method: 'POST',
       headers: {
         Authorization: `Basic ${credentials}`,

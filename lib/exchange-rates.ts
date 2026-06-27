@@ -1,6 +1,6 @@
 
 
-import { SupportedCurrency } from './constants';
+import { SupportedCurrency, API_ENDPOINTS } from './constants';
 
 // --- Fiat Exchange Rates ---
 
@@ -28,7 +28,7 @@ const FALLBACK_FIAT_RATES: Record<string, number> = {
 
 async function fetchFiatRates(): Promise<Record<string, number>> {
   try {
-    const response = await fetch('https://open.er-api.com/v6/latest/USD', {
+    const response = await fetch(API_ENDPOINTS.FIAT_EXCHANGE_RATES, {
       next: { revalidate: 300 }, // Cache in Next.js for 5 minutes
     });
 
@@ -112,7 +112,7 @@ const FALLBACK_XLM_RATE = 0.11;
  */
 async function fetchXLMRate(): Promise<number> {
   try {
-    const response = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=XLMUSDT', {
+    const response = await fetch(API_ENDPOINTS.XLM_PRICE, {
       next: { revalidate: 30 }, // Cache in Next.js for 30 seconds
     });
 

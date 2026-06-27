@@ -80,13 +80,12 @@ export async function getMerchantInfo(
   }
 }
 
+// ──────────────────────────────────────────────────────────────────────────────
+// SECURITY: Server calculates all amounts - client only sends checkout ID and method
+// ──────────────────────────────────────────────────────────────────────────────
 export async function completeCheckoutPayment(data: {
   checkoutLinkId: string;
   customerName: string;
-  amount: number;
-  currency: string;
-  usdcAmount: number;
-  description: string;
   paymentMethod: 'card' | 'stellar';
   stellarTxHash?: string;
 }): Promise<{ success: boolean; paymentId: string }> {
@@ -97,7 +96,8 @@ export async function completeCheckoutPayment(data: {
   });
 
   if (!res.ok) {
-    const { error } = await res.json();
+    const { error, details } = await res.json();
+    console.error('[completeCheckoutPayment] Error:', error, details);
     throw new Error(error || 'Failed to complete payment');
   }
 

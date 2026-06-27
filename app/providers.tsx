@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { WalletProvider } from '@/contexts/WalletContext';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/sonner';
+import { PRIVY_APP_ID } from '@/lib/constants';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -24,7 +26,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <PrivyProvider
-        appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
+        appId={PRIVY_APP_ID}
         config={{
           loginMethods: ['email', 'google'],
           appearance: {
@@ -36,7 +38,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
       >
         <AuthProvider>
           <WalletProvider>
-            <ThemeProvider>{children}</ThemeProvider>
+            <ThemeProvider>
+              {children}
+              <Toaster position="bottom-right" />
+            </ThemeProvider>
           </WalletProvider>
         </AuthProvider>
       </PrivyProvider>

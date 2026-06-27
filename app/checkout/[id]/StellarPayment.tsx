@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useWallet } from '@/contexts/WalletContext';
 import { ShortAddress } from '@/components/ShortAddress';
+import { API_ENDPOINTS } from '@/lib/constants';
 
 interface StellarPaymentProps {
   merchantAddress: string;
@@ -33,7 +34,7 @@ export function StellarPayment({
       const { TransactionBuilder, Asset, Networks, Operation, Memo } = await import('@stellar/stellar-sdk');
       const { Horizon } = await import('@stellar/stellar-sdk');
 
-      const server = new Horizon.Server('https://horizon-testnet.stellar.org');
+      const server = new Horizon.Server(API_ENDPOINTS.STELLAR_HORIZON_TESTNET);
 
       // Load the customer's account
       const account = await server.loadAccount(address);

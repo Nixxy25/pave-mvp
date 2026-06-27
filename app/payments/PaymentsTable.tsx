@@ -10,6 +10,7 @@ import {
 import { formatTimeAgo } from '@/lib/api/helpers';
 import { useExchangeRates, convertCurrency } from '@/hooks';
 import { ShortAddress } from '@/components/ShortAddress';
+import { API_ENDPOINTS } from '@/lib/constants';
 import type { Payment } from '@/types';
 
 const COLUMNS: TableColumn[] = [
@@ -86,10 +87,10 @@ export function PaymentsTable({ payments, loading }: PaymentsTableProps) {
                     USDC {payment.usdcAmount?.toLocaleString() || '0'}
                   </td>
                   <td className="whitespace-nowrap px-3 py-2.5 text-[12.5px] text-foreground sm:px-4 sm:py-3 sm:text-sm">{payment.paidWith}</td>
-                  <td className="px-3 py-2.5 sm:px-4 sm:py-3">
+                  <td className="whitespace-nowrap px-3 py-2.5 sm:px-4 sm:py-3">
                     {payment.method === 'Stellar Wallet' && payment.stellarTxHash ? (
                       <a
-                        href={`https://stellar.expert/explorer/testnet/tx/${payment.stellarTxHash}`}
+                          href={`${API_ENDPOINTS.STELLAR_EXPLORER_TESTNET}/tx/${payment.stellarTxHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="hover:underline"

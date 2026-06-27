@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { StellarPayment } from './StellarPayment';
 import { CheckoutHeader } from './CheckoutHeader';
@@ -62,28 +63,22 @@ export default function CheckoutPage() {
   const handleCardPayment = async () => {
     if (!checkoutData) return;
     if (!customerName.trim()) {
-      alert('Please enter your name to continue');
+      toast.error('Please enter your name to continue');
       return;
     }
-    
-    const exchangeAmount = checkoutData.equivalents[selectedCurrency] || checkoutData.amount;
     
     // This is disabled but keeping the handler for potential future use
     try {
       const result = await completeCheckoutPayment({
           checkoutLinkId: checkoutData.id,
           customerName: customerName.trim(),
-          amount: exchangeAmount,
-          currency: selectedCurrency,
-          usdcAmount: checkoutData.equivalents['USD'] || checkoutData.amount,
-          description: checkoutData.description,
           paymentMethod: 'card',
         });
         
         // Redirect to secure confirmation page (server fetches payment details)
         window.location.href = `/confirmed/${result.paymentId}`;
       } catch {
-        alert('Payment failed. Please try again.');
+        toast.error('Payment failed. Please try again.');
       }
   };
 
@@ -93,22 +88,18 @@ export default function CheckoutPage() {
       const result = await completeCheckoutPayment({
         checkoutLinkId: checkoutData.id,
         customerName: customerName.trim() || 'Stellar User',
-        amount: usdcAmount,
-        currency: 'XLM',
-        usdcAmount,
-        description: checkoutData.description,
         paymentMethod: 'stellar',
         stellarTxHash: txHash,
       });
       // Redirect to secure confirmation page (server fetches payment details)
       window.location.href = `/confirmed/${result.paymentId}`;
     } catch {
-      alert('Payment sent but record failed. TX: ' + txHash);
+      toast.error('Payment sent but record failed. TX: ' + txHash);
     }
   };
 
   const handleStellarError = (msg: string) => {
-    alert(`Stellar payment failed: ${msg}`);
+    toast.error(`Stellar payment failed: ${msg}`);
   };
 
   if (loading) {
@@ -161,10 +152,6 @@ export default function CheckoutPage() {
   // Calculate live exchange amounts using React Query
   const exchangeAmount = exchangeRates 
     ? convertCurrency(amount, currency, selectedCurrency, exchangeRates)
-    : amount;
-  
-  const usdcAmount = exchangeRates
-    ? convertCurrency(amount, currency, 'USD', exchangeRates)
     : amount;
 
   const xlmAmount = exchangeRates

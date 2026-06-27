@@ -6,6 +6,7 @@ import { DataTableHeader, type TableColumn } from '@/components/ui/data-table';
 import { formatTimeAgo } from '@/lib/api/helpers';
 import { useExchangeRates, convertCurrency } from '@/hooks';
 import { ShortAddress } from '@/components/ShortAddress';
+import { API_ENDPOINTS } from '@/lib/constants';
 import type { Payment } from '@/types';
 
 const COLUMNS: TableColumn[] = [
@@ -140,10 +141,10 @@ export function RecentActivityTable({ activities }: RecentActivityTableProps) {
                     </td>
 
                     {/* TX ID */}
-                    <td className="px-3 py-2.5 sm:px-5 sm:py-3.5">
+                    <td className="whitespace-nowrap px-3 py-2.5 sm:px-5 sm:py-3.5">
                       {payment.method === 'Stellar Wallet' && payment.stellarTxHash ? (
                         <a
-                          href={`https://stellar.expert/explorer/testnet/tx/${payment.stellarTxHash}`}
+                          href={`${API_ENDPOINTS.STELLAR_EXPLORER_TESTNET}/tx/${payment.stellarTxHash}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="hover:underline"
