@@ -5,12 +5,12 @@ export function Footer() {
     <footer className="border-t bg-card">
       <div className="mx-auto flex h-14 max-w-[1400px] items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-6">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm max-sm:text-xs text-muted-foreground">
             © 2026 Pave. All rights reserved.
           </p>
         </div>
         
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+        <div className="flex items-center gap-4 text-sm max-sm:text-xs text-muted-foreground">
           <Link href="/api-webhooks" className="hover:text-foreground transition-colors">
             Docs
           </Link>
