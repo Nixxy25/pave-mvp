@@ -9,12 +9,14 @@ import { PaymentMethodSelector } from './PaymentMethodSelector';
 import { CurrencySelector } from './CurrencySelector';
 import { getCheckoutLinkById, getMerchantInfo, completeCheckoutPayment } from '@/lib/api';
 import { isSupportedCurrency } from '@/lib/constants';
+import { useExchangeRates, convertCurrency } from '@/hooks/useExchangeRates';
 import type { CheckoutLink } from '@/types';
 
 type PaymentMethod = 'card' | 'stellar';
 
 export default function CheckoutPage() {
   const params = useParams();
+  const { data: exchangeRates, isLoading: ratesLoading } = useExchangeRates();
   const [checkoutData, setCheckoutData] = useState<CheckoutLink | null>(null);
   const [merchantInfo, setMerchantInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -89,7 +91,6 @@ export default function CheckoutPage() {
 
   const handleStellarSuccess = async (txHash: string) => {
     if (!checkoutData) return;
-    const usdcAmount = checkoutData.equivalents['USD'] || checkoutData.amount;
     try {
       await completeCheckoutPayment({
         checkoutLinkId: checkoutData.id,
@@ -130,9 +131,21 @@ export default function CheckoutPage() {
     );
   }
 
-  const { amount, currency, description, equivalents } = checkoutData;
-  const exchangeAmount = equivalents[selectedCurrency] || amount;
-  const usdcAmount = equivalents['USD'] || amount;
+  const { amount, currency, description } = checkoutData;
+  
+  // Calculate live exchange amounts using React Query
+  const exchangeAmount = exchangeRates 
+    ? convertCurrency(amount, currency, selectedCurrency, exchangeRates)
+    : amount;
+  
+  const usdcAmount = exchangeRates
+    ? convertCurrency(amount, currency, 'USD', exchangeRates)
+    : amount;
+
+  const xlmAmount = exchangeRates
+    ? convertCurrency(amount, currency, 'XLM', exchangeRates)
+    : amount;
+
   const hasStellarOption = Boolean(checkoutData.stellarWalletAddress);
 
   return (
@@ -164,7 +177,7 @@ export default function CheckoutPage() {
             paymentMethod={paymentMethod}
             selectedCurrency={selectedCurrency}
             exchangeAmount={exchangeAmount}
-            usdcAmount={usdcAmount}
+            xlmAmount={xlmAmount}
           />
 
           {/* Body */}
@@ -187,26 +200,44 @@ export default function CheckoutPage() {
               hasStellarOption={hasStellarOption}
             />
 
-            {paymentMethod === 'card' && (
+            {paymentMethod === 'card' && exchangeRates && (
               <CurrencySelector
                 selectedCurrency={selectedCurrency}
                 setSelectedCurrency={setSelectedCurrency}
-                equivalents={equivalents}
+                equivalents={{
+                  USD: convertCurrency(amount, currency, 'USD', exchangeRates),
+                  NGN: convertCurrency(amount, currency, 'NGN', exchangeRates),
+                  GHS: convertCurrency(amount, currency, 'GHS', exchangeRates),
+                  KES: convertCurrency(amount, currency, 'KES', exchangeRates),
+                  XLM: convertCurrency(amount, currency, 'XLM', exchangeRates),
+                }}
                 acceptedCurrencies={checkoutData.acceptedCurrencies}
               />
+            )}
+
+            {paymentMethod === 'card' && !exchangeRates && (
+              <div className="rounded-lg border bg-muted/20 p-4 text-center text-sm text-muted-foreground">
+                Loading exchange rates...
+              </div>
             )}
 
             {/* Stellar Payment */}
             {paymentMethod === 'stellar' && checkoutData.stellarWalletAddress && (
               <div className="mb-1">
-                <StellarPayment
-                  merchantAddress={checkoutData.stellarWalletAddress}
-                  xlmAmount={usdcAmount}
-                  onSuccess={handleStellarSuccess}
-                  onError={handleStellarError}
-                  disabled={!customerName.trim()}
-                />
-                {!customerName.trim() && (
+                {exchangeRates ? (
+                  <StellarPayment
+                    merchantAddress={checkoutData.stellarWalletAddress}
+                    xlmAmount={xlmAmount}
+                    onSuccess={handleStellarSuccess}
+                    onError={handleStellarError}
+                    disabled={!customerName.trim()}
+                  />
+                ) : (
+                  <div className="rounded-lg border bg-muted/20 p-4 text-center text-sm text-muted-foreground">
+                    Loading exchange rates...
+                  </div>
+                )}
+                {!customerName.trim() && exchangeRates && (
                   <p className="mt-2 text-center text-[12px] text-muted-foreground">
                     Enter your name above to enable payment
                   </p>
