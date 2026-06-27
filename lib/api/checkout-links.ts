@@ -1,4 +1,3 @@
-import { fetchUserAttributes } from 'aws-amplify/auth';
 import { rowToCheckoutLink } from './helpers';
 import { logAPICall } from './logs';
 import { authFetch } from '../fetch-api';
@@ -19,9 +18,15 @@ export async function getCheckoutLinkById(id: string): Promise<CheckoutLink | nu
 }
 
 export async function createPayment(data: CreatePaymentData): Promise<CheckoutLink> {
-  const attrs = (await fetchUserAttributes().catch(() => ({}))) as Record<string, string>;
-  const merchantName = attrs.nickname || 'Business';
-  const merchantPersonName = attrs.name || '';
+  // Get merchant info from Supabase via API
+  const merchantRes = await authFetch('/api/merchant').catch(() => null);
+  let merchantName = 'Business';
+  let merchantPersonName = '';
+  if (merchantRes?.ok) {
+    const { merchant } = await merchantRes.json();
+    merchantName = merchant?.full_name || 'Business';
+    merchantPersonName = merchant?.full_name || '';
+  }
 
   const res = await authFetch('/api/checkout-links', {
     method: 'POST',
@@ -61,13 +66,15 @@ export async function getMerchantInfo(
     return null;
   }
 
-  // Logged-in dashboard: read from Cognito
+  // Logged-in dashboard: read from Supabase via API
   if (typeof window === 'undefined') return null;
   try {
-    const attributes = await fetchUserAttributes();
+    const res = await authFetch('/api/merchant');
+    if (!res.ok) return null;
+    const { merchant } = await res.json();
     return {
-      name: attributes.nickname || 'Business',
-      personName: attributes.name || '',
+      name: merchant?.full_name || 'Business',
+      personName: merchant?.full_name || '',
       country: 'Nigeria',
       verified: true,
     };

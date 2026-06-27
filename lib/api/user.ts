@@ -1,56 +1,32 @@
-import {
-  getCurrentUser as getCognitoUser,
-  fetchUserAttributes,
-  fetchAuthSession,
-} from 'aws-amplify/auth';
+import { authFetch } from '../fetch-api';
 import type { Merchant } from '@/types';
 
+interface MerchantRow {
+  privy_user_id: string;
+  email: string;
+  full_name: string;
+  stellar_address: string;
+  stellar_wallet_id: string;
+  api_key: string;
+  api_secret: string;
+  created_at: string;
+}
+
 export async function getUserProfile(): Promise<Merchant> {
-  const cognitoUser = await getCognitoUser();
-  const userId = cognitoUser.userId;
-  const isGoogleUser = cognitoUser.username?.startsWith('google_') || false;
+  const res = await authFetch('/api/merchant');
+  if (!res.ok) throw new Error('Not authenticated');
 
-  let email = '';
-  let name = '';
-  let businessName = '';
-
-  if (isGoogleUser) {
-    const session = await fetchAuthSession();
-    const idToken = session.tokens?.idToken;
-    if (idToken?.payload) {
-      email = (idToken.payload.email as string) || '';
-      name = (idToken.payload.name as string) || '';
-    }
-    const attrs = await fetchUserAttributes();
-    businessName = attrs.nickname || '';
-  } else {
-    const attributes = await fetchUserAttributes();
-    email = attributes.email || '';
-    name = attributes.name || '';
-    businessName = attributes.nickname || '';
-  }
-
-  let apiKeys = JSON.parse(localStorage.getItem(`pave_api_keys_${userId}`) || 'null');
-  if (!apiKeys) {
-    apiKeys = {
-      apiKey: `pk_test_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`,
-      secretKey: `sk_test_${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`,
-      stellarWalletAddress: `G${Math.random().toString(36).substring(2, 15).toUpperCase()}${Math.random().toString(36).substring(2, 15).toUpperCase()}`,
-    };
-    localStorage.setItem(`pave_api_keys_${userId}`, JSON.stringify(apiKeys));
-  }
+  const { merchant } = (await res.json()) as { merchant: MerchantRow };
 
   return {
-    id: userId,
-    name,
-    email,
-    businessName,
-    createdAt: new Date().toISOString(),
-    plan: 'Free',
-    apiKey: apiKeys.apiKey,
-    secretKey: apiKeys.secretKey,
-    stellarWallet: apiKeys.stellarWalletAddress,
-    stellarWalletAddress: apiKeys.stellarWalletAddress,
+    id: merchant.privy_user_id,
+    name: merchant.full_name || merchant.email?.split('@')[0] || 'User',
+    email: merchant.email,
+    createdAt: merchant.created_at,
+    apiKey: merchant.api_key,
+    secretKey: merchant.api_secret,
+    stellarWallet: merchant.stellar_address,
+    stellarWalletAddress: merchant.stellar_address,
     preferences: {
       emailNotifications: true,
       autoWithdrawal: false,
@@ -59,3 +35,4 @@ export async function getUserProfile(): Promise<Merchant> {
     },
   } as Merchant;
 }
+
