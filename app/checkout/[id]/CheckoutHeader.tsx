@@ -10,7 +10,7 @@ interface CheckoutHeaderProps {
   paymentMethod: 'card' | 'stellar';
   selectedCurrency: string;
   exchangeAmount: number;
-  usdcAmount: number;
+  xlmAmount: number;
 }
 
 export function CheckoutHeader({
@@ -21,7 +21,7 @@ export function CheckoutHeader({
   paymentMethod,
   selectedCurrency,
   exchangeAmount,
-  usdcAmount,
+  xlmAmount,
 }: CheckoutHeaderProps) {
   return (
     <div className="border-b p-6 pb-5">
@@ -47,7 +47,7 @@ export function CheckoutHeader({
         <span className="text-muted-foreground">
           ≈{' '}
           {paymentMethod === 'stellar'
-            ? `${usdcAmount.toFixed(2)} XLM`
+            ? `${xlmAmount.toFixed(2)} XLM`
             : `${selectedCurrency} ${exchangeAmount.toLocaleString()}`}
         </span>
         <Badge
