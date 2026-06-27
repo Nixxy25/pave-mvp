@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUserId } from '@/lib/server-auth';
 import { supabase } from '@/lib/supabase';
-import { CONVERSION_RATES } from '@/lib/constants';
+import { getFiatRates } from '@/lib/exchange-rates';
 
 // GET /api/payments?type=list&status=&search=
 // GET /api/payments?type=balance
@@ -42,7 +42,9 @@ export async function GET(req: NextRequest) {
       0,
     );
 
-    const usdToNgnRate = (CONVERSION_RATES as Record<string, Record<string, number>>)['USD']?.['NGN'] || 1605;
+    // Get live exchange rate
+    const rates = await getFiatRates();
+    const usdToNgnRate = rates['NGN'] || 1605; // fallback to 1605 if API fails
     return NextResponse.json({ totalIn, usdToNgnRate });
   }
 
