@@ -6,7 +6,7 @@ export const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID!;
 export const API_ENDPOINTS = {
   // Exchange Rate APIs
   FIAT_EXCHANGE_RATES: 'https://open.er-api.com/v6/latest/USD',
-  XLM_PRICE: 'https://api.binance.com/api/v3/ticker/price?symbol=XLMUSDT',
+  XLM_PRICE: 'https://api.coingecko.com/api/v3/simple/price?ids=stellar&vs_currencies=usd',
   
   // Stellar Network
   STELLAR_HORIZON_TESTNET: 'https://horizon-testnet.stellar.org',
