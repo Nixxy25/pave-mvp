@@ -21,7 +21,7 @@ export function StellarPayment({
   onError,
   disabled = false,
 }: StellarPaymentProps) {
-  const { address, connecting, connect } = useWallet();
+  const { address, connecting, connect, disconnect } = useWallet();
   const [processing, setProcessing] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -130,8 +130,18 @@ export function StellarPayment({
     <div className="space-y-4">
       {/* Sending from */}
       <div className="border bg-muted/40 p-3.5">
-        <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-          Sending from
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            Sending from
+          </div>
+          <Button
+            onClick={disconnect}
+            variant="ghost"
+            size="sm"
+            className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+          >
+            Disconnect
+          </Button>
         </div>
         <ShortAddress address={address} className="text-[13px] text-foreground" />
       </div>
