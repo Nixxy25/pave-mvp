@@ -108,7 +108,7 @@ const XLM_CACHE_TTL = 30 * 1000;
 const FALLBACK_XLM_RATE = 0.11;
 
 /**
- * Fetch current XLM/USD spot price from Coinbase
+ * Fetch current XLM/USD price from CoinGecko API
  */
 async function fetchXLMRate(): Promise<number> {
   try {
@@ -121,10 +121,10 @@ async function fetchXLMRate(): Promise<number> {
     }
 
     const data = await response.json();
-    
-    const price = Number(data?.data?.amount);
 
-    if (!Number.isFinite(price) || price <= 0) {
+    const price = data?.stellar?.usd;
+
+    if (typeof price !== 'number') {
       throw new Error('Invalid API response');
     }
 

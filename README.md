@@ -31,7 +31,7 @@ Pave enables merchants to accept payments from customers worldwide and receive i
 **Payment & Settlement**
 - **Stellar Network** - Testnet blockchain for USDC transfers
 - **Stellar Wallets Kit** - Browser wallet integration (Freighter, Lobstr, etc.)
-- **Live Exchange Rates** - Binance API for XLM rates, Open Exchange Rates for fiat
+- **Live Exchange Rates** - CoinGecko API for XLM rates, Open Exchange Rates for fiat
 
 **Data & State Management**
 - **React Query** - Server state management with caching
