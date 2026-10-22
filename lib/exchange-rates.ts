@@ -108,7 +108,7 @@ const XLM_CACHE_TTL = 30 * 1000;
 const FALLBACK_XLM_RATE = 0.11;
 
 /**
- * Fetch current XLM/USDT price from Binance API
+ * Fetch current XLM/USD spot price from Coinbase
  */
 async function fetchXLMRate(): Promise<number> {
   try {
@@ -122,11 +122,13 @@ async function fetchXLMRate(): Promise<number> {
 
     const data = await response.json();
     
-    if (!data.price) {
+    const price = Number(data?.data?.amount);
+
+    if (!Number.isFinite(price) || price <= 0) {
       throw new Error('Invalid API response');
     }
 
-    return parseFloat(data.price);
+    return price;
   } catch (error) {
     console.error('[exchange-rates] Failed to fetch XLM rate:', error);
     return FALLBACK_XLM_RATE;
