@@ -122,9 +122,9 @@ async function fetchXLMRate(): Promise<number> {
 
     const data = await response.json();
 
-    const price = data?.stellar?.usd;
+    const price = Number(data?.data?.amount);
 
-    if (typeof price !== 'number') {
+    if (!Number.isFinite(price) || price <= 0) {
       throw new Error('Invalid API response');
     }
 
