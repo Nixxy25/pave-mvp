@@ -1,5 +1,5 @@
-import { authFetch } from '../fetch-api';
-import { rowToPayment } from './helpers';
+import { authFetch } from '@/lib/fetch-api';
+import { rowToPayment } from '@/features/payments/mappers';
 import type { Payment, PaymentFilters } from '@/types';
 
 export async function getPayments(filters?: PaymentFilters): Promise<Payment[]> {

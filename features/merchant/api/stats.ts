@@ -1,4 +1,4 @@
-import { authFetch } from '../fetch-api';
+import { authFetch } from '@/lib/fetch-api';
 import type { AccountStats } from '@/types';
 
 export async function getStats(): Promise<AccountStats> {
