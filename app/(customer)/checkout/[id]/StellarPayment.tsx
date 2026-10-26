@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useWallet } from '@/contexts/WalletContext';
+import { useWallet } from '@/features/customer/wallet/WalletContext';
 import { ShortAddress } from '@/components/ShortAddress';
-import { API_ENDPOINTS } from '@/lib/constants';
+import { submitStellarPayment } from '@/lib/stellar/client-payment';
 
 interface StellarPaymentProps {
   merchantAddress: string;
@@ -30,45 +30,14 @@ export function StellarPayment({
     setProcessing(true);
 
     try {
-      // Dynamically import stellar-sdk (avoids SSR issues)
-      const { TransactionBuilder, Asset, Networks, Operation, Memo } = await import('@stellar/stellar-sdk');
-      const { Horizon } = await import('@stellar/stellar-sdk');
-
-      const server = new Horizon.Server(API_ENDPOINTS.STELLAR_HORIZON_TESTNET);
-
-      // Load the customer's account
-      const account = await server.loadAccount(address);
-
-      // Build the transaction
-      const tx = new TransactionBuilder(account, {
-        fee: '100',
-        networkPassphrase: Networks.TESTNET,
-      })
-        .addOperation(
-          Operation.payment({
-            destination: merchantAddress,
-            asset: Asset.native(),
-            amount: xlmAmount.toFixed(7),
-          })
-        )
-        .addMemo(Memo.text('Pave checkout'))
-        .setTimeout(180)
-        .build();
-
-      // Sign via the connected wallet
-      const { StellarWalletsKit } = await import('@creit.tech/stellar-wallets-kit/sdk');
-      const { signedTxXdr } = await StellarWalletsKit.signTransaction(tx.toXDR(), {
-        networkPassphrase: Networks.TESTNET,
-        address,
+      const txHash = await submitStellarPayment({
+        sourceAddress: address,
+        merchantAddress,
+        xlmAmount,
       });
 
-      // Submit to testnet Horizon
-      const { TransactionBuilder: TB2 } = await import('@stellar/stellar-sdk');
-      const signed = TB2.fromXDR(signedTxXdr, Networks.TESTNET);
-      const response = await server.submitTransaction(signed);
-
       setSuccess(true);
-      onSuccess(response.hash);
+      onSuccess(txHash);
     } catch (err: unknown) {
       const error = err as { response?: { data?: { extras?: { result_codes?: { operations?: string[]; transaction?: string } } } }; message?: string };
       const codes = error?.response?.data?.extras?.result_codes;
