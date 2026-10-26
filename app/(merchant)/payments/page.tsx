@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { usePayments, useDebounce } from '@/hooks';
+import { usePayments } from '@/features/merchant/hooks/usePayments';
+import { useDebounce } from '@/lib/hooks/useDebounce';
 import { PaymentsFilters } from './PaymentsFilters';
 import { PaymentsTable } from './PaymentsTable';
 import type { PaymentStatus } from '@/types';
