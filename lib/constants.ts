@@ -41,7 +41,7 @@ export const CURRENCY_COUNTRIES: Record<SupportedCurrency, string> = {
   'USD': 'US',
 };
 
-// NOTE: For live exchange rates, use the functions from @/lib/exchange-rates
+// NOTE: For live exchange rates, use the functions from @/features/payments/server/exchange-rates
 
 export function getCurrencyName(code: string): string {
   return CURRENCY_NAMES[code as SupportedCurrency] || code;

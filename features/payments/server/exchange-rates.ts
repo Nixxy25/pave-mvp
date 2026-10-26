@@ -1,6 +1,6 @@
 
 
-import { SupportedCurrency, API_ENDPOINTS } from './constants';
+import { SupportedCurrency, API_ENDPOINTS } from '@/lib/constants';
 
 // --- Fiat Exchange Rates ---
 
