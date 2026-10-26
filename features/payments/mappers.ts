@@ -1,37 +1,19 @@
-// Private helpers shared across domain modules — not re-exported from the barrel.
+// Row mappers shared by the merchant and customer modules.
 
 import type { CheckoutLink, Payment } from '@/types';
 
-
-export function formatTimeAgo(createdAt: string): string {
-  const date = new Date(createdAt);
-  const diff = Date.now() - date.getTime();
-  const seconds = Math.floor(diff / 1000);
-  const minutes = Math.floor(diff / 60_000);
-  const hours = Math.floor(diff / 3_600_000);
-  const days = Math.floor(diff / 86_400_000);
-
-  // Show relative time for recent activity
-  if (seconds < 60) return `${seconds}s ago`;
-  if (minutes < 60) return `${minutes}m ago`;
-  if (hours < 24) return `${hours}h ago`;
-  if (days < 7) return `${days}d ago`;
-
-  // Show full date with month for older dates
-  return date.toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
-  });
+function getCheckoutUrl(id: string): string {
+  const configuredBaseUrl = process.env.NEXT_PUBLIC_PAY_BASE_URL?.replace(/\/+$/, '');
+  const baseUrl =
+    configuredBaseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+  return `${baseUrl}/checkout/${id}`;
 }
-
-// ─── Row mappers ──────────────────────────────────────────────────────────────
 
 export function rowToCheckoutLink(row: Record<string, unknown>): CheckoutLink {
   return {
     id: row.id as string,
     paymentId: row.id as string,
-    url: `${typeof window !== 'undefined' ? window.location.origin : ''}/checkout/${row.id}`,
+    url: getCheckoutUrl(row.id as string),
     amount: row.amount as number,
     currency: row.currency as string,
     description: row.description as string,
