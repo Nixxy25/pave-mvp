@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
-import { useExchangeRates, convertCurrency } from '@/hooks/useExchangeRates';
+import { useExchangeRates, convertCurrency } from '@/features/payments/hooks/useExchangeRates';
 import { API_ENDPOINTS } from '@/lib/constants';
 
 interface PaymentDetails {
