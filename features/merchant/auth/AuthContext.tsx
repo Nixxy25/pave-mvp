@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, ReactNode } from 'react';
 import { usePrivy } from '@privy-io/react-auth';
+import { usePathname } from 'next/navigation';
 import { setTokenGetter, setUserIdGetter } from '@/lib/fetch-api';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login: privyLogin,
   } = usePrivy();
 
+  const pathname = usePathname();
   const [merchant, setMerchant] = useState<MerchantRow | null>(null);
   const [refreshTick, setRefreshTick] = useState(0);
 
@@ -76,6 +78,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // ── Load or create merchant profile whenever auth state changes ───────────
   useEffect(() => {
     if (!ready) return;
+
+    const isAdminSurface =
+      pathname === '/admin' ||
+      pathname.startsWith('/admin/') ||
+      (typeof window !== 'undefined' && window.location.hostname === 'admin.pavee.co');
+    if (isAdminSurface) {
+      setMerchant(null);
+      return;
+    }
 
     const doLoad = async (): Promise<MerchantRow | null> => {
       if (!authenticated || !privyUser?.id) return null;
@@ -132,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((m) => setMerchant(m))
       .catch(console.error);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ready, authenticated, privyUser?.id, privyEmail, privyFullName, refreshTick]);
+  }, [ready, authenticated, pathname, privyUser?.id, privyEmail, privyFullName, refreshTick]);
 
   // ── Derived user object from Supabase merchant row ────────────────────────
   const user: User | null = merchant

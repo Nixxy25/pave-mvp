@@ -1,6 +1,6 @@
 'use client';
 
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/features/merchant/auth/AuthContext';
 import { Button } from '@/components/ui/button';
 
 interface SignInButtonProps {

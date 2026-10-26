@@ -1,4 +1,4 @@
-import { SignInButton } from '@/components/SignInButton';
+import { SignInButton } from '@/features/merchant/components/SignInButton';
 
 interface SignInPromptProps {
   title?: string;
