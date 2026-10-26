@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { DataTableHeader, type TableColumn } from '@/components/ui/data-table';
-import { formatTimeAgo } from '@/lib/api/helpers';
-import { useExchangeRates, convertCurrency } from '@/hooks';
+import { formatTimeAgo } from '@/features/merchant/lib/format';
+import { useExchangeRates, convertCurrency } from '@/features/payments/hooks/useExchangeRates';
 import { ShortAddress } from '@/components/ShortAddress';
 import { API_ENDPOINTS } from '@/lib/constants';
 import type { Payment } from '@/types';

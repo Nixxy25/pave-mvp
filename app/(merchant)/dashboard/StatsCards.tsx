@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { BalanceData, Payment } from '@/types';
-import { useExchangeRates, convertCurrency } from '@/hooks/useExchangeRates';
+import { useExchangeRates, convertCurrency } from '@/features/payments/hooks/useExchangeRates';
 import {
   Select,
   SelectContent,

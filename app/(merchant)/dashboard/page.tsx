@@ -1,9 +1,11 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useBalance, usePayments } from '@/hooks';
-import { getUserProfile, getStats } from '@/lib/api';
+import { useAuth } from '@/features/merchant/auth/AuthContext';
+import { useBalance } from '@/features/merchant/hooks/useBalance';
+import { usePayments } from '@/features/merchant/hooks/usePayments';
+import { getUserProfile } from '@/features/merchant/api/user';
+import { getStats } from '@/features/merchant/api/stats';
 import { StatsCards } from './StatsCards';
 import { RecentActivityTable } from './RecentActivityTable';
 import type { Merchant, Payment } from '@/types';
