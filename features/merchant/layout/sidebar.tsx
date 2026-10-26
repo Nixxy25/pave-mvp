@@ -16,8 +16,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useAuth } from '@/contexts/AuthContext';
-import { SignInButton } from '@/components/SignInButton';
+import { useAuth } from '@/features/merchant/auth/AuthContext';
+import { SignInButton } from '@/features/merchant/components/SignInButton';
 
 interface NavItem {
   href: string;

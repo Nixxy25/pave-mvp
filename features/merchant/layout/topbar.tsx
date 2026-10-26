@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { useAuth } from '@/contexts/AuthContext';
-import { SignInButton } from '@/components/SignInButton';
+import { useAuth } from '@/features/merchant/auth/AuthContext';
+import { SignInButton } from '@/features/merchant/components/SignInButton';
 
 interface TopbarProps {
   onNotificationClick?: () => void;

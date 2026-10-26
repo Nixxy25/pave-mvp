@@ -2,7 +2,7 @@
 
 import { Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/features/merchant/auth/AuthContext';
 import { ShortAddress } from '@/components/ShortAddress';
 
 export function WalletConnectButton() {

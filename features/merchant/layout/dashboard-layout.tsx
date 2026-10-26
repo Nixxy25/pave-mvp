@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/features/merchant/auth/AuthContext';
 import { Topbar } from './topbar';
 import { Sidebar } from './sidebar';
 import { NotificationPanel } from './notification-panel';
