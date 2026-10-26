@@ -24,6 +24,7 @@
 .DS_Store
 *.pem
 BUILD.md
+/PAVE-ARCHITECTURE-NOTES.md
 
 # debug
 npm-debug.log*
