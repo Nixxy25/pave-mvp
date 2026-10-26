@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useCheckoutLinks } from '@/hooks/useCheckoutLinks';
+import { useCheckoutLinks } from '@/features/merchant/hooks/useCheckoutLinks';
 import { CreateCheckoutLinkDialog } from './CreateCheckoutLinkDialog';
 import { EditCheckoutLinkDialog } from './EditCheckoutLinkDialog';
 import { CheckoutLinksTable } from './CheckoutLinksTable';

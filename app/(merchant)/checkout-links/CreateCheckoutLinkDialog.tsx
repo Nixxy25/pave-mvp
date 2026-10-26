@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createPayment } from '@/lib/api';
-import { useAuth } from '@/contexts/AuthContext';
+import { createPayment } from '@/features/merchant/api/checkout-links';
+import { useAuth } from '@/features/merchant/auth/AuthContext';
 import { SUPPORTED_CURRENCIES, type SupportedCurrency } from '@/lib/constants';
 import { ShortAddress } from '@/components/ShortAddress';
 import { Button } from '@/components/ui/button';
