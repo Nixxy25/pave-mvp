@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
-import { getAPILogs } from '@/lib/api';
+import { useAuth } from '@/features/merchant/auth/AuthContext';
+import { getAPILogs } from '@/features/merchant/api/logs';
 import { Badge } from '@/components/ui/badge';
 import { DataTableHeader, DataTableLoading, DataTableEmpty, type TableColumn } from '@/components/ui/data-table';
 import type { APILog } from '@/types';
