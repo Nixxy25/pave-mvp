@@ -8,9 +8,9 @@ import { StellarPayment } from './StellarPayment';
 import { CheckoutHeader } from './CheckoutHeader';
 import { PaymentMethodSelector } from './PaymentMethodSelector';
 import { CurrencySelector } from './CurrencySelector';
-import { getCheckoutLinkById, getMerchantInfo, completeCheckoutPayment } from '@/lib/api';
+import { getCheckoutLinkById, getMerchantInfo, completeCheckoutPayment } from '@/features/customer/api/checkout';
 import { isSupportedCurrency } from '@/lib/constants';
-import { useExchangeRates, convertCurrency } from '@/hooks/useExchangeRates';
+import { useExchangeRates, convertCurrency } from '@/features/payments/hooks/useExchangeRates';
 import type { CheckoutLink } from '@/types';
 
 type PaymentMethod = 'card' | 'stellar';
