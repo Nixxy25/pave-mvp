@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/contexts/AuthContext';
-import { getStats } from '@/lib/api';
-import { SignInPrompt } from '@/components/SignInPrompt';
+import { useAuth } from '@/features/merchant/auth/AuthContext';
+import { getStats } from '@/features/merchant/api/stats';
+import { SignInPrompt } from '@/features/merchant/components/SignInPrompt';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
