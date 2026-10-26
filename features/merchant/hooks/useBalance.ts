@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getBalance } from '@/lib/api';
+import { getBalance } from '../api/balance';
 import type { BalanceData } from '@/types';
 
 export function useBalance() {
