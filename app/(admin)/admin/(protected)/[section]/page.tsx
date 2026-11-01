@@ -14,11 +14,9 @@ export default async function AdminSectionPage({
 
   return (
     <section>
-      <p className="mb-2 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-        Internal operations
-      </p>
-      <h1 className="mb-3 font-serif text-3xl">{item.label}</h1>
-      <p className="text-sm text-muted-foreground">
+      <p className="mb-1 text-xs font-medium text-text-muted">Internal operations</p>
+      <h1 className="mb-2 text-2xl font-semibold tracking-tight text-text-primary">{item.label}</h1>
+      <p className="text-sm text-text-secondary">
         This section is reserved for a future Admin implementation.
       </p>
     </section>

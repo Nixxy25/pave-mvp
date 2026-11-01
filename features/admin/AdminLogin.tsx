@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { usePrivy } from '@privy-io/react-auth';
+import { PaveLogo } from '@/components/brand/PaveLogo';
 import { Button } from '@/components/ui/button';
 
 export function AdminLogin() {
@@ -38,9 +39,7 @@ export function AdminLogin() {
         }
         if (cancelled) return;
 
-        router.replace(
-          window.location.hostname === 'admin.pavee.co' ? '/' : '/admin',
-        );
+        router.replace('/admin');
         router.refresh();
       } catch (error) {
         if (!cancelled) {
@@ -69,12 +68,12 @@ export function AdminLogin() {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-4">
-      <section className="w-full max-w-md border bg-card p-8 text-center shadow-sm">
-        <p className="mb-2 font-mono text-xs uppercase tracking-wider text-muted-foreground">
-          Internal access
-        </p>
-        <h1 className="mb-3 font-serif text-3xl">Pave Admin</h1>
-        <p className="mb-6 text-sm text-muted-foreground">
+      <section className="w-full max-w-md border bg-card p-8 text-center shadow-sm ring-1 ring-foreground/5">
+        <div className="mb-6 flex justify-center">
+          <PaveLogo size={36} priority />
+        </div>
+        <h1 className="mb-1.5 text-xl font-semibold tracking-tight text-text-primary">Admin sign in</h1>
+        <p className="mb-6 text-sm text-text-secondary">
           Sign in with an account authorized by the Pave operations team.
         </p>
         {!authenticated && (
