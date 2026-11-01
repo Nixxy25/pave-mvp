@@ -4,7 +4,6 @@ import { PrivyProvider } from '@privy-io/react-auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 import { AuthProvider } from '@/features/merchant/auth/AuthContext';
-import { WalletProvider } from '@/features/customer/wallet/WalletContext';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
 import { PRIVY_APP_ID } from '@/lib/constants';
@@ -37,12 +36,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
         }}
       >
         <AuthProvider>
-          <WalletProvider>
             <ThemeProvider>
               {children}
               <Toaster position="bottom-right" />
             </ThemeProvider>
-          </WalletProvider>
         </AuthProvider>
       </PrivyProvider>
     </QueryClientProvider>

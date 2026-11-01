@@ -1,23 +1,20 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Fraunces } from "next/font/google";
+import { Geist_Mono } from "next/font/google";
+import localFont from "next/font/local";
 import { Providers } from "./providers";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-sans",
-  subsets: ["latin"],
+// Inter is self-hosted from /public (variable font: weights 100-900, optical size axis).
+const inter = localFont({
+  src: "../public/Inter-VariableFont_opsz,wght.ttf",
+  variable: "--font-inter",
+  weight: "100 900",
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-mono",
+  variable: "--font-geist-mono",
   subsets: ["latin"],
-});
-
-const fraunces = Fraunces({
-  variable: "--font-serif",
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
-  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -38,9 +35,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
+      className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#fafaf9]">
+      <body className="min-h-full flex flex-col bg-background font-sans text-foreground">
         <Providers>{children}</Providers>
       </body>
     </html>

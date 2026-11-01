@@ -15,7 +15,7 @@ export function ThemeToggle() {
     <Button
       variant="outline"
       size="icon"
-      className="h-[34px] w-[34px]"
+      className="size-[34px] rounded-none"
       onClick={toggleTheme}
       aria-label="Toggle theme"
     >
