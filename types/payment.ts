@@ -33,12 +33,10 @@ export interface Payment {
 }
 
 export interface CreatePaymentData {
+  title: string;
   amount: number;
   currency: string;
-  description: string;
-  acceptedCurrencies: string[];
-  settlementAsset: string;
-  stellarWalletAddress?: string;
+  description?: string;
   webhookUrl?: string;
   expiresInHours?: number;
   metadata?: Record<string, any>;
@@ -57,11 +55,12 @@ export interface CheckoutLink {
   url: string;
   amount: number;
   currency: string;
+  title?: string;
   description: string;
   acceptedCurrencies: string[];
+  acceptedPaymentMethods: Array<'crypto' | 'bank_transfer'>;
   settlementAsset: string;
   stellarWalletAddress?: string;
-  equivalents: Record<string, number>;
   expiresAt: string;
   createdAt: string;
   status: 'active' | 'expired' | 'completed';
