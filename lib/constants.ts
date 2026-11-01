@@ -6,11 +6,6 @@ export const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID!;
 export const API_ENDPOINTS = {
   // Exchange Rate APIs
   FIAT_EXCHANGE_RATES: 'https://open.er-api.com/v6/latest/USD',
-  XLM_PRICE: 'https://api.coinbase.com/v2/prices/XLM-USD/spot',
-  
-  // Stellar Network
-  STELLAR_HORIZON_TESTNET: 'https://horizon-testnet.stellar.org',
-  STELLAR_EXPLORER_TESTNET: 'https://stellar.expert/explorer/testnet',
   
   PRIVY_AUTH_BASE: 'https://auth.privy.io/api/v1',
 } as const;
@@ -41,7 +36,7 @@ export const CURRENCY_COUNTRIES: Record<SupportedCurrency, string> = {
   'USD': 'US',
 };
 
-// NOTE: For live exchange rates, use the functions from @/lib/exchange-rates
+// NOTE: For live exchange rates, use the functions from @/features/payments/server/exchange-rates
 
 export function getCurrencyName(code: string): string {
   return CURRENCY_NAMES[code as SupportedCurrency] || code;

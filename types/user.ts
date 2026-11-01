@@ -40,8 +40,5 @@ export interface BalanceData {
 export interface AccountStats {
   totalVolume: number;
   paymentCount: number;
-  conversionRate: number;
-  paveFee: number;
-  stellarFees: number;
   period: string;
 }

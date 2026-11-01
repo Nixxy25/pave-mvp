@@ -17,13 +17,13 @@ interface DataTableHeaderProps {
 
 export function DataTableHeader({ columns, className }: DataTableHeaderProps) {
   return (
-    <thead>
-      <tr className={cn("border-b bg-muted/50", className)}>
+    <thead className="sticky top-0 z-10 bg-muted">
+      <tr className={cn("border-b bg-muted", className)}>
         {columns.map((column) => (
           <th
             key={column.key}
             className={cn(
-              "px-4 py-3 font-mono text-[10.5px] font-medium uppercase tracking-wider text-muted-foreground",
+              "whitespace-nowrap px-4 py-2.5 text-xs font-medium text-muted-foreground",
               column.align === 'right' && "text-right",
               column.align === 'center' && "text-center",
               column.align !== 'right' && column.align !== 'center' && "text-left",
@@ -48,7 +48,7 @@ export function DataTableCell({ children, className, align = 'left' }: DataTable
   return (
     <td
       className={cn(
-        "px-4 py-3 text-sm text-foreground",
+        "px-4 py-3 text-sm text-text-primary",
         align === 'right' && "text-right",
         align === 'center' && "text-center",
         className
