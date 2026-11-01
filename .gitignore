@@ -24,7 +24,7 @@
 .DS_Store
 *.pem
 BUILD.md
-/PAVE-ARCHITECTURE-NOTES.md
+/PAVE_ARCHITECTURE.md
 
 # debug
 npm-debug.log*
@@ -32,8 +32,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files and local agent config (secrets; never commit)
+.env
+.env.*
+.env*.local
+.env.testing
+.claude/
 
 # vercel
 .vercel
