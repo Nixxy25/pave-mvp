@@ -1,45 +1,140 @@
-import { rowToCheckoutLink } from '@/features/payments/mappers';
-import type { CheckoutLink } from '@/types';
-
-export async function getCheckoutLinkById(id: string): Promise<CheckoutLink | null> {
-  const res = await fetch(`/api/checkout?id=${encodeURIComponent(id)}`);
-  if (!res.ok) return null;
-  const { data } = await res.json();
-  return data ? rowToCheckoutLink(data) : null;
+export interface CheckoutQuote {
+  usdcAmount: number;
+  quotedAt: string;
+  expiresAt: string;
+  source: string;
 }
 
-export async function getMerchantInfo(
-  checkoutLinkId: string,
-): Promise<{ name: string; personName: string; verified: boolean } | null> {
-  const res = await fetch(`/api/checkout?id=${encodeURIComponent(checkoutLinkId)}`);
-  if (!res.ok) return null;
-  const { data } = await res.json();
-  if (!data) return null;
-  return {
-    name: data.merchant_name || 'Business',
-    personName: data.merchant_person_name || '',
-    verified: data.merchant_verified ?? true,
-  };
+export interface CheckoutInfo {
+  id: string;
+  merchantName: string;
+  merchantVerified: boolean;
+  amount: number | string;
+  currency: string;
+  title: string;
+  description: string;
+  expiresAt: string;
+  status: 'active' | 'expired' | 'completed';
+  acceptedPaymentMethods: Array<'crypto' | 'bank_transfer'>;
+  completion: {
+    amount: string;
+    assetCode: CheckoutAssetCode;
+    network: string;
+    transactionHash: string | null;
+    paidAt: string | null;
+  } | null;
 }
 
-// SECURITY: The server calculates all amounts; the client only sends the checkout ID and method.
-export async function completeCheckoutPayment(data: {
+export type CheckoutPaymentStatus =
+  | 'awaiting_payment'
+  | 'payment_detected'
+  | 'verifying'
+  | 'completed'
+  | 'expired'
+  | 'payment_issue';
+
+export type CheckoutAssetCode = 'USDC';
+
+export interface CheckoutPaymentSession {
+  id: string;
   checkoutLinkId: string;
-  customerName: string;
-  paymentMethod: 'card' | 'stellar';
-  stellarTxHash?: string;
-}): Promise<{ success: boolean; paymentId: string }> {
-  const res = await fetch('/api/checkout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data),
-  });
+  amount: string;
+  invoiceAmount: string;
+  invoiceCurrency: string;
+  assetCode: CheckoutAssetCode;
+  network: 'stellar-testnet' | 'stellar-mainnet' | 'base-sepolia' | 'ethereum-sepolia';
+  destinationAddress: string | null;
+  memo: string | null;
+  createdAt: string;
+  expiresAt: string;
+  status: CheckoutPaymentStatus;
+}
 
-  if (!res.ok) {
-    const { error, details } = await res.json();
-    console.error('[completeCheckoutPayment] Error:', error, details);
-    throw new Error(error || 'Failed to complete payment');
+export interface CheckoutConfirmation {
+  id: string;
+  sessionId: string;
+  merchantName: string;
+  invoiceAmount: string;
+  invoiceCurrency: string;
+  amount: string;
+  assetCode: CheckoutAssetCode;
+  network: string;
+  transactionHash: string;
+  createdAt: string;
+  explorerUrl: string;
+}
+
+export class CheckoutApiError extends Error {
+  constructor(
+    message: string,
+    public readonly status: number,
+    public readonly code?: string,
+  ) {
+    super(message);
+    this.name = 'CheckoutApiError';
   }
+}
 
-  return res.json();
+async function readJson<T>(response: Response): Promise<T> {
+  const body = await response.json().catch(() => null) as {
+    data?: T;
+    error?: string;
+    code?: string;
+  } | null;
+  if (!response.ok) {
+    throw new CheckoutApiError(
+      body?.error || 'The checkout request could not be completed.',
+      response.status,
+      body?.code,
+    );
+  }
+  if (!body?.data) throw new CheckoutApiError('The checkout response was invalid.', 502);
+  return body.data;
+}
+
+export async function getCheckoutQuote(checkoutLinkId: string): Promise<CheckoutQuote> {
+  return readJson<CheckoutQuote>(
+    await fetch(`/api/checkout/quotes?checkoutLinkId=${encodeURIComponent(checkoutLinkId)}`, { cache: 'no-store' }),
+  );
+}
+
+export async function getCheckoutInfo(id: string): Promise<CheckoutInfo> {
+  return readJson<CheckoutInfo>(
+    await fetch(`/api/checkout?id=${encodeURIComponent(id)}`, { cache: 'no-store' }),
+  );
+}
+
+export async function createCheckoutPaymentSession(
+  checkoutLinkId: string,
+  idempotencyKey: string,
+  assetCode: CheckoutAssetCode = 'USDC',
+): Promise<CheckoutPaymentSession> {
+  return readJson<CheckoutPaymentSession>(
+    await fetch('/api/checkout/sessions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      cache: 'no-store',
+      body: JSON.stringify({ checkoutLinkId, idempotencyKey, assetCode }),
+    }),
+  );
+}
+
+export async function getCheckoutPaymentSession(
+  sessionId: string,
+  checkoutLinkId: string,
+): Promise<CheckoutPaymentSession> {
+  return readJson<CheckoutPaymentSession>(
+    await fetch(
+      `/api/checkout/sessions/${encodeURIComponent(sessionId)}?checkoutLinkId=${encodeURIComponent(checkoutLinkId)}`,
+      { cache: 'no-store' },
+    ),
+  );
+}
+
+export async function getCheckoutConfirmation(sessionId: string): Promise<CheckoutConfirmation> {
+  return readJson<CheckoutConfirmation>(
+    await fetch(`/api/checkout/sessions/${encodeURIComponent(sessionId)}/confirmation`, {
+      cache: 'no-store',
+    }),
+  );
 }

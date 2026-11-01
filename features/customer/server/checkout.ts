@@ -1,178 +1,71 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase/server';
-import { convertFiat, getXLMRate } from '@/features/payments/server/exchange-rates';
-import { API_ENDPOINTS } from '@/lib/constants';
+import { paymentMethodsForCurrency } from '@/features/payments/checkout-methods';
+import { formatCustomerAmount } from '@/features/customer/server/payment-sessions';
 
-// GET /api/checkout?id=xxx  → public: fetch checkout link + merchant info
-export async function GET(req: NextRequest) {
-  const id = req.nextUrl.searchParams.get('id');
-  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function GET(request: NextRequest) {
+  const id = request.nextUrl.searchParams.get('id');
+  if (!id || !UUID_PATTERN.test(id)) {
+    return NextResponse.json({ error: 'Checkout link not found.' }, { status: 404 });
+  }
 
   const { data, error } = await supabase
     .from('checkout_links')
-    .select('*')
+    .select('id, merchant_name, merchant_verified, amount, currency, title, description, expires_at, status, accepted_payment_methods')
     .eq('id', id)
-    .single();
-
-  if (error || !data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-
-  return NextResponse.json({ data });
-}
-
-// POST /api/checkout  → public: complete a checkout payment
-export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const { checkoutLinkId, customerName, paymentMethod, stellarTxHash } = body;
-
-  if (!checkoutLinkId || !customerName || !paymentMethod) {
-    return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-  }
-
-
-  const { data: linkRow, error: linkError } = await supabase
-    .from('checkout_links')
-    .select('merchant_id, amount, currency, description, stellar_wallet_address, status')
-    .eq('id', checkoutLinkId)
-    .single();
-
-  if (linkError || !linkRow) {
-    return NextResponse.json({ error: 'Checkout link not found' }, { status: 404 });
-  }
-
-  if (linkRow.status !== 'active') {
-    return NextResponse.json({ error: 'Checkout link is no longer active' }, { status: 400 });
-  }
-
-  const isStellar = paymentMethod === 'stellar';
-  const baseAmount = linkRow.amount;
-  const baseCurrency = linkRow.currency;
-
-
-  let calculatedUsdcAmount: number;
-  try {
-    calculatedUsdcAmount = await convertFiat(baseAmount, baseCurrency, 'USD');
-  } catch (error) {
-    console.error('[checkout] Exchange rate calculation failed:', error);
-    return NextResponse.json({ error: 'Unable to calculate payment amount' }, { status: 500 });
-  }
-
-  if (isStellar) {
-    if (!stellarTxHash) {
-      return NextResponse.json({ error: 'Stellar transaction hash required' }, { status: 400 });
-    }
-
-    if (!linkRow.stellar_wallet_address) {
-      return NextResponse.json({ error: 'Merchant Stellar address not configured' }, { status: 400 });
-    }
-
-    try {
-      // Dynamically import Stellar SDK to verify transaction
-      const { Horizon } = await import('@stellar/stellar-sdk');
-      const server = new Horizon.Server(API_ENDPOINTS.STELLAR_HORIZON_TESTNET);
-
-      // Fetch transaction from Stellar network
-      const txResponse = await server.transactions().transaction(stellarTxHash).call();
-
-      // Verify transaction succeeded
-      if (!txResponse.successful) {
-        return NextResponse.json({ error: 'Stellar transaction failed on network' }, { status: 400 });
-      }
-
-      // Fetch operations to verify payment details
-      const operations = await server.operations().forTransaction(stellarTxHash).call();
-      const paymentOp = operations.records.find((op: any) => op.type === 'payment') as any;
-
-      if (!paymentOp) {
-        return NextResponse.json({ error: 'No payment operation found in transaction' }, { status: 400 });
-      }
-
-      if (paymentOp.to !== linkRow.stellar_wallet_address) {
-        return NextResponse.json({ 
-          error: 'Payment sent to wrong address',
-          details: { expected: linkRow.stellar_wallet_address, received: paymentOp.to }
-        }, { status: 400 });
-      }
-
-      // Verify payment asset is XLM (native)
-      if (paymentOp.asset_type !== 'native') {
-        return NextResponse.json({ error: 'Payment must be in XLM' }, { status: 400 });
-      }
-
-      // Verify payment amount (allow 2% tolerance for rate fluctuations during checkout)
-      const xlmRate = await getXLMRate();
-      const expectedXlmAmount = calculatedUsdcAmount / xlmRate;
-      const actualXlmAmount = parseFloat(paymentOp.amount);
-      const tolerance = 0.02; 
-
-      if (Math.abs(actualXlmAmount - expectedXlmAmount) / expectedXlmAmount > tolerance) {
-        return NextResponse.json({ 
-          error: 'Payment amount mismatch',
-          details: {
-            expected: expectedXlmAmount.toFixed(7),
-            received: actualXlmAmount.toFixed(7),
-            tolerance: `${tolerance * 100}%`
-          }
-        }, { status: 400 });
-      }
-
-      // Check if transaction was already used for another payment
-      const { data: existingPayment } = await supabase
-        .from('payments')
-        .select('id')
-        .eq('stellar_tx_hash', stellarTxHash)
-        .single();
-
-      if (existingPayment) {
-        return NextResponse.json({ error: 'Transaction already used for payment' }, { status: 400 });
-      }
-
-    } catch (error: any) {
-      console.error('[checkout] Stellar verification failed:', error);
-      
-      if (error.response?.status === 404) {
-        return NextResponse.json({ error: 'Transaction not found on Stellar network' }, { status: 400 });
-      }
-      
-      return NextResponse.json({ 
-        error: 'Failed to verify Stellar transaction',
-        details: error.message 
-      }, { status: 400 });
-    }
-  }
-
-
-  const { data: inserted, error } = await supabase
-    .from('payments')
-    .insert({
-      merchant_id: linkRow.merchant_id,
-      checkout_link_id: checkoutLinkId,
-      payer_name: customerName.trim(),
-      amount: baseAmount,
-      currency: baseCurrency,
-      usdc_amount: calculatedUsdcAmount,
-      paid_with: isStellar ? 'XLM' : 'Visa Card',
-      settled_amount: calculatedUsdcAmount,
-      settled_currency: 'USDC',
-      method: isStellar ? 'Stellar Wallet' : 'Card',
-      source: 'Checkout',
-      description: linkRow.description,
-      status: 'completed',
-      settled_at: new Date().toISOString(),
-      ...(isStellar && stellarTxHash ? { stellar_tx_hash: stellarTxHash } : {}),
-    })
-    .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
-    console.error('[checkout] Database insert failed:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('[checkout] Failed to load checkout link:', error.message);
+    return NextResponse.json({ error: 'Checkout is temporarily unavailable.' }, { status: 503 });
   }
+  if (!data) return NextResponse.json({ error: 'Checkout link not found.' }, { status: 404 });
 
-  // Mark checkout link as completed
-  await supabase
-    .from('checkout_links')
-    .update({ status: 'completed' })
-    .eq('id', checkoutLinkId);
+  const expired = data.status === 'expired' || new Date(data.expires_at).getTime() <= Date.now();
+  const status = data.status === 'completed' ? 'completed' : expired ? 'expired' : data.status;
+  let completion: {
+    amount: string; assetCode: string; network: string; transactionHash: string | null; paidAt: string | null;
+  } | null = null;
+  if (status === 'completed') {
+    const { data: rows, error: completionError } = await supabase
+      .rpc('get_checkout_link_completion', { p_checkout_link_id: data.id });
+    if (completionError) console.error('[checkout] Completion details unavailable:', completionError.message);
+    const paid = Array.isArray(rows) ? rows[0] : null;
+    if (paid) {
+      completion = {
+        amount: formatCustomerAmount(paid.result_amount_units),
+        assetCode: paid.result_asset_code,
+        network: paid.result_network,
+        transactionHash: paid.result_tx_hash ?? null,
+        paidAt: paid.result_paid_at,
+      };
+    }
+  }
+  return NextResponse.json({
+    data: {
+      completion,
+      id: data.id,
+      merchantName: data.merchant_name || 'Business',
+      merchantVerified: data.merchant_verified ?? false,
+      amount: data.amount,
+      currency: data.currency,
+      title: data.title || data.description,
+      description: data.title && data.description !== data.title ? data.description : '',
+      expiresAt: data.expires_at,
+      status,
+      acceptedPaymentMethods: paymentMethodsForCurrency(data.currency),
+    },
+  }, { headers: { 'Cache-Control': 'private, no-store' } });
+}
 
-  return NextResponse.json({ success: true, paymentId: inserted.id }, { status: 201 });
+export async function POST() {
+  return NextResponse.json(
+    {
+      error: 'Direct customer payment recording is disabled. Use a verified payment session.',
+      code: 'DIRECT_PAYMENT_DISABLED',
+    },
+    { status: 410, headers: { 'Cache-Control': 'no-store' } },
+  );
 }
