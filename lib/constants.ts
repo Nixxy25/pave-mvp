@@ -6,11 +6,6 @@ export const PRIVY_APP_ID = process.env.NEXT_PUBLIC_PRIVY_APP_ID!;
 export const API_ENDPOINTS = {
   // Exchange Rate APIs
   FIAT_EXCHANGE_RATES: 'https://open.er-api.com/v6/latest/USD',
-  XLM_PRICE: 'https://api.coinbase.com/v2/prices/XLM-USD/spot',
-  
-  // Stellar Network
-  STELLAR_HORIZON_TESTNET: 'https://horizon-testnet.stellar.org',
-  STELLAR_EXPLORER_TESTNET: 'https://stellar.expert/explorer/testnet',
   
   PRIVY_AUTH_BASE: 'https://auth.privy.io/api/v1',
 } as const;
