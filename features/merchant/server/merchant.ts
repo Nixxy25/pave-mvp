@@ -41,8 +41,6 @@ export async function POST(req: NextRequest) {
       privy_user_id: userId,
       email,
       full_name,
-      stellar_address: '',
-      stellar_wallet_id: '',
       // API keys removed - Coming Soon feature
       // api_key: generateKey('pk_test'),
       // api_secret: generateKey('sk_test'),

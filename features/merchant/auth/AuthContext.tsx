@@ -81,8 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const isAdminSurface =
       pathname === '/admin' ||
-      pathname.startsWith('/admin/') ||
-      (typeof window !== 'undefined' && window.location.hostname === 'admin.pavee.co');
+      pathname.startsWith('/admin/');
     if (isAdminSurface) {
       setMerchant(null);
       return;
@@ -99,18 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (res.ok) {
         const { merchant: existing } = (await res.json()) as { merchant: MerchantRow };
-
-        // 2a. Create Stellar wallet if not yet assigned
-        if (!existing.stellar_address) {
-          const walletRes = await fetch('/api/stellar-wallet', {
-            method: 'POST',
-            headers: authHeader,
-          });
-          if (walletRes.ok) {
-            const { address } = await walletRes.json();
-            return { ...existing, stellar_address: address };
-          }
-        }
         return existing;
       }
 
@@ -123,16 +110,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         if (!createRes.ok) return null;
         const { merchant: created } = (await createRes.json()) as { merchant: MerchantRow };
-
-        // 2b. Create Stellar wallet immediately after merchant creation
-        const walletRes = await fetch('/api/stellar-wallet', {
-          method: 'POST',
-          headers: authHeader,
-        });
-        if (walletRes.ok) {
-          const { address } = await walletRes.json();
-          return { ...created, stellar_address: address };
-        }
         return created;
       }
 

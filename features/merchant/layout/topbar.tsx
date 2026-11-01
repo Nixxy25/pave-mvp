@@ -1,11 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
+import { PaveLogo } from '@/components/brand/PaveLogo';
 import { Bell, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useAuth } from '@/features/merchant/auth/AuthContext';
 import { SignInButton } from '@/features/merchant/components/SignInButton';
@@ -30,25 +29,17 @@ export function Topbar({ onNotificationClick, hasUnreadNotifications = false, on
 
   return (
     <nav className="sticky top-0 z-50 flex h-[58px] items-center justify-between border-b bg-card px-4 md:px-7">
-      <div className="flex items-center gap-1">
-        <Link href="/dashboard">
-          <Image src="/pave2.png" alt="Pave" width={70} height={28} className="object-contain" />
-        </Link>
-
-        <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden " onClick={onMenuClick}>
-          <Menu className="h-5 w-5 text-foreground" />
+      <div className="flex items-center gap-2">
+        <Button variant="ghost" size="icon" className="h-9 w-9 md:hidden" aria-label="Open navigation" onClick={onMenuClick}>
+          <Menu className="size-5 stroke-[1.75]" />
         </Button>
+
+        <Link href="/dashboard" aria-label="Pave dashboard">
+          <PaveLogo size={28} priority />
+        </Link>
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2.5">
-        <Badge
-          variant="outline"
-          className="hidden border-green-500 bg-green-50 font-mono text-[13px] font-medium text-green-600 dark:border-green-600 dark:bg-green-950 dark:text-green-400 sm:flex"
-        >
-          <div className="mr-1.5 h-1.5 w-1.5 animate-blink text-lg bg-green-600 dark:bg-green-400" />
-          Testnet
-        </Badge>
-
         <ThemeToggle />
 
         {isAuthenticated ? (
@@ -59,14 +50,14 @@ export function Topbar({ onNotificationClick, hasUnreadNotifications = false, on
               className="relative h-[34px] w-[34px]"
               onClick={onNotificationClick}
             >
-              <Bell className="h-4 w-4 text-muted-foreground" />
+              <Bell className="size-4 stroke-[1.75] text-text-secondary" />
               {hasUnreadNotifications && (
-                <span className="absolute right-2 top-1.5 h-1.5 w-1.5 bg-[var(--pave-orange)] ring-2 ring-white" />
+                <span className="absolute right-2 top-1.5 size-1.5 rounded-full bg-[var(--pave-orange)] ring-2 ring-card" />
               )}
             </Button>
 
             <Link href="/account">
-              <Avatar className="h-8 w-8 cursor-pointer bg-gradient-to-br from-[var(--pave-orange)] to-[#ff8a00] ring-2 ring-white ring-offset-2 ring-offset-[var(--border)]">
+              <Avatar className="h-8 w-8 cursor-pointer bg-gradient-to-br from-[var(--pave-orange)] to-[#ff8a00]">
                 <AvatarFallback className="bg-transparent text-[11.5px] font-medium text-white">
                   {user ? getInitials(user.fullName || user.email) : '?'}
                 </AvatarFallback>

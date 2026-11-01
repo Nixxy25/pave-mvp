@@ -2,18 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
   LayoutDashboard,
   CreditCard,
   ShoppingBag,
-  TrendingUp,
-  CheckCircle,
-  Code,
-  FileText,
+  Landmark,
   User,
   X,
 } from 'lucide-react';
+import { PaveLogo } from '@/components/brand/PaveLogo';
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/features/merchant/auth/AuthContext';
@@ -42,15 +40,7 @@ const navSections = [
     items: [
       { href: '/payments', label: 'Payments', icon: CreditCard },
       { href: '/checkout-links', label: 'Checkout Links', icon: ShoppingBag },
-      { href: '/settlement', label: 'Settlement', icon: TrendingUp },
-      { href: '/withdrawals', label: 'Withdrawals', icon: CheckCircle },
-    ],
-  },
-  {
-    title: 'Developer',
-    items: [
-      { href: '/api-webhooks', label: 'API & Webhooks', icon: Code },
-      { href: '/logs', label: 'Logs', icon: FileText },
+      { href: '/settlement', label: 'Settlement', icon: Landmark },
     ],
   },
 ];
@@ -80,8 +70,8 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
     <>
       {navSections.map((section) => (
         <div key={section.title}>
-          <div className="px-2.5 pb-1 pt-2.5">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+          <div className="px-2.5 pb-1.5 pt-4 first:pt-1">
+            <span className="text-xs font-medium text-text-muted">
               {section.title}
             </span>
           </div>
@@ -94,15 +84,14 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-2.5 px-2.5 py-2 text-[13.5px] transition-all',
+                  'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors',
                   isActive
                     ? 'bg-[var(--pave-orange-light)] font-medium text-[var(--pave-orange)]'
-                    : 'text-muted-foreground hover:bg-muted dark:hover:bg-accent hover:text-foreground'
+                    : 'text-text-secondary hover:bg-muted hover:text-text-primary'
                 )}
               >
                 <Icon className={cn(
-                  'h-[15px] w-[15px] flex-shrink-0',
-                  isActive && 'stroke-[var(--pave-orange)]'
+                  'size-4 shrink-0 stroke-[1.75]',
                 )} />
                 {item.label}
               </Link>
@@ -122,13 +111,13 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
             key={item.href}
             href={item.href}
             className={cn(
-              'flex items-center gap-2.5 px-2.5 py-2 text-[13.5px] transition-all',
+              'flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors',
               isActive
                 ? 'bg-[var(--pave-orange-light)] font-medium text-[var(--pave-orange)]'
-                : 'text-muted-foreground hover:bg-muted dark:hover:bg-accent hover:text-foreground'
+                : 'text-text-secondary hover:bg-muted hover:text-text-primary'
             )}
           >
-            <Icon className="h-[15px] w-[15px] flex-shrink-0" />
+            <Icon className="size-4 shrink-0 stroke-[1.75]" />
             {item.label}
           </Link>
         );
@@ -142,11 +131,11 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
                 {getInitials(user.fullName || user.email)}
               </AvatarFallback>
             </Avatar>
-            <div className="flex-1">
-              <div className="text-[12.5px] font-medium text-foreground">
+            <div className="min-w-0 flex-1">
+              <div className="text-[13px] font-medium text-text-primary">
                 {user.fullName?.split(' ')[0] || user.email.split('@')[0]}
               </div>
-              <div className="text-[11px] text-muted-foreground">
+              <div className="truncate text-[11px] text-text-muted">
                 {user.email}
               </div>
             </div>
@@ -181,12 +170,13 @@ export function Sidebar({ isMobileOpen = false, onMobileClose }: SidebarProps) {
           <aside className="absolute left-0 top-0 flex h-full w-[280px] flex-col gap-0.5 overflow-y-auto bg-card p-2.5 shadow-xl animate-in slide-in-from-left duration-300">
             {/* Close button */}
             <div className="mb-2 flex items-center justify-between px-2.5 pt-1">
-              <span className="font-serif text-[18px] font-medium text-foreground">Menu</span>
+              <PaveLogo size={26} />
               <button 
+                aria-label="Close navigation"
                 onClick={onMobileClose}
                 className="p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
               >
-                <X className="h-5 w-5" />
+                <X className="size-5 stroke-[1.75]" />
               </button>
             </div>
             {sidebarContent}

@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 export function Footer() {
   return (
     <footer className="border-t bg-card">
@@ -11,9 +9,6 @@ export function Footer() {
         </div>
         
         <div className="flex items-center gap-4 text-sm max-sm:text-xs text-muted-foreground">
-          <Link href="/api-webhooks" className="hover:text-foreground transition-colors">
-            Docs
-          </Link>
           <a href="mailto:paveng24@gmail.com" className="hover:text-foreground transition-colors">
             Support
           </a>
