@@ -1,146 +1,67 @@
 'use client';
 
-import { useState } from 'react';
-import type { BalanceData, Payment } from '@/types';
-import { useExchangeRates, convertCurrency } from '@/features/payments/hooks/useExchangeRates';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { ArrowDown, ArrowUp, Lock, Minus } from 'lucide-react';
+import type { MerchantLedgerData } from '@/features/merchant/api/ledger';
 
-interface StatsCardsProps {
-  balance: BalanceData;
-  payments: Payment[];
-  activities: Array<Payment>;
+function formatAmount(value: string | undefined) {
+  return Number(value ?? '0').toLocaleString(undefined, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 7,
+  });
 }
 
-type ConversionCurrency = 'XLM' | 'NGN' | 'GHS' | 'KES';
-
-export function StatsCards({ balance, payments, activities }: StatsCardsProps) {
-  const { data: exchangeRates } = useExchangeRates();
-  const [selectedCurrency, setSelectedCurrency] = useState<ConversionCurrency>('XLM');
-  const today = new Date().toDateString();
-
-  const todayPayments = payments.filter(
-    (p) => p.status === 'completed' && new Date(p.createdAt).toDateString() === today,
-  );
-
-  const paymentsTotal = todayPayments.reduce((sum, p) => sum + (p.usdcAmount || 0), 0);
-  const usdcChange = paymentsTotal;
-  
-  // Calculate equivalent in selected currency
-  const equivalentValue = exchangeRates 
-    ? convertCurrency(balance.usdc, 'USD', selectedCurrency, exchangeRates)
-    : balance.usdc;
-  
-  const equivalentChange = exchangeRates
-    ? convertCurrency(usdcChange, 'USD', selectedCurrency, exchangeRates)
-    : usdcChange;
-  
-  // Currency symbols and formatting
-  const currencySymbols: Record<ConversionCurrency, string> = {
-    XLM: 'XLM',
-    NGN: '₦',
-    GHS: 'GH₵',
-    KES: 'KES',
-  };
-
-  const todayActivityCount = activities.filter(
-    (a) => new Date(a.createdAt).toDateString() === today,
-  ).length;
-
-  const symbol = currencySymbols[selectedCurrency];
-  const displayValue = selectedCurrency === 'XLM' 
-    ? `${symbol} ${equivalentValue.toFixed(2)}`
-    : `${symbol}${equivalentValue.toLocaleString()}`;
-  const displayChange = selectedCurrency === 'XLM'
-    ? `${equivalentChange >= 0 ? '+' : ''}${symbol} ${Math.abs(equivalentChange).toFixed(2)}`
-    : `${equivalentChange >= 0 ? '+' : ''}${symbol}${Math.abs(equivalentChange).toLocaleString()}`;
-
-  const stats = [
-    {
-      label: 'Available Balance',
-      value: `$${balance.usdc.toLocaleString()}`,
-      sub: 'USDC · Stellar wallet',
-      change: `${usdcChange >= 0 ? '+' : ''}$${Math.abs(usdcChange).toLocaleString()} today`,
-      positive: usdcChange >= 0,
-      isConversion: false,
-    },
-    {
-      label: 'Conversion',
-      value: displayValue,
-      sub: 'Live  rate',
-      change: displayChange,
-      positive: equivalentChange >= 0,
-      isConversion: true,
-    },
-    {
-      label: 'Activity Today',
-      value: todayActivityCount.toString(),
-      sub: 'Payment transactions',
-      change:
-        todayActivityCount === 0
-          ? 'Just started'
-          : `${todayActivityCount} transaction${todayActivityCount !== 1 ? 's' : ''}`,
-      positive: true,
-      isConversion: false,
-    },
-    {
-      label: 'Avg Settle Time',
-      value: '5s',
-      sub: 'Stellar block time',
-      change: 'Live network avg',
-      positive: true,
-      isConversion: false,
-    },
-  ];
-
+function Amount({ value }: { value: string }) {
   return (
-    <div
-      className="mb-6.5 grid animate-fadeup grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-4"
-      style={{ animationDelay: '0.14s' }}
-    >
-      {stats.map((stat, i) => (
-        <div
-          key={i}
-          className="border bg-card p-4.5 px-5 shadow-[0_1px_2px_rgba(0,0,0,.04)] transition-shadow hover:shadow-[0_1px_3px_rgba(0,0,0,.08),0_1px_2px_rgba(0,0,0,.04)]"
-        >
-          <div className="mb-2 flex items-center justify-between">
-            <div className="font-mono text-[10.5px] uppercase tracking-[0.5px] text-muted-foreground">
-              {stat.label}
-            </div>
-            {stat.isConversion && (
-              <Select value={selectedCurrency} onValueChange={(val) => setSelectedCurrency(val as ConversionCurrency)}>
-                <SelectTrigger className="h-6 w-[85px] border-muted text-[11px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="XLM">XLM</SelectItem>
-                  <SelectItem value="NGN">NGN</SelectItem>
-                  <SelectItem value="GHS">GHS</SelectItem>
-                  <SelectItem value="KES">KES</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-          <div className="mb-1 font-serif text-[30px] font-light italic leading-none tracking-tighter text-foreground">
-            {stat.value}
-          </div>
-          <div className="text-[12px] text-muted-foreground">{stat.sub}</div>
-          <div
-            className={`mt-2 inline-flex items-center gap-1 border px-2 py-0.5 font-mono text-[11.5px] ${
-              stat.positive
-                ? 'border-[var(--success-medium)] bg-[var(--success-light)] text-[var(--success)]'
-                : 'border-red-200 bg-red-50 text-red-600'
-            }`}
-          >
-            {stat.positive ? '↑' : '↓'} {stat.change}
-          </div>
-        </div>
-      ))}
-    </div>
+    <>
+      {value}
+      <span className="ml-1.5 text-[0.72em] font-medium text-text-secondary">USDC</span>
+    </>
+  );
+}
+
+function ActivityToday({ today, yesterday }: { today: number | null | undefined; yesterday: number | null | undefined }) {
+  if (today === null || today === undefined) return <p className="mt-1 text-2xl font-semibold text-text-primary">—</p>;
+  const delta = yesterday === null || yesterday === undefined ? 0 : today - yesterday;
+  const Icon = delta > 0 ? ArrowUp : delta < 0 ? ArrowDown : Minus;
+  const tone = delta > 0 ? 'text-status-success' : delta < 0 ? 'text-status-failed' : 'text-text-muted';
+  const label = delta === 0 ? 'Same as yesterday' : `${Math.abs(delta)} ${delta > 0 ? 'more' : 'fewer'} than yesterday`;
+  return (
+    <>
+      <p className="mt-1 flex items-center gap-2 text-2xl font-semibold tabular-nums text-text-primary">
+        {today.toLocaleString()}
+        <Icon aria-hidden="true" className={`size-5 ${tone}`} />
+      </p>
+      <p className={`mt-1 text-xs ${tone}`}>{label}</p>
+    </>
+  );
+}
+
+export function StatsCards({ ledger }: { ledger: MerchantLedgerData | null }) {
+  return (
+    <section className="mb-6 overflow-hidden rounded-2xl border bg-card">
+      <div className="p-5 sm:p-6">
+        <p className="text-sm text-text-secondary">Total received</p>
+        <p className="mt-2 text-4xl font-semibold tracking-tight tabular-nums text-text-primary sm:text-5xl">
+          <Amount value={formatAmount(ledger?.totalReceived)} />
+        </p>
+        <p className="mt-3 text-xs text-text-muted">
+          {(ledger?.totalPaymentCount ?? 0).toLocaleString()} verified payment{ledger?.totalPaymentCount === 1 ? '' : 's'} · Move your USDC to your local bank
+        </p>
+        <button type="button" disabled title="Bank settlement is coming soon" className="mt-3 inline-flex cursor-not-allowed items-center gap-2 rounded-none border border-border bg-muted px-3 py-1.5 text-xs font-medium text-text-muted">
+          <Lock aria-hidden="true" className="size-3.5" /> Move to bank · Coming soon
+        </button>
+      </div>
+
+      <div className="border-t px-5 py-4 sm:px-6">
+        <p className="text-xs text-text-muted">Activity Today</p>
+        <ActivityToday today={ledger?.paymentsToday} yesterday={ledger?.paymentsYesterday} />
+      </div>
+
+      {ledger?.wallet && ledger.wallet.status !== 'ready' && (
+        <p className="border-t px-5 py-3 text-xs text-status-pending sm:px-6">
+          Your receiving wallet is being set up. Checkout opens once it is ready.
+        </p>
+      )}
+    </section>
   );
 }

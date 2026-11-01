@@ -2,71 +2,82 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/features/merchant/auth/AuthContext';
-import { useBalance } from '@/features/merchant/hooks/useBalance';
-import { usePayments } from '@/features/merchant/hooks/usePayments';
+import { authFetch } from '@/lib/fetch-api';
 import { getUserProfile } from '@/features/merchant/api/user';
-import { getStats } from '@/features/merchant/api/stats';
+import { useLedgerBalance } from '@/features/merchant/hooks/useLedgerBalance';
+import { useLedgerTransactions } from '@/features/merchant/hooks/useLedgerTransactions';
+import { PageContainer, PageHeader } from '@/components/shared/PageLayout';
 import { StatsCards } from './StatsCards';
-import { RecentActivityTable } from './RecentActivityTable';
-import type { Merchant, Payment } from '@/types';
+import { LedgerRecentActivity } from './LedgerRecentActivity';
+import type { Merchant } from '@/types';
 
 export default function DashboardPage() {
   const { isAuthenticated } = useAuth();
   const [user, setUser] = useState<Merchant | null>(null);
-  const { balance, loading: balanceLoading } = useBalance();
-  const { payments, loading: paymentsLoading } = usePayments();
+  const { data: ledger, loading: balanceLoading, error: balanceError, refetch } = useLedgerBalance(isAuthenticated);
+  const { data: transactions, loading: transactionsLoading, error: transactionError } = useLedgerTransactions({
+    enabled: isAuthenticated,
+    page: 1,
+    status: 'all',
+    search: '',
+  });
 
   useEffect(() => {
     if (!isAuthenticated) return;
-    getUserProfile().then(setUser).catch(() => {});
-    getStats().catch(() => {});
+    getUserProfile().then(setUser).catch((error: unknown) => {
+      console.error('[merchant-dashboard] Profile unavailable:', error);
+    });
   }, [isAuthenticated]);
 
-  // Derive activities directly from payments
-  const activities = payments
-    .map((p: Payment) => ({ ...p, type: 'payment' as const }))
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    .slice(0, 10);
+  const walletReady = ledger?.wallet?.status === 'ready';
+  const [provisioning, setProvisioning] = useState(false);
 
-  const loading = balanceLoading || paymentsLoading;
+  // First visit: create the merchant's permanent receiving wallet, then reload.
+  useEffect(() => {
+    if (!isAuthenticated || balanceLoading || !ledger || walletReady || provisioning) return;
+    setProvisioning(true);
+    authFetch('/api/merchant/wallet')
+      .then((response) => { if (response.ok) refetch(); })
+      .catch(() => undefined)
+      .finally(() => setProvisioning(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, balanceLoading, ledger, walletReady]);
+
+  const loading = balanceLoading || transactionsLoading;
 
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <div className="h-8 w-8 animate-spin border-4 border-gray-200 border-t-[var(--pave-orange)]" />
+        <div className="size-8 animate-spin rounded-full border-4 border-border border-t-[var(--pave-orange)]" />
       </div>
     );
   }
 
-  return (
-    <div className="mx-auto max-w-[1280px] px-4 py-6 sm:px-7 sm:py-8">
-      <div className="mb-6.5 animate-fadeup">
-        <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
-          Dashboard
+  if (balanceError || transactionError) {
+    return (
+      <PageContainer>
+        <div role="alert" className="rounded-xl border border-status-failed/30 bg-status-failed-bg p-4 text-sm text-status-failed">
+          Merchant financial data is temporarily unavailable. Please try again later.
         </div>
-        <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
-          Welcome,{' '}
-          <strong className="font-medium not-italic">{user?.name.split(' ')[0] || 'there'}</strong>{' '}
-          👋
-        </h1>
-        <p className="mt-1 text-[13.5px] text-muted-foreground">
-          Here&apos;s your payment activity —{' '}
-          {new Date().toLocaleDateString('en-US', {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-          })}
-        </p>
-      </div>
+      </PageContainer>
+    );
+  }
 
-      <StatsCards
-        balance={balance}
-        payments={payments}
-        activities={activities}
+  return (
+    <PageContainer>
+      <PageHeader
+        className="animate-fadeup"
+        title={`Welcome, ${user?.name.split(' ')[0] || 'there'}`}
+        description={`Your payment activity — ${new Date().toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        })}`}
       />
 
-      <RecentActivityTable activities={activities} />
-    </div>
+      <StatsCards ledger={ledger} />
+      <LedgerRecentActivity rows={(transactions?.rows ?? []).slice(0, 10)} />
+    </PageContainer>
   );
 }
