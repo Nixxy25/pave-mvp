@@ -13,7 +13,7 @@ import type { CheckoutLink } from '@/types';
 
 const COLUMNS: TableColumn[] = [
   { key: 'id', label: 'Link ID' },
-  { key: 'description', label: 'Description' },
+  { key: 'description', label: 'Payment' },
   { key: 'amount', label: 'Amount' },
   { key: 'url', label: 'Checkout URL' },
   { key: 'status', label: 'Status' },
@@ -57,7 +57,7 @@ export function CheckoutLinksTable({ links, loading, copiedId, onCopy, onEdit }:
                       {link.id}
                     </td>
                     <td className="px-4 py-3 text-sm text-foreground">
-                      <div className="max-w-[200px] truncate">{link.description}</div>
+                      <div className="max-w-[200px] truncate">{link.title || link.description}</div>
                     </td>
                     <td className="whitespace-nowrap px-4 py-3 text-sm font-medium text-foreground">
                       {link.currency} {link.amount.toLocaleString()}

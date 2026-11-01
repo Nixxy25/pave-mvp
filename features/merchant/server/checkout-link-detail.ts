@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedUserId } from '@/lib/auth/privy';
 import { supabase } from '@/lib/supabase/server';
+import { isInvoiceCurrency, paymentMethodsForCurrency } from '@/features/payments/checkout-methods';
 
 export async function PATCH(
   req: NextRequest,
@@ -13,7 +14,16 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await req.json();
-  const { amount, currency, description, acceptedCurrencies, settlementAsset } = body;
+  const { amount, currency, title, description } = body;
+  const invoiceCurrency = typeof currency === 'string' ? currency.toUpperCase() : '';
+  const paymentTitle = typeof title === 'string' ? title.trim() : '';
+  const paymentDescription = typeof description === 'string' ? description.trim() : '';
+  if (!isInvoiceCurrency(invoiceCurrency) || paymentTitle.length === 0 || paymentTitle.length > 120) {
+    return NextResponse.json({ error: 'Enter a payment title and a supported invoice currency.' }, { status: 400 });
+  }
+  if (!Number.isFinite(Number(amount)) || Number(amount) <= 0) {
+    return NextResponse.json({ error: 'Enter a valid invoice amount.' }, { status: 400 });
+  }
 
   // Verify the checkout link belongs to this user and is active
   const { data: existingLink, error: fetchError } = await supabase
@@ -31,22 +41,16 @@ export async function PATCH(
     return NextResponse.json({ error: 'Can only edit active checkout links' }, { status: 400 });
   }
 
-  // Import the live exchange rate service to recalculate equivalents
-  const { calculateEquivalents } = await import('@/features/payments/server/exchange-rates');
-
-  // Calculate new equivalents using live rates
-  const equivalents = await calculateEquivalents(amount, currency);
-
   // Update the checkout link
   const { data, error } = await supabase
     .from('checkout_links')
     .update({
       amount,
-      currency,
-      description,
-      accepted_currencies: acceptedCurrencies,
-      settlement_asset: settlementAsset,
-      equivalents,
+      currency: invoiceCurrency,
+      title: paymentTitle,
+      description: paymentDescription || paymentTitle,
+      accepted_currencies: [invoiceCurrency],
+      accepted_payment_methods: paymentMethodsForCurrency(invoiceCurrency),
     })
     .eq('id', id)
     .eq('merchant_id', userId)

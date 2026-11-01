@@ -32,7 +32,7 @@ export default function CheckoutLinksPage() {
   if (loading) {
     return (
       <div className="flex h-96 items-center justify-center">
-        <div className="h-8 w-8 animate-spin border-4 border-gray-200 border-t-[var(--pave-orange)]" />
+        <div className="size-8 animate-spin rounded-full border-4 border-border border-t-[var(--pave-orange)]" />
       </div>
     );
   }
@@ -44,7 +44,7 @@ export default function CheckoutLinksPage() {
           <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
             Checkout Links
           </div>
-          <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
+          <h1 className="font-sans text-[24px] font-semibold leading-tight tracking-tight text-foreground sm:text-[27px]">
             Payment Links
           </h1>
           <p className="mt-1 text-[13.5px] text-muted-foreground">
