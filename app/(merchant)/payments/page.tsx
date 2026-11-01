@@ -1,46 +1,83 @@
 'use client';
 
 import { useState } from 'react';
-import { usePayments } from '@/features/merchant/hooks/usePayments';
+import { useAuth } from '@/features/merchant/auth/AuthContext';
 import { useDebounce } from '@/lib/hooks/useDebounce';
+import { useLedgerTransactions } from '@/features/merchant/hooks/useLedgerTransactions';
+import { PageContainer, PageHeader } from '@/components/shared/PageLayout';
 import { PaymentsFilters } from './PaymentsFilters';
 import { PaymentsTable } from './PaymentsTable';
-import type { PaymentStatus } from '@/types';
 
 export default function PaymentsPage() {
+  const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  
-  // Debounce search query to avoid excessive re-fetches
+  const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(searchQuery, 400);
-  
-  const { payments, loading } = usePayments({
-    status: statusFilter !== 'all' ? (statusFilter as PaymentStatus) : undefined,
+  const { data, loading, error } = useLedgerTransactions({
+    enabled: isAuthenticated,
+    page,
+    status: statusFilter,
     search: debouncedSearch,
   });
 
+  function updateSearch(value: string) {
+    setPage(1);
+    setSearchQuery(value);
+  }
+
+  function updateStatus(value: string) {
+    setPage(1);
+    setStatusFilter(value);
+  }
+
   return (
-    <div className="mx-auto max-w-[1200px] px-4 py-6 sm:px-7 sm:py-8">
-      <div className="mb-6 animate-fadeup">
-        <div className="mb-1.5 font-mono text-[10.5px] uppercase tracking-wide text-muted-foreground">
-          Payments
-        </div>
-        <h1 className="font-serif text-[24px] font-light italic leading-tight tracking-tight text-foreground sm:text-[27px]">
-          Payment History
-        </h1>
-        <p className="mt-1 text-[13.5px] text-muted-foreground">
-          All payments received through Pave Checkout and API
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        className="animate-fadeup"
+        title="Payment history"
+        description="Verified USDC ledger payments and clearly labeled historical records"
+      />
 
       <PaymentsFilters
         searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
+        setSearchQuery={updateSearch}
         statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
+        setStatusFilter={updateStatus}
       />
 
-      <PaymentsTable payments={payments} loading={loading} />
-    </div>
+      {error ? (
+        <div role="alert" className="border border-status-failed/30 bg-status-failed-bg p-4 text-sm text-status-failed">
+          {error.message}
+        </div>
+      ) : (
+        <>
+          <PaymentsTable payments={data?.rows ?? []} loading={loading} />
+          <div className="mt-4 flex items-center justify-between text-sm">
+            <span className="text-text-muted">
+              {data?.total ?? 0} payments · Page {data?.page ?? page} of {data?.totalPages ?? 1}
+            </span>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                disabled={page <= 1 || loading}
+                className="border bg-card px-3 py-1.5 text-text-secondary transition-colors hover:bg-muted hover:text-text-primary disabled:opacity-50"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                onClick={() => setPage((current) => Math.min(data?.totalPages ?? current, current + 1))}
+                disabled={loading || page >= (data?.totalPages ?? 1)}
+                className="border bg-card px-3 py-1.5 text-text-secondary transition-colors hover:bg-muted hover:text-text-primary disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </PageContainer>
   );
 }

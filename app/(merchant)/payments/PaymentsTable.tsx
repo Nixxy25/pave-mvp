@@ -1,139 +1,136 @@
 'use client';
 
-import { Badge } from '@/components/ui/badge';
-import {
-  DataTableHeader,
-  DataTableLoading,
-  DataTableEmpty,
-  type TableColumn,
-} from '@/components/ui/data-table';
-import { formatTimeAgo } from '@/features/merchant/lib/format';
-import { useExchangeRates, convertCurrency } from '@/features/payments/hooks/useExchangeRates';
+import { useState } from 'react';
+import { Fragment } from 'react';
+import { StatusBadge } from '@/components/shared/StatusBadge';
+import { DataTableEmpty, DataTableHeader, DataTableLoading, type TableColumn } from '@/components/ui/data-table';
+import { networkLabel, stellarTransactionUrl } from '@/lib/stellar-explorer';
 import { ShortAddress } from '@/components/ShortAddress';
-import { API_ENDPOINTS } from '@/lib/constants';
-import type { Payment } from '@/types';
+import { getMerchantTransaction } from '@/features/merchant/api/ledger';
+import type { MerchantFinancialTransaction } from '@/features/merchant/types/ledger';
 
 const COLUMNS: TableColumn[] = [
   { key: 'id', label: 'Payment ID' },
-  { key: 'payer', label: 'Customer' },
-  { key: 'amount', label: 'Amount' },
-  { key: 'usdcAmount', label: 'USDC Amount' },
-  { key: 'paidWith', label: 'Paid With' },
-  { key: 'txId', label: 'TX ID' },
+  { key: 'checkout', label: 'Checkout reference' },
+  { key: 'customer', label: 'Customer' },
+  { key: 'gross', label: 'Invoice amount' },
+  { key: 'usdc', label: 'Amount received' },
+  { key: 'network', label: 'Network' },
   { key: 'status', label: 'Status' },
-  { key: 'date', label: 'Date' },
-  { key: 'receipt', label: 'Receipt' },
+  { key: 'hash', label: 'Transaction' },
+  { key: 'date', label: 'Payment date' },
+  { key: 'details', label: 'Details' },
 ];
 
-function getStatusColor(status: Payment['status']) {
-  switch (status) {
-    case 'completed':
-      return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400';
-    case 'pending':
-      return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
-    case 'failed':
-      return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-    default:
-      return 'bg-muted text-muted-foreground';
-  }
-}
-
 interface PaymentsTableProps {
-  payments: Payment[];
+  payments: MerchantFinancialTransaction[];
   loading: boolean;
 }
 
+function amount(value: number | null): string {
+  return value === null ? '—' : value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 7 });
+}
+
 export function PaymentsTable({ payments, loading }: PaymentsTableProps) {
-  const { data: exchangeRates } = useExchangeRates();
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const [details, setDetails] = useState<Record<string, MerchantFinancialTransaction>>({});
+  const [detailLoading, setDetailLoading] = useState<string | null>(null);
+  const [detailError, setDetailError] = useState<string | null>(null);
+
+  async function toggleDetails(paymentId: string) {
+    if (expanded === paymentId) {
+      setExpanded(null);
+      setDetailError(null);
+      return;
+    }
+    setExpanded(paymentId);
+    setDetailError(null);
+    if (details[paymentId]) return;
+    setDetailLoading(paymentId);
+    try {
+      const payment = await getMerchantTransaction(paymentId);
+      setDetails((current) => ({ ...current, [paymentId]: payment }));
+    } catch (error) {
+      setDetailError(error instanceof Error ? error.message : 'Payment details are unavailable.');
+    } finally {
+      setDetailLoading(null);
+    }
+  }
 
   return (
-    <div
-      className="border bg-card shadow-sm animate-fadeup max-h-[calc(100vh-280px)] overflow-hidden flex flex-col"
-      style={{ animationDelay: '0.14s' }}
-    >
-      <div className="overflow-x-auto overflow-y-auto flex-1">
-        <table className="w-full">
+    <div className="max-h-[calc(100vh-280px)] overflow-hidden border bg-card">
+      <div className="max-h-[calc(100vh-280px)] overflow-auto">
+        <table className="w-full text-sm">
           <DataTableHeader columns={COLUMNS} />
           <tbody>
             {loading ? (
-              <DataTableLoading colSpan={COLUMNS.length} message="Loading payments..." />
+              <DataTableLoading colSpan={COLUMNS.length} message="Loading merchant transactions..." />
             ) : payments.length === 0 ? (
-              <DataTableEmpty
-                colSpan={COLUMNS.length}
-                message="No payments found. Create a checkout link to get started."
-              />
-            ) : (
-              payments.map((payment) => (
-                <tr key={payment.id} className="border-b transition-colors hover:bg-muted/50">
-                  <td className="px-3 py-2.5 sm:px-4 sm:py-3">
-                    <ShortAddress
-                      address={payment.id}
-                      startChars={8}
-                      endChars={4}
-                      showCopy={true}
-                      className="text-[11px] text-muted-foreground sm:text-xs"
-                    />
+              <DataTableEmpty colSpan={COLUMNS.length} message="No transactions match your filters." />
+            ) : payments.map((payment) => (
+              <Fragment key={payment.paymentId}>
+                <tr className="border-b transition-colors hover:bg-muted/40">
+                  <td className="px-4 py-3">
+                    <ShortAddress address={payment.paymentId} startChars={8} endChars={4} showCopy />
                   </td>
-                  <td className="px-3 py-2.5 sm:px-4 sm:py-3">
-                    <div className="text-[12.5px] font-medium text-foreground sm:text-sm">{payment.payer.name}</div>
-                    <div className="text-[11px] text-muted-foreground sm:text-xs">{payment.payer.email}</div>
+                  <td className="px-4 py-3">
+                    {payment.checkoutReference
+                      ? <ShortAddress address={payment.checkoutReference} startChars={8} endChars={4} />
+                      : '—'}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-[12.5px] font-medium text-foreground sm:px-4 sm:py-3 sm:text-sm">
-                    {payment.method === 'Stellar Wallet' && exchangeRates && payment.usdcAmount
-                      ? `XLM ${convertCurrency(payment.usdcAmount, 'USD', 'XLM', exchangeRates).toFixed(2)}`
-                      : `${payment.currency} ${payment.amount.toLocaleString()}`}
+                  <td className="px-4 py-3">
+                    <div className="text-text-primary">{payment.customerName}</div>
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-[12.5px] text-foreground sm:px-4 sm:py-3 sm:text-sm">
-                    USDC {payment.usdcAmount?.toLocaleString() || '0'}
+                  <td className="whitespace-nowrap px-4 py-3">{payment.grossCurrency} {payment.grossAmount.toLocaleString()}</td>
+                  <td className="whitespace-nowrap px-4 py-3">
+                    {payment.assetAmount === null ? '—' : `${payment.assetCode} ${amount(payment.assetAmount)}`}
                   </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-[12.5px] text-foreground sm:px-4 sm:py-3 sm:text-sm">{payment.paidWith}</td>
-                  <td className="whitespace-nowrap px-3 py-2.5 sm:px-4 sm:py-3">
-                    {payment.method === 'Stellar Wallet' && payment.stellarTxHash ? (
+                  <td className="whitespace-nowrap px-4 py-3">{networkLabel(payment.network)}</td>
+                  <td className="px-4 py-3"><StatusBadge status={payment.status} /></td>
+                  <td className="px-4 py-3">
+                    {payment.transactionHash ? (
                       <a
-                          href={`${API_ENDPOINTS.STELLAR_EXPLORER_TESTNET}/tx/${payment.stellarTxHash}`}
+                        href={stellarTransactionUrl(payment.network, payment.transactionHash)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="hover:underline"
+                        className="text-status-info hover:underline"
                       >
-                        <ShortAddress
-                          address={payment.stellarTxHash}
-                          startChars={8}
-                          endChars={6}
-                          className="text-[11px] text-[var(--stellar)] sm:text-[11.5px]"
-                        />
+                        <ShortAddress address={payment.transactionHash} startChars={7} endChars={5} />
                       </a>
-                    ) : (
-                      <ShortAddress
-                        address={payment.id}
-                        startChars={8}
-                        endChars={4}
-                        className="text-[11px] text-muted-foreground sm:text-[11.5px]"
-                      />
-                    )}
+                    ) : '—'}
                   </td>
-                  <td className="px-3 py-2.5 sm:px-4 sm:py-3">
-                    <Badge className={getStatusColor(payment.status)}>{payment.status}</Badge>
-                  </td>
-                  <td className="whitespace-nowrap px-3 py-2.5 text-[12.5px] text-muted-foreground sm:px-4 sm:py-3 sm:text-sm">
-                    {formatTimeAgo(payment.createdAt)}
-                  </td>
-                  <td className="px-3 py-2.5 sm:px-4 sm:py-3">
-                    {payment.status === 'completed' ? (
-                      <a
-                        href={`/confirmed/${payment.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[12.5px] font-medium text-[var(--pave-orange)] hover:underline sm:text-sm"
-                      >
-                        View →
-                      </a>
-                    ) : (
-                      <span className="text-[12.5px] text-muted-foreground sm:text-sm">—</span>
-                    )}
+                  <td className="whitespace-nowrap px-4 py-3 text-text-muted">{new Date(payment.paymentDate).toLocaleDateString()}</td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      aria-expanded={expanded === payment.paymentId}
+                      onClick={() => void toggleDetails(payment.paymentId)}
+                      className="font-medium text-[var(--pave-orange)] hover:underline"
+                    >
+                      {expanded === payment.paymentId ? 'Hide' : 'View'}
+                    </button>
                   </td>
                 </tr>
-              ))
-            )}
+                {expanded === payment.paymentId && (
+                  <tr className="border-b bg-muted/30">
+                    <td colSpan={COLUMNS.length} className="px-5 py-4 text-sm">
+                      {detailLoading === payment.paymentId ? (
+                        <p className="text-text-muted">Loading verified payment details…</p>
+                      ) : detailError ? (
+                        <p role="alert" className="text-status-failed">{detailError}</p>
+                      ) : (
+                        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                          <div><strong className="font-medium text-text-secondary">Payment status:</strong> {(details[payment.paymentId] ?? payment).status}</div>
+                          <div><strong className="font-medium text-text-secondary">Checkout:</strong> {(details[payment.paymentId] ?? payment).checkoutReference ?? 'Unavailable'}</div>
+                          <div><strong className="font-medium text-text-secondary">Invoice:</strong> {payment.grossCurrency} {payment.grossAmount.toLocaleString()}</div>
+                          <div><strong className="font-medium text-text-secondary">Transaction:</strong> {payment.transactionHash ?? 'Unavailable'}</div>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            ))}
           </tbody>
         </table>
       </div>

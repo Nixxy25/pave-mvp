@@ -1,5 +1,6 @@
 'use client';
 
+import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -27,12 +28,15 @@ export function PaymentsFilters({
       className="mb-5 flex animate-fadeup flex-col gap-3 sm:flex-row"
       style={{ animationDelay: '0.07s' }}
     >
-      <Input
-        placeholder="Search by payer name or payment ID..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="w-full sm:max-w-md"
-      />
+      <div className="relative w-full sm:max-w-md">
+        <Search aria-hidden="true" className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 stroke-[1.75] text-text-muted" />
+        <Input
+          placeholder="Search payment, checkout, customer, or Stellar hash..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-8"
+        />
+      </div>
       <Select value={statusFilter} onValueChange={setStatusFilter}>
         <SelectTrigger className="w-full sm:w-[180px]">
           <SelectValue placeholder="Filter by status" />
