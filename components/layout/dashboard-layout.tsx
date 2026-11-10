@@ -31,7 +31,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           onMobileClose={() => setIsMobileSidebarOpen(false)}
         />
         
-        <main key={isAuthenticated ? 'auth' : 'anon'} className="flex-1 overflow-y-auto bg-background">
+        <main key={isAuthenticated ? 'auth' : 'anon'} className="flex-1 overflow-y-auto bg-[#fafaf7] dark:bg-background">
           {children}
         </main>
       </div>

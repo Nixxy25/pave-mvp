@@ -36,7 +36,7 @@ export default function SettlementPage() {
               </svg>
             </div>
             <div className="font-medium text-foreground">Customer Pays</div>
-            <div className="mt-1 text-sm text-muted-foreground">NGN / KES / GHS</div>
+            <div className="mt-1 text-sm text-muted-foreground">USD / KES / GHS</div>
           </div>
 
           {/* Arrow - rotates on mobile */}

@@ -209,7 +209,7 @@ export async function calculateEquivalents(
   baseCurrency: string
 ): Promise<Record<string, number>> {
   const equivalents: Record<string, number> = {};
-  const supportedFiats: SupportedCurrency[] = ['USD', 'NGN', 'GHS', 'KES'];
+  const supportedFiats: SupportedCurrency[] = ['USD', 'GHS', 'KES'];
 
   // Start with the base currency
   equivalents[baseCurrency] = baseAmount;

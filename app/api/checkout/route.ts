@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { convertFiat, getXLMRate } from '@/lib/exchange-rates';
 import { API_ENDPOINTS } from '@/lib/constants';
+import { verifyTransaction } from '@/lib/paystack';
 
 // GET /api/checkout?id=xxx  → public: fetch checkout link + merchant info
 export async function GET(req: NextRequest) {
@@ -22,9 +23,10 @@ export async function GET(req: NextRequest) {
 // POST /api/checkout  → public: complete a checkout payment
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { checkoutLinkId, customerName, paymentMethod, stellarTxHash } = body;
+  const { checkoutLinkId, customerEmail, paymentMethod, stellarTxHash, paystackReference } = body;
+  let customerName: string = body.customerName;
 
-  if (!checkoutLinkId || !customerName || !paymentMethod) {
+  if (!checkoutLinkId || !paymentMethod || (paymentMethod !== 'paystack' && !customerName)) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
   }
 
@@ -44,6 +46,10 @@ export async function POST(req: NextRequest) {
   }
 
   const isStellar = paymentMethod === 'stellar';
+  const isPaystack = paymentMethod === 'paystack';
+  if (!isStellar && !isPaystack) {
+    return NextResponse.json({ error: 'Unsupported payment method' }, { status: 400 });
+  }
   const baseAmount = linkRow.amount;
   const baseCurrency = linkRow.currency;
 
@@ -141,19 +147,66 @@ export async function POST(req: NextRequest) {
   }
 
 
+  // ── Card / bank transfer / mobile money (Paystack): never trust the client. ──
+  // The only way to record one is a Paystack reference that Paystack itself confirms as paid,
+  // for exactly the amount + currency this server set when the payment was initialised.
+  let paystackChannel: string | null = null;
+  let paidWith = 'XLM';
+  if (isPaystack) {
+    if (typeof paystackReference !== 'string' || !paystackReference) {
+      return NextResponse.json({ error: 'Payment reference required' }, { status: 400 });
+    }
+    try {
+      const tx = await verifyTransaction(paystackReference);
+      const meta = (tx.metadata || {}) as Record<string, unknown>;
+      if (tx.status !== 'success') {
+        return NextResponse.json(
+          { error: tx.status === 'failed' ? 'Payment failed or was declined' : 'Payment has not been completed' },
+          { status: 400 },
+        );
+      }
+      if (
+        meta.checkout_link_id !== checkoutLinkId ||
+        meta.expected_amount_minor !== tx.amount ||
+        meta.expected_currency !== tx.currency
+      ) {
+        return NextResponse.json({ error: 'Payment does not match this checkout link' }, { status: 400 });
+      }
+      const { data: dupe } = await supabase
+        .from('payments')
+        .select('id')
+        .eq('checkout_link_id', checkoutLinkId)
+        .eq('status', 'completed')
+        .limit(1);
+      if (dupe && dupe.length > 0) {
+        return NextResponse.json({ success: true, paymentId: dupe[0].id }, { status: 200 });
+      }
+      paystackChannel = tx.channel;
+      paidWith = `${tx.currency} · ${tx.channel}`;
+      if (!customerName) customerName = String(meta.customer_name || 'Customer');
+    } catch (error) {
+      console.error('[checkout] Paystack verification failed:', error);
+      return NextResponse.json({ error: 'Could not verify payment' }, { status: 400 });
+    }
+  }
+
   const { data: inserted, error } = await supabase
     .from('payments')
     .insert({
       merchant_id: linkRow.merchant_id,
       checkout_link_id: checkoutLinkId,
       payer_name: customerName.trim(),
+      payer_email:
+        typeof customerEmail === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerEmail.trim())
+          ? customerEmail.trim().slice(0, 254)
+          : null,
       amount: baseAmount,
       currency: baseCurrency,
       usdc_amount: calculatedUsdcAmount,
-      paid_with: isStellar ? 'XLM' : 'Visa Card',
+      paid_with: paidWith,
       settled_amount: calculatedUsdcAmount,
       settled_currency: 'USDC',
-      method: isStellar ? 'Stellar Wallet' : 'Card',
+      method: isStellar ? 'Stellar Wallet' : paystackChannel === 'card' ? 'Card' : 'Bank Transfer',
       source: 'Checkout',
       description: linkRow.description,
       status: 'completed',

@@ -85,9 +85,11 @@ export async function getMerchantInfo(
 // ──────────────────────────────────────────────────────────────────────────────
 export async function completeCheckoutPayment(data: {
   checkoutLinkId: string;
-  customerName: string;
-  paymentMethod: 'card' | 'stellar';
+  customerName?: string;
+  customerEmail?: string;
+  paymentMethod: 'paystack' | 'stellar';
   stellarTxHash?: string;
+  paystackReference?: string;
 }): Promise<{ success: boolean; paymentId: string }> {
   const res = await fetch('/api/checkout', {
     method: 'POST',

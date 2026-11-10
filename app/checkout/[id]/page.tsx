@@ -3,17 +3,18 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
+import { AnimatePresence, motion } from 'motion/react';
+import { ArrowLeft, ArrowRight, Loader2, Lock, Mail, Pencil, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { StellarPayment } from './StellarPayment';
-import { CheckoutHeader } from './CheckoutHeader';
-import { PaymentMethodSelector } from './PaymentMethodSelector';
-import { CurrencySelector } from './CurrencySelector';
+import { CryptoPay } from './CryptoPay';
+import { PaystackPay } from './PaystackPay';
+import { OrderSummary, type CheckoutStep } from './CheckoutHeader';
+import { PaymentMethodSelector, type PaymentMethod } from './PaymentMethodSelector';
 import { getCheckoutLinkById, getMerchantInfo, completeCheckoutPayment } from '@/lib/api';
-import { isSupportedCurrency } from '@/lib/constants';
 import { useExchangeRates, convertCurrency } from '@/hooks/useExchangeRates';
 import type { CheckoutLink } from '@/types';
 
-type PaymentMethod = 'card' | 'stellar';
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function CheckoutPage() {
   const params = useParams();
@@ -21,9 +22,13 @@ export default function CheckoutPage() {
   const [checkoutData, setCheckoutData] = useState<CheckoutLink | null>(null);
   const [merchantInfo, setMerchantInfo] = useState<{ name: string; personName: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedCurrency, setSelectedCurrency] = useState('GHS');
   const [customerName, setCustomerName] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [touched, setTouched] = useState(false);
+  const [step, setStep] = useState<CheckoutStep>('details');
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('stellar');
+  const [hasPaystack, setHasPaystack] = useState(false);
+  const [returning, setReturning] = useState<null | { reference: string; state: 'verifying' | 'pending' | 'failed'; msg?: string }>(null);
 
   useEffect(() => {
     const loadCheckoutData = async () => {
@@ -38,17 +43,6 @@ export default function CheckoutPage() {
           if (merchant) {
             setMerchantInfo(merchant);
           }
-          
-          const acceptedCurrencies = link.acceptedCurrencies || [];
-          const availableCurrencies = acceptedCurrencies.filter(isSupportedCurrency);
-          if (availableCurrencies.length > 0) {
-            setSelectedCurrency(availableCurrencies[0]);
-          } else if (link.equivalents) {
-            const currencyKeys = Object.keys(link.equivalents).filter(isSupportedCurrency);
-            if (currencyKeys.length > 0) {
-              setSelectedCurrency(currencyKeys[0]);
-            }
-          }
         }
       } catch {
         // Silently fail - checkout might not exist
@@ -60,27 +54,48 @@ export default function CheckoutPage() {
     loadCheckoutData();
   }, [params.id]);
 
-  const handleCardPayment = async () => {
-    if (!checkoutData) return;
-    if (!customerName.trim()) {
-      toast.error('Please enter your name to continue');
-      return;
-    }
-    
-    // This is disabled but keeping the handler for potential future use
-    try {
-      const result = await completeCheckoutPayment({
-          checkoutLinkId: checkoutData.id,
-          customerName: customerName.trim(),
-          paymentMethod: 'card',
+  useEffect(() => {
+    fetch('/api/paystack/initialize')
+      .then((r) => r.json())
+      .then((j) => setHasPaystack(Boolean(j.enabled)))
+      .catch(() => {});
+  }, []);
+
+  // Back from Paystack's hosted page: confirm the payment server-side, then show the receipt.
+  useEffect(() => {
+    const ref = new URLSearchParams(window.location.search).get('reference');
+    if (!ref) return;
+    const checkoutId = params.id as string;
+    let cancelled = false;
+    let tries = 0;
+    setReturning({ reference: ref, state: 'verifying' });
+
+    const attempt = async () => {
+      try {
+        const result = await completeCheckoutPayment({
+          checkoutLinkId: checkoutId,
+          paymentMethod: 'paystack',
+          paystackReference: ref,
         });
-        
-        // Redirect to secure confirmation page (server fetches payment details)
-        window.location.href = `/confirmed/${result.paymentId}`;
-      } catch {
-        toast.error('Payment failed. Please try again.');
+        if (!cancelled) window.location.replace(`/confirmed/${result.paymentId}`);
+      } catch (err) {
+        if (cancelled) return;
+        const msg = err instanceof Error ? err.message : '';
+        // Bank transfers / mobile money can take a moment to confirm: keep checking.
+        if (msg.includes('not been completed') && tries < 36) {
+          tries += 1;
+          setReturning({ reference: ref, state: 'pending' });
+          setTimeout(attempt, 5000);
+        } else {
+          setReturning({ reference: ref, state: 'failed', msg });
+        }
       }
-  };
+    };
+    attempt();
+    return () => {
+      cancelled = true;
+    };
+  }, [params.id]);
 
   const handleStellarSuccess = async (txHash: string) => {
     if (!checkoutData) return;
@@ -88,6 +103,7 @@ export default function CheckoutPage() {
       const result = await completeCheckoutPayment({
         checkoutLinkId: checkoutData.id,
         customerName: customerName.trim() || 'Stellar User',
+        customerEmail: customerEmail.trim() || undefined,
         paymentMethod: 'stellar',
         stellarTxHash: txHash,
       });
@@ -106,6 +122,36 @@ export default function CheckoutPage() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#fafaf9]">
         <div className="text-muted-foreground">Loading checkout...</div>
+      </div>
+    );
+  }
+
+  if (returning) {
+    const failed = returning.state === 'failed';
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#fafaf7] px-4 dark:bg-background">
+        <div className="w-full max-w-[440px] rounded-3xl border border-border/60 bg-card p-9 text-center shadow-[0_40px_80px_-30px_rgba(0,0,0,.25)]">
+          <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-[var(--pave-orange-light)] text-[var(--pave-orange)]">
+            {failed ? <Lock className="size-6" /> : <Loader2 className="size-6 animate-spin" />}
+          </span>
+          <h1 className="mt-5 font-serif text-[26px] font-light italic text-foreground">
+            {failed ? 'We couldn’t confirm your payment' : returning.state === 'pending' ? 'Waiting for your bank…' : 'Confirming your payment…'}
+          </h1>
+          <p className="mt-2 text-[13.5px] text-muted-foreground">
+            {failed
+              ? returning.msg || 'Something went wrong. If money left your account, contact the merchant with this reference.'
+              : 'This only takes a moment. Please keep this page open.'}
+          </p>
+          <div className="mt-4 font-mono text-[11px] text-muted-foreground">Ref: {returning.reference}</div>
+          {failed && (
+            <a
+              href={`/checkout/${params.id as string}`}
+              className="mt-6 inline-flex h-11 items-center rounded-full bg-foreground px-6 text-[14px] font-medium text-background transition-colors hover:bg-[var(--pave-orange)] hover:text-white"
+            >
+              Back to checkout
+            </a>
+          )}
+        </div>
       </div>
     );
   }
@@ -148,147 +194,234 @@ export default function CheckoutPage() {
   }
 
   const { amount, currency, description } = checkoutData;
-  
-  // Calculate live exchange amounts using React Query
-  const exchangeAmount = exchangeRates 
-    ? convertCurrency(amount, currency, selectedCurrency, exchangeRates)
-    : amount;
 
-  const xlmAmount = exchangeRates
-    ? convertCurrency(amount, currency, 'XLM', exchangeRates)
-    : amount;
+  const xlmAmount = exchangeRates ? convertCurrency(amount, currency, 'XLM', exchangeRates) : amount;
+
+  const equivalents = exchangeRates
+    ? (checkoutData.acceptedCurrencies || [])
+        .filter((c) => c !== currency && ['USD', 'GHS', 'KES'].includes(c))
+        .slice(0, 2)
+        .map((code) => ({ code, value: convertCurrency(amount, currency, code, exchangeRates) }))
+    : [];
 
   const hasStellarOption = Boolean(checkoutData.stellarWalletAddress);
+  const nameValid = customerName.trim().length > 1;
+  const emailValid = EMAIL_RE.test(customerEmail.trim());
+
+  const submitDetails = (e: React.FormEvent) => {
+    e.preventDefault();
+    setTouched(true);
+    if (!nameValid || !emailValid) return;
+    setStep('method');
+  };
+
+  const chooseMethod = (method: PaymentMethod) => {
+    setPaymentMethod(method);
+    setStep('pay');
+  };
+
+  const slide = {
+    initial: { opacity: 0, x: 24 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -24 },
+    transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+  };
+
+  const fieldLabel =
+    'mb-2 block font-mono text-[10.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground';
+  const fieldBase =
+    'h-12 w-full rounded-xl border bg-muted/40 pl-11 pr-4 text-[15px] text-foreground outline-none transition-all placeholder:text-muted-foreground focus:bg-card focus:ring-4';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-[#fafaf7] dark:bg-background">
       {/* Topbar */}
-      <nav className="sticky top-0 z-50 flex h-[58px] items-center justify-between border-b bg-card px-4 sm:px-7">
-        <div className="flex items-center gap-2.5">
-          <span className="font-serif text-[21px] font-medium tracking-tight text-foreground">
-            Pave Checkout
-          </span>
+      <nav className="sticky top-0 z-50 flex h-[60px] items-center justify-between border-b border-border/60 bg-background/80 px-4 backdrop-blur-xl sm:px-8">
+        <div className="flex items-center gap-2">
+          <span className="size-2 rounded-full bg-[var(--pave-orange)]" />
+          <span className="font-serif text-[21px] font-medium tracking-tight text-foreground">Pave Checkout</span>
         </div>
-        <div className="hidden items-center gap-2 text-[12px] text-muted-foreground sm:flex">
-          <svg width="12" height="13" viewBox="0 0 12 13" fill="none">
-            <path d="M2 6V4a4 4 0 018 0v2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-            <rect x="1" y="5.5" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.3" />
-          </svg>
+        <div className="flex items-center gap-1.5 rounded-full border border-border/60 px-3 py-1.5 text-[12px] text-muted-foreground">
+          <Lock className="size-3" />
           Secured by Pave
         </div>
       </nav>
 
-      {/* Main Content */}
-      <div className="flex justify-center px-4 py-8 sm:py-12">
-        <div className="w-full max-w-[520px] animate-fadeup border bg-card shadow-lg">
-          <CheckoutHeader
-            merchantInfo={merchantInfo}
+      <div className="flex justify-center px-4 py-8 sm:py-14">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="grid w-full max-w-[980px] overflow-hidden rounded-3xl border border-border/60 bg-card shadow-[0_1px_2px_rgba(0,0,0,.04),0_40px_80px_-30px_rgba(0,0,0,.25)] md:grid-cols-[360px_1fr]"
+        >
+          <OrderSummary
+            merchantName={merchantInfo?.name}
             currency={currency}
             amount={amount}
             description={description}
-            paymentMethod={paymentMethod}
-            selectedCurrency={selectedCurrency}
-            exchangeAmount={exchangeAmount}
-            xlmAmount={xlmAmount}
+            step={step}
+            equivalents={equivalents}
           />
 
-          {/* Body */}
-          <div className="p-6">
-            {/* Customer name */}
-            <div className="mb-5">
-              <label className="mb-1.5 block text-[13px] font-medium text-foreground">Your name</label>
-              <input
-                type="text"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Your name"
-                className="h-11 w-full border border-gray-300 px-3.5 text-[14px] outline-none transition-all focus:border-[var(--pave-orange)] focus:ring-2 focus:ring-[var(--pave-orange)]/20"
-              />
-            </div>
-
-            <PaymentMethodSelector
-              paymentMethod={paymentMethod}
-              setPaymentMethod={setPaymentMethod}
-              hasStellarOption={hasStellarOption}
-            />
-
-            {paymentMethod === 'card' && exchangeRates && (
-              <CurrencySelector
-                selectedCurrency={selectedCurrency}
-                setSelectedCurrency={setSelectedCurrency}
-                equivalents={{
-                  USD: convertCurrency(amount, currency, 'USD', exchangeRates),
-                  NGN: convertCurrency(amount, currency, 'NGN', exchangeRates),
-                  GHS: convertCurrency(amount, currency, 'GHS', exchangeRates),
-                  KES: convertCurrency(amount, currency, 'KES', exchangeRates),
-                  XLM: convertCurrency(amount, currency, 'XLM', exchangeRates),
-                }}
-                acceptedCurrencies={checkoutData.acceptedCurrencies}
-              />
-            )}
-
-            {paymentMethod === 'card' && !exchangeRates && (
-              <div className="border bg-muted/20 p-4 text-center text-sm text-muted-foreground">
-                Loading exchange rates...
-              </div>
-            )}
-
-            {/* Stellar Payment */}
-            {paymentMethod === 'stellar' && checkoutData.stellarWalletAddress && (
-              <div className="mb-1">
-                {exchangeRates ? (
-                  <StellarPayment
-                    merchantAddress={checkoutData.stellarWalletAddress}
-                    xlmAmount={xlmAmount}
-                    onSuccess={handleStellarSuccess}
-                    onError={handleStellarError}
-                    disabled={!customerName.trim()}
-                  />
-                ) : (
-                  <div className="border bg-muted/20 p-4 text-center text-sm text-muted-foreground">
-                    Loading exchange rates...
-                  </div>
-                )}
-                {!customerName.trim() && exchangeRates && (
-                  <p className="mt-2 text-center text-[12px] text-muted-foreground">
-                    Enter your name above to enable payment
+          <div className="flex min-h-[460px] flex-col p-6 sm:p-9">
+            <AnimatePresence mode="wait" initial={false}>
+              {step === 'details' && (
+                <motion.form key="details" {...slide} onSubmit={submitDetails} noValidate className="flex flex-1 flex-col">
+                  <h1 className="font-serif text-[28px] font-light italic leading-tight text-foreground">
+                    Let&apos;s start with you
+                  </h1>
+                  <p className="mt-1 text-[13.5px] text-muted-foreground">
+                    We&apos;ll send your receipt here. It takes ten seconds.
                   </p>
-                )}
-              </div>
-            )}
+
+                  <div className="mt-7 space-y-5">
+                    <div>
+                      <label htmlFor="cust-name" className={fieldLabel}>Full name</label>
+                      <div className="relative">
+                        <User className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" />
+                        <input
+                          id="cust-name"
+                          type="text"
+                          autoComplete="name"
+                          autoFocus
+                          value={customerName}
+                          onChange={(e) => setCustomerName(e.target.value)}
+                          placeholder="Ama Mensah"
+                          aria-invalid={touched && !nameValid}
+                          className={`${fieldBase} ${
+                            touched && !nameValid
+                              ? 'border-red-500 focus:ring-red-500/15'
+                              : 'border-border/70 focus:border-[var(--pave-orange)] focus:ring-[var(--pave-orange)]/15'
+                          }`}
+                        />
+                      </div>
+                      {touched && !nameValid && (
+                        <p className="mt-1.5 text-[12px] text-red-500">Please enter your name.</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label htmlFor="cust-email" className={fieldLabel}>Email address</label>
+                      <div className="relative">
+                        <Mail className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-muted-foreground" />
+                        <input
+                          id="cust-email"
+                          type="email"
+                          autoComplete="email"
+                          value={customerEmail}
+                          onChange={(e) => setCustomerEmail(e.target.value)}
+                          placeholder="you@example.com"
+                          aria-invalid={touched && !emailValid}
+                          className={`${fieldBase} ${
+                            touched && !emailValid
+                              ? 'border-red-500 focus:ring-red-500/15'
+                              : 'border-border/70 focus:border-[var(--pave-orange)] focus:ring-[var(--pave-orange)]/15'
+                          }`}
+                        />
+                      </div>
+                      {touched && !emailValid && (
+                        <p className="mt-1.5 text-[12px] text-red-500">Enter a valid email address.</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    className="group mt-auto h-12 w-full rounded-full bg-foreground text-[15px] text-background shadow-lg transition-all hover:bg-[var(--pave-orange)] hover:text-white hover:shadow-[0_10px_30px_-8px_rgba(208,82,0,0.6)]"
+                  >
+                    Continue
+                    <ArrowRight className="ml-1 size-4 transition-transform duration-300 group-hover:translate-x-1" />
+                  </Button>
+                  <p className="mt-4 text-center text-[11.5px] text-muted-foreground">
+                    Your details are only shared with {merchantInfo?.name || 'the merchant'}.
+                  </p>
+                </motion.form>
+              )}
+
+              {step === 'method' && (
+                <motion.div key="method" {...slide} className="flex flex-1 flex-col">
+                  <h1 className="font-serif text-[28px] font-light italic leading-tight text-foreground">
+                    How would you like to pay?
+                  </h1>
+                  <button
+                    type="button"
+                    onClick={() => setStep('details')}
+                    className="group mt-2 inline-flex w-fit cursor-pointer items-center gap-2 rounded-full bg-muted px-3 py-1.5 text-[12.5px] text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <span className="max-w-[220px] truncate">
+                      {customerName.trim()} · {customerEmail.trim()}
+                    </span>
+                    <Pencil className="size-3 transition-transform group-hover:rotate-12" />
+                  </button>
+
+                  <div className="mt-7">
+                    <PaymentMethodSelector
+                      hasStellarOption={hasStellarOption}
+                      hasPaystack={hasPaystack}
+                      xlmAmount={exchangeRates ? xlmAmount : undefined}
+                      onSelect={chooseMethod}
+                    />
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setStep('details')}
+                    className="mt-auto inline-flex w-fit cursor-pointer items-center gap-1.5 pt-8 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <ArrowLeft className="size-3.5" /> Back
+                  </button>
+                </motion.div>
+              )}
+
+              {step === 'pay' && (
+                <motion.div key="pay" {...slide} className="flex flex-1 flex-col">
+                  <h1 className="font-serif text-[28px] font-light italic leading-tight text-foreground">
+                    {paymentMethod === 'stellar' ? 'Send stablecoins' : paymentMethod === 'card' ? 'Pay by card' : 'Pay by transfer'}
+                  </h1>
+                  <p className="mt-1 text-[13.5px] text-muted-foreground">
+                    Paying as <span className="font-medium text-foreground">{customerName.trim()}</span>
+                  </p>
+
+                  <div className="mt-6">
+                    {paymentMethod === 'stellar' && checkoutData.stellarWalletAddress ? (
+                      exchangeRates ? (
+                        <CryptoPay
+                          merchantAddress={checkoutData.stellarWalletAddress}
+                          xlmAmount={xlmAmount}
+                          onSuccess={handleStellarSuccess}
+                          onError={handleStellarError}
+                          disabled={!nameValid}
+                        />
+                      ) : (
+                        <div className="rounded-2xl border bg-muted/30 p-6 text-center text-sm text-muted-foreground">
+                          Loading live rates…
+                        </div>
+                      )
+                    ) : (
+                      <PaystackPay
+                        mode={paymentMethod === 'card' ? 'card' : 'transfer'}
+                        checkoutLinkId={checkoutData.id}
+                        customerName={customerName.trim()}
+                        customerEmail={customerEmail.trim()}
+                        baseCurrency={currency}
+                        baseAmount={amount}
+                        acceptedCurrencies={checkoutData.acceptedCurrencies || []}
+                        rates={exchangeRates}
+                      />
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setStep('method')}
+                    className="mt-auto inline-flex w-fit cursor-pointer items-center gap-1.5 pt-8 text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <ArrowLeft className="size-3.5" /> Change payment method
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-
-          {/* Footer — card pay button */}
-          {paymentMethod === 'card' && (
-            <div className="border-t p-6 pt-5">
-              <Button
-                onClick={handleCardPayment}
-                disabled={true}
-                className="h-12 w-full bg-muted text-[15px] font-medium text-muted-foreground cursor-not-allowed opacity-70"
-              >
-                Coming Soon
-                <svg width="10" height="12" viewBox="0 0 10 12" fill="none" className="ml-2">
-                  <path d="M1 5.5V3.5a4 4 0 018 0v2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                  <rect x=".5" y="5" width="9" height="6.5" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-                </svg>
-              </Button>
-
-              <div className="mt-4 flex items-center justify-center gap-4 text-[11.5px]">
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
-                    <path d="M1 5.5V3.5a4 4 0 018 0v2" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
-                    <rect x=".5" y="5" width="9" height="6.5" rx="1.5" stroke="currentColor" strokeWidth="1.2" />
-                  </svg>
-                  Secured
-                </div>
-                <span className="text-gray-200">·</span>
-                <div className="text-muted-foreground">Settles in ~5s</div>
-                <span className="text-gray-200">·</span>
-                <div className="text-[var(--stellar)]">Stellar network</div>
-              </div>
-            </div>
-          )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

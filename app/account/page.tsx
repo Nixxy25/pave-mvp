@@ -142,8 +142,8 @@ export default function AccountPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex-1">
-                  <div className="font-medium text-foreground">Auto-convert to NGN</div>
-                  <div className="text-sm text-muted-foreground">Automatically convert USDC to NGN on receipt</div>
+                  <div className="font-medium text-foreground">Auto-convert to local currency</div>
+                  <div className="text-sm text-muted-foreground">Automatically convert USDC to your local currency on receipt</div>
                 </div>
                 <Switch
                   checked={settings.autoConvert}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ArrowRight, Check, Link2, Plus, Wallet } from 'lucide-react';
 import { createPayment } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { SUPPORTED_CURRENCIES, type SupportedCurrency } from '@/lib/constants';
@@ -28,7 +29,6 @@ interface CreateCheckoutLinkDialogProps {
 
 // Define select field configurations 
 const CURRENCY_OPTIONS = [
-  { value: 'NGN', label: 'NGN' },
   { value: 'KES', label: 'KES' },
   { value: 'GHS', label: 'GHS' },
   { value: 'USD', label: 'USD' },
@@ -56,7 +56,7 @@ const DEFAULT_FORM: {
   expiresInHours: number;
 } = {
   amount: '',
-  currency: 'NGN',
+  currency: 'USD',
   description: '',
   settlementAsset: 'USDC',
   stellarWalletAddress: '',
@@ -116,61 +116,68 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
     }));
   };
 
+  const fieldLabel =
+    'mb-2 block font-mono text-[10.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground';
+  const selectedCount = formData.acceptedCurrencies.length;
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <Button 
+      <Button
         onClick={handleTriggerClick}
-        className="w-full bg-[var(--pave-orange)] hover:bg-[var(--pave-orange-hover)] sm:w-auto"
+        className="group h-auto w-full gap-2 rounded-full bg-foreground px-5 py-2.5 text-[13.5px] text-background shadow-lg transition-all hover:bg-[var(--pave-orange)] hover:text-white hover:shadow-[0_10px_30px_-8px_rgba(208,82,0,0.6)] sm:w-auto"
       >
-        + New Checkout Link
+        <Plus className="size-4 transition-transform duration-300 group-hover:rotate-90" />
+        New checkout link
       </Button>
-      <DialogContent className="max-h-[90vh] w-[95vw] max-w-[600px] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="font-serif text-xl font-light italic">
-            Create checkout link
-          </DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            A hosted payment page, generated in seconds
-          </p>
+      <DialogContent className="max-h-[92vh] w-[95vw] max-w-[560px] gap-0 overflow-y-auto">
+        <DialogHeader className="mb-6 flex-row items-center gap-4 text-left">
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-[var(--pave-orange)] text-white shadow-[0_10px_24px_-10px_rgba(208,82,0,0.8)]">
+            <Link2 className="size-5" />
+          </span>
+          <div className="min-w-0">
+            <DialogTitle className="font-serif text-[24px] font-light italic leading-tight">
+              Create checkout link
+            </DialogTitle>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
+              A hosted payment page, generated in seconds.
+            </p>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleCreate} className="mt-4 space-y-4">
+        <form onSubmit={handleCreate} className="space-y-5">
           <div>
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description" className={fieldLabel}>
+              Description
+            </Label>
             <Input
               id="description"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              placeholder="Add Description"
+              placeholder="e.g. Design retainer, Hoodie order"
               required
-              className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none hover:outline-none border-input"
             />
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <Label htmlFor="amount">
-                Amount{' '}
-                <span className="text-xs text-muted-foreground">base currency</span>
-              </Label>
+          <div>
+            <Label htmlFor="amount" className={fieldLabel}>
+              Amount
+            </Label>
+            <div className="flex gap-2">
               <Input
                 id="amount"
                 type="number"
                 step="0.01"
                 value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                placeholder="45000"
+                placeholder="0.00"
                 required
-                className="font-mono focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none hover:outline-none border-input [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                className="flex-1 font-mono text-[17px] [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
-            </div>
-            <div>
-              <Label htmlFor="currency">Currency</Label>
               <Select
                 value={formData.currency}
                 onValueChange={(value) => setFormData({ ...formData, currency: value })}
               >
-                <SelectTrigger className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none hover:outline-none border-input">
+                <SelectTrigger className="w-28 font-mono">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -184,14 +191,16 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="settlement">Settlement asset</Label>
+              <Label htmlFor="settlement" className={fieldLabel}>
+                Settle in
+              </Label>
               <Select
                 value={formData.settlementAsset}
                 onValueChange={(value) => setFormData({ ...formData, settlementAsset: value })}
               >
-                <SelectTrigger className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none hover:outline-none border-input">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -204,14 +213,16 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
               </Select>
             </div>
             <div>
-              <Label htmlFor="expires">Link expiry</Label>
+              <Label htmlFor="expires" className={fieldLabel}>
+                Link expiry
+              </Label>
               <Select
                 value={formData.expiresInHours.toString()}
                 onValueChange={(value) =>
                   setFormData({ ...formData, expiresInHours: parseInt(value) })
                 }
               >
-                <SelectTrigger className="focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none hover:outline-none border-input">
+                <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -226,20 +237,25 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
           </div>
 
           <div>
-            <Label htmlFor="stellarWallet">
-              Stellar wallet address{' '}
-              <span className="text-xs text-muted-foreground">
-                (receives payments from customers)
-              </span>
+            <Label htmlFor="stellarWallet" className={fieldLabel}>
+              Receiving wallet
             </Label>
             {formData.stellarWalletAddress ? (
-              <div className="flex items-center gap-2 border border-input bg-muted/50 px-3 py-2">
-                <ShortAddress
-                  address={formData.stellarWalletAddress}
-                  startChars={8}
-                  endChars={8}
-                  className="flex-1 text-xs"
-                />
+              <div className="flex items-center gap-3 rounded-xl border border-border/70 bg-muted/40 px-3.5 py-3">
+                <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[var(--pave-orange-light)] text-[var(--pave-orange)]">
+                  <Wallet className="size-4" />
+                </span>
+                <div className="min-w-0 flex-1">
+                  <ShortAddress
+                    address={formData.stellarWalletAddress}
+                    startChars={8}
+                    endChars={8}
+                    className="text-[12.5px]"
+                  />
+                  <div className="text-[11.5px] text-muted-foreground">
+                    Stellar · receives customer payments
+                  </div>
+                </div>
               </div>
             ) : (
               <Input
@@ -247,59 +263,60 @@ export function CreateCheckoutLinkDialog({ onCreated }: CreateCheckoutLinkDialog
                 value={formData.stellarWalletAddress}
                 onChange={(e) => setFormData({ ...formData, stellarWalletAddress: e.target.value })}
                 placeholder="G..."
-                className="font-mono text-xs focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none hover:outline-none border-input"
+                className="font-mono text-xs"
               />
             )}
           </div>
 
-          <div className="pt-4">
-            <Label className="mb-2 block">
-              Accept currencies from customers{' '}
-              <span className="text-xs text-muted-foreground">— payer&apos;s local currency</span>
-            </Label>
+          <div>
+            <div className="mb-2 flex items-baseline justify-between">
+              <Label className="font-mono text-[10.5px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+                Customers can pay in
+              </Label>
+              <span className="font-mono text-[11px] text-muted-foreground">
+                {selectedCount} selected
+              </span>
+            </div>
             <div className="flex flex-wrap gap-2">
-              {SUPPORTED_CURRENCIES.map((curr) => (
-                <button
-                  key={curr}
-                  type="button"
-                  onClick={() => toggleCurrency(curr)}
-                  className={`border px-3 py-1 text-sm font-medium transition-all focus:outline-none ${
-                    formData.acceptedCurrencies.includes(curr)
-                      ? 'border-[var(--pave-orange)] bg-[var(--pave-orange)] text-white'
-                      : 'border-gray-300 bg-card text-muted-foreground hover:border-gray-400 dark:border-gray-700'
-                  }`}
-                >
-                  {curr}
-                </button>
-              ))}
+              {SUPPORTED_CURRENCIES.map((curr) => {
+                const on = formData.acceptedCurrencies.includes(curr);
+                return (
+                  <button
+                    key={curr}
+                    type="button"
+                    onClick={() => toggleCurrency(curr)}
+                    aria-pressed={on}
+                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-4 py-2 font-mono text-[13px] font-medium outline-none transition-all active:scale-95 focus-visible:ring-4 focus-visible:ring-[var(--pave-orange)]/15 ${
+                      on
+                        ? 'border-[var(--pave-orange)] bg-[var(--pave-orange-light)] text-[var(--pave-orange)]'
+                        : 'border-border/70 bg-muted/40 text-muted-foreground hover:border-border hover:text-foreground'
+                    }`}
+                  >
+                    <Check className={`size-3.5 transition-all ${on ? 'scale-100 opacity-100' : 'w-0 scale-0 opacity-0'}`} />
+                    {curr}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+          <div className="flex flex-col-reverse gap-2.5 pt-3 sm:flex-row">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
-              className="flex-1 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none"
+              className="h-12 flex-1 rounded-full"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={creating}
-              className="flex-1 bg-[var(--pave-orange)] hover:bg-[var(--pave-orange-hover)] focus:outline-none"
+              className="group h-12 flex-[1.6] rounded-full bg-foreground text-background shadow-lg transition-all hover:bg-[var(--pave-orange)] hover:text-white hover:shadow-[0_10px_30px_-8px_rgba(208,82,0,0.6)]"
             >
-              {creating ? 'Creating...' : 'Generate Checkout Link'}
+              {creating ? 'Creating…' : 'Generate checkout link'}
               {!creating && (
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className="ml-1.5">
-                  <path
-                    d="M2 7h10M8 3l4 4-4 4"
-                    stroke="white"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <ArrowRight className="ml-1 size-4 transition-transform duration-300 group-hover:translate-x-1" />
               )}
             </Button>
           </div>

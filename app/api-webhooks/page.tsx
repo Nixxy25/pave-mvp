@@ -5,8 +5,8 @@ export default function APIWebhooksPage() {
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "amount": 50000,
-    "currency": "NGN",
+    "amount": 4500,
+    "currency": "KES",
     "description": "Premium subscription",
     "settlementAsset": "USDC",
     "acceptedCurrencies": ["Card", "USDC", "Bank Transfer"]
@@ -15,8 +15,8 @@ export default function APIWebhooksPage() {
   const responseExample = `{
   "id": "pay_abc123xyz",
   "checkoutUrl": "https://checkout.pave.finance/pay_abc123xyz",
-  "amount": 50000,
-  "currency": "NGN",
+  "amount": 4500,
+  "currency": "KES",
   "status": "pending",
   "createdAt": "2026-04-13T10:30:00Z",
   "expiresAt": "2026-04-14T10:30:00Z"
@@ -26,9 +26,9 @@ export default function APIWebhooksPage() {
   "event": "payment.completed",
   "data": {
     "id": "pay_abc123xyz",
-    "amount": 50000,
-    "currency": "NGN",
-    "usdcAmount": 35.21,
+    "amount": 4500,
+    "currency": "KES",
+    "usdcAmount": 34.88,
     "payer": {
       "name": "John Doe",
       "email": "john@example.com"
