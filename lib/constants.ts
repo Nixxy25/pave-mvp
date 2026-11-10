@@ -17,27 +17,24 @@ export const API_ENDPOINTS = {
 
 
 
-export const SUPPORTED_CURRENCIES = ['GHS', 'USD', 'KES', 'NGN'] as const;
+export const SUPPORTED_CURRENCIES = ['GHS', 'USD', 'KES'] as const;
 export type SupportedCurrency = typeof SUPPORTED_CURRENCIES[number];
 
 export const CURRENCY_NAMES: Record<SupportedCurrency, string> = {
   'GHS': 'Ghanaian Cedi',
   'USD': 'US Dollar',
   'KES': 'Kenyan Shilling',
-  'NGN': 'Nigerian Naira',
 };
 
 export const CURRENCY_SYMBOLS: Record<SupportedCurrency, string> = {
   'GHS': '₵',
   'USD': '$',
   'KES': 'KSh',
-  'NGN': '₦',
 };
 
 export const CURRENCY_COUNTRIES: Record<SupportedCurrency, string> = {
   'GHS': 'GH',
   'KES': 'KE',
-  'NGN': 'NG',
   'USD': 'US',
 };
 

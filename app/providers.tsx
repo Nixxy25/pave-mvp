@@ -31,7 +31,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           loginMethods: ['email', 'google'],
           appearance: {
             theme: 'light',
-            accentColor: '#e8602c',
+            accentColor: '#D05200',
             logo: 'https://res.cloudinary.com/dj1f8plkn/image/upload/f_auto,q_auto/7_sdtfea',
           },
         }}

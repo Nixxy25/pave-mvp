@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ArrowRight, Check, Loader2, Wallet } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useWallet } from '@/contexts/WalletContext';
 import { ShortAddress } from '@/components/ShortAddress';
@@ -100,26 +101,21 @@ export function StellarPayment({
   // Not connected
   if (!address) {
     return (
-      <div className="flex flex-col items-center gap-4 border border-dashed border-[var(--stellar)]/40 bg-[var(--stellar)]/5 p-6 text-center">
-        <div className="flex h-12 w-12 items-center justify-center bg-[var(--stellar)]/10">
-          {/* Stellar-style icon */}
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M21.5 7.5L3 12l18.5 4.5" stroke="var(--stellar)" strokeWidth="2" strokeLinecap="round" />
-            <path d="M3 7.5l18.5 4.5L3 16.5" stroke="var(--stellar)" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        </div>
-        <div>
-          <div className="text-[14px] font-medium text-foreground">Connect your Stellar wallet</div>
-          <div className="mt-1 text-[12.5px] text-muted-foreground">
-            You&apos;ll send <span className="font-medium">{xlmAmount.toFixed(2)} XLM</span> on testnet
-          </div>
-        </div>
+      <div className="relative overflow-hidden rounded-2xl border border-border/70 bg-muted/30 p-7 text-center">
+        <span className="relative mx-auto grid size-14 place-items-center rounded-2xl bg-[var(--pave-orange)] text-white shadow-[0_12px_28px_-10px_rgba(208,82,0,0.8)]">
+          <Wallet className="size-6" />
+        </span>
+        <div className="relative mt-4 text-[16px] font-semibold text-foreground">Connect your Stellar wallet</div>
+        <p className="relative mx-auto mt-1 max-w-[300px] text-[13px] text-muted-foreground">
+          You&apos;ll send <span className="font-mono font-medium text-foreground">{xlmAmount.toFixed(2)} XLM</span> on
+          testnet. Nothing moves until you approve it in your wallet.
+        </p>
         <Button
           onClick={connect}
           disabled={connecting}
-          className="h-10 bg-[var(--stellar)] px-6 text-[13.5px] font-medium text-white hover:bg-[var(--stellar)]/90"
+          className="relative mt-5 h-12 rounded-full bg-foreground px-8 text-[14px] text-background shadow-lg transition-all hover:bg-[var(--pave-orange)] hover:text-white hover:shadow-[0_10px_30px_-8px_rgba(208,82,0,0.6)]"
         >
-          {connecting ? 'Connecting…' : 'Connect Wallet'}
+          {connecting ? 'Connecting…' : 'Connect wallet'}
         </Button>
       </div>
     );
@@ -127,68 +123,59 @@ export function StellarPayment({
 
   // Connected — show payment UI
   return (
-    <div className="space-y-4">
-      {/* Sending from */}
-      <div className="border bg-muted/40 p-3.5">
-         <div className="mb-2 flex items-center justify-between">
-          <div className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            Sending from
-          </div>
-          <Button
+    <div className="space-y-3.5">
+      <div className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <div className="font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">Sending from</div>
+          <button
+            type="button"
             onClick={disconnect}
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+            className="cursor-pointer rounded-full px-2.5 py-1 text-[11.5px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
             Disconnect
-          </Button>
+          </button>
         </div>
-        <ShortAddress address={address} className="text-[13px] text-foreground" />
-      </div>
-
-      {/* Sending to */}
-      <div className="flex items-center gap-3 border bg-muted/40 p-3.5">
-        <div className="flex-1 min-w-0">
-          <div className="mb-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-            Merchant wallet (destination)
-          </div>
-          <ShortAddress
-            address={merchantAddress}
-            showCopy
-            className="text-[13px] text-foreground"
-          />
+        <div className="flex items-center gap-2.5">
+          <span className="relative flex size-2">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-[var(--success)] opacity-60" />
+            <span className="relative inline-flex size-2 rounded-full bg-[var(--success)]" />
+          </span>
+          <ShortAddress address={address} className="text-[13px] text-foreground" />
         </div>
       </div>
 
-      {/* Amount */}
-      <div className="flex items-center justify-between border border-[var(--stellar)]/20 bg-[var(--stellar)]/5 px-4 py-3">
+      <div className="rounded-2xl border border-border/70 bg-muted/30 p-4">
+        <div className="mb-2 font-mono text-[10.5px] uppercase tracking-[0.08em] text-muted-foreground">
+          Merchant wallet
+        </div>
+        <ShortAddress address={merchantAddress} showCopy className="text-[13px] text-foreground" />
+      </div>
+
+      <div className="flex items-center justify-between rounded-2xl bg-[var(--pave-orange-light)] px-5 py-4">
         <span className="text-[13px] text-muted-foreground">You will send</span>
-        <span className="font-mono text-[15px] font-semibold text-[var(--stellar)]">
-          {xlmAmount.toFixed(2)} XLM
+        <span className="font-serif text-[26px] font-light italic leading-none text-[var(--pave-orange)]">
+          {xlmAmount.toFixed(2)} <span className="font-mono text-[13px] not-italic">XLM</span>
         </span>
       </div>
 
-      {/* Pay button */}
       <Button
         onClick={handlePay}
         disabled={processing || disabled || success}
-        className="h-12 w-full bg-[var(--stellar)] text-[15px] font-medium text-white hover:bg-[var(--stellar)]/90 disabled:opacity-70"
+        className="group h-13 w-full rounded-full bg-foreground py-4 text-[15px] font-medium text-background shadow-lg transition-all hover:bg-[var(--pave-orange)] hover:text-white hover:shadow-[0_10px_30px_-8px_rgba(208,82,0,0.6)] disabled:opacity-70"
       >
         {success ? (
-          'Payment Successful'
+          <span className="flex items-center gap-2">
+            <Check className="size-4" /> Payment successful
+          </span>
         ) : processing ? (
           <span className="flex items-center gap-2">
-            <svg className="animate-spin" width="16" height="16" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="32" strokeDashoffset="12" />
-            </svg>
+            <Loader2 className="size-4 animate-spin" />
             Submitting to Stellar…
           </span>
         ) : (
           <span className="flex items-center gap-2">
             Pay {xlmAmount.toFixed(2)} XLM
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-              <path d="M2 7.5h11M9 3.5l4 4-4 4" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
+            <ArrowRight className="size-4 transition-transform duration-300 group-hover:translate-x-1" />
           </span>
         )}
       </Button>

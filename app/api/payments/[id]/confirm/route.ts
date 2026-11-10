@@ -3,11 +3,10 @@ import { supabase } from '@/lib/supabase';
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } | Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
 
-  const resolvedParams = await Promise.resolve(params);
-  const { id } = resolvedParams;
+  const { id } = await params;
 
   if (!id) {
     return NextResponse.json({ error: 'Payment ID is required' }, { status: 400 });
